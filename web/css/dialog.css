@@ -1,0 +1,76 @@
+/* The app's own dialogs (New Song). Plain for now; the faux-wood look is on the roadmap. */
+.studioDialog {
+  width: 360px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  font: 14px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: #333;
+  background: #fbfaf7;
+}
+
+.studioDialog::backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.studioDialog form {
+  padding: 0 20px 16px;
+}
+
+.studioDialog h2 {
+  margin: 0 -20px 12px;
+  padding: 10px 20px;
+  border-radius: 8px 8px 0 0;
+  background: #5b3a1e;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.studioDialogNote {
+  margin: 0 0 10px;
+  color: #777;
+  font-size: 13px;
+}
+
+.studioDialog label {
+  display: block;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.studioDialog input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 3px;
+  padding: 6px 8px;
+  border: 1px solid #cfc6b6;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: normal;
+}
+
+.studioDialogButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.studioDialogButtons button {
+  padding: 6px 14px;
+  border: 1px solid #cfc6b6;
+  border-radius: 5px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.studioDialogButtons .studioDialogDefault {
+  border-color: #f39c3c;
+  background: #f39c3c;
+  color: #fff;
+  font-weight: 600;
+}

@@ -9,6 +9,7 @@ import {
   songExtensions,
 } from './songbook.js';
 import { onMenu } from './menu.js';
+import { newSong } from './new-song.js';
 
 const statusEl = document.getElementById('songbookStatus');
 const listEl = document.getElementById('songList');
@@ -84,6 +85,8 @@ async function chooseSong() {
 
 document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
 document.getElementById('openSong').addEventListener('click', chooseSong);
+document.getElementById('newSong').addEventListener('click', () => newSong());
+onMenu('new-song', () => newSong());
 // File > Open Songbook… (Shift+Cmd+O) and Open… (Cmd+O). Save and Save As do nothing
 // here; Quit quits.
 onMenu('open-songbook', chooseSongbook);

@@ -19,19 +19,21 @@ import {
   saveSongFile, SONG_EXTENSION, splitPath, tauri,
 } from './songbook.js';
 import { onMenu, quitApp } from './menu.js';
+import { newSong } from './new-song.js';
 
 const { parseSong } = globalThis.studioSongs;
 const container = document.getElementById('songEditor');
 
 const cleanPath = (path) => path.replace(/[\/\\]+$/, '').normalize('NFC');
 
-// Until a song is open (or if it can't be), File > Open…, Open Songbook…, Open Recent
+// Until a song is open (or if it can't be), File > New Song…, Open…, Open Songbook…, Open Recent
 // and View > Show Song List just go; main() replaces these with ones that ask about
 // unsaved changes.
 onMenu('open-file', async () => {
   const path = await pickSongFile();
   if (path) location.href = fileUri(path);
 });
+onMenu('new-song', () => newSong());
 onMenu('open-songbook', () => { location.href = 'index.html?open=1'; });
 onMenu('open-recent', openRecent);
 onMenu('show-song-list', () => { location.href = 'index.html'; });
@@ -197,6 +199,9 @@ async function main() {
     // now editing the new file; the old one keeps its last saved text
     location.href = songbook.songUri(name);
   });
+
+  // File > New Song… (Cmd+N): asks about unsaved changes once the new song is named
+  onMenu('new-song', () => newSong({ confirm: () => !isDirty() || confirmDiscard('Start a new song') }));
 
   // File > Open… (Cmd+O): a song on its own
   onMenu('open-file', async () => {
