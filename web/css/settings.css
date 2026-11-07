@@ -1,9 +1,8 @@
-/* The Settings window. */
+/* The Settings window, on the editor's wood grain (wood.css). */
 body {
   margin: 0;
   font: 14px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
-  color: #333;
-  background: #fbfaf7;
+  color: #2b1100;
 }
 
 main {
@@ -13,14 +12,18 @@ main {
 fieldset {
   margin: 0 0 16px;
   padding: 10px 14px 12px;
-  border: 1px solid #e0d9cc;
-  border-radius: 6px;
+  border: 1px solid #c58b45;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
 }
 
 legend {
-  padding: 0 4px;
-  color: #5b3a1e;
-  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 5px;
+  background: #933f17;
+  color: #f4e19f;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(86, 3, 5, 0.95);
 }
 
 label {
@@ -30,7 +33,7 @@ label {
 
 .hint,
 .note {
-  color: #777;
+  color: #6b4a2a;
   font-size: 13px;
 }
 

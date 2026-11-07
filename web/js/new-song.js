@@ -17,13 +17,15 @@ function askTitleAndArtist(songbookName) {
   dialog.className = 'studioDialog';
   dialog.innerHTML = `
     <form>
-      <h2>New Song</h2>
+      <h2 class="woodBar">New Song</h2>
+      <div class="studioDialogBody woodChip">
       <p class="studioDialogNote">In the songbook <strong>${escapeHtml(songbookName)}</strong></p>
-      <label>Title <input name="title" required autocomplete="off" spellcheck="false" /></label>
-      <label>Artist <input name="artist" autocomplete="off" spellcheck="false" placeholder="optional" /></label>
+      <label>Title <input name="title" class="woodInput" required autocomplete="off" spellcheck="false" /></label>
+      <label>Artist <input name="artist" class="woodInput" autocomplete="off" spellcheck="false" placeholder="optional" /></label>
       <div class="studioDialogButtons">
-        <button type="button" class="studioDialogCancel">Cancel</button>
-        <button class="studioDialogDefault">Create</button>
+        <button type="button" class="studioDialogCancel woodBtn">Cancel</button>
+        <button class="studioDialogDefault woodBtn orange">Create</button>
+      </div>
       </div>
     </form>`;
   document.body.append(dialog);

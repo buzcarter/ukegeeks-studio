@@ -37,7 +37,7 @@ The owner's list from 2026-11-06, after the prototype worked. Roughly in order; 
 - **Settings** for the above, kept by the app. (Done: file types and reopening the last songbook; file naming comes with that item.) A Settings window (Cmd+,) and `settings.json`, read and written through Rust. First settings: song file types to list (`.cpm` on; `.txt`, which covers `.cpm.txt`, off; the other ChordPro extensions `.cho`, `.crd`, `.chopro`, `.chord`, `.chordpro`, `.pro` off), and reopening the last songbook at launch.
 - **File > Open…** (Cmd+O) for one song on its own. (Done; Open Songbook… is now Shift+Cmd+O.) Double-clicking a song in Finder comes with the bundle (Phase 5).
 - **File > New Song** (Cmd+N). (Done.) title and artist, then "Title - Artist.cpm" in the open songbook (`SongRepository.create()`). No New Songbook item for 1.0: the folder picker's New Folder button does it.
-- **Keep the faux-wood look** of the Song-a-Matic headers and dialogs in the app's own chrome and dialogs. Hokey, but it's UkeGeeks.
+- **Keep the faux-wood look** (done: `web/css/wood.css`) of the Song-a-Matic headers and dialogs in the app's own chrome and dialogs. Hokey, but it's UkeGeeks.
 - **Print.** (Done: File > Print….) One song, nicely; the editor already has print styles and paper sizes.
 
 Later, maybe release 1.2: **Ace as the default editor** instead of the plain Edit Song box, which means working out how the Chord Builder fits with it.

@@ -1,0 +1,80 @@
+/*
+ * The Song-a-Matic's faux-wood look for the app's own pages and dialogs. Colors and
+ * images come from the editor's CSS (@ukegeeks/song-editor, ugsEditorPlus.min.css):
+ * its menu bar (.ugsAppMenuBar), dialogs (.overlay) and orange buttons (.baseBtn.orange).
+ * The images are the editor's own, copied into vendor/ by scripts/vendor.js.
+ */
+
+/* The wooden strip of the editor's menu bar and dialog headers */
+.woodBar {
+  border-top: 1px solid #84623c;
+  border-bottom: 1px solid #240e01;
+  background: #933f17 url("../vendor/song-editor/img/editor/editorSprite.png") 0 -100px repeat-x;
+  color: #f4e19f;
+  text-shadow: 1px 2px 0 rgba(86, 3, 5, 0.95);
+}
+
+/* "UkeGeeks Studio", as the editor writes its logo (.ugsLogo) */
+.woodLogo {
+  color: #f2a848;
+  font-family: 'Peralta', cursive;
+  font-weight: normal;
+  text-shadow: 1px 1px #332222;
+}
+
+/* The wood-grain panel inside the editor's dialogs */
+.woodChip {
+  background: #e9c48a url("../vendor/song-editor/img/editor/woodChip.png") repeat 0 0;
+}
+
+/* Buttons: the editor's .baseBtn, orange for the main one */
+.woodBtn {
+  padding: 0.25em 1em;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background-color: #999;
+  color: #fff;
+  font: inherit;
+  font-weight: bold;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.woodBtn:hover {
+  background-color: #888;
+}
+
+.woodBtn.orange {
+  border-color: #da7c0c;
+  background: #f78d1d linear-gradient(to bottom, #faa51a 0%, #f47a20 100%);
+  color: #fef4e9;
+  text-shadow: #da7c0c 0 1px 0, #faa51a 0 -1px 0;
+}
+
+.woodBtn.orange:hover {
+  background: #f47c20 linear-gradient(to bottom, #f88e11 0%, #f06015 100%);
+}
+
+.woodBtn.orange:active {
+  color: #fcd3a5;
+  background-image: linear-gradient(to bottom, #f47a20 0%, #faa51a 100%);
+}
+
+/* Text boxes, as in the editor's dialogs */
+.woodInput {
+  border: 1px solid #e1b166;
+  background-color: rgba(255, 255, 255, 0.7);
+  transition: background-color 500ms linear;
+}
+
+.woodInput:hover {
+  border-color: #444;
+  background-color: rgba(255, 255, 200, 0.7);
+}
+
+.woodInput:focus {
+  border-color: #6c280c;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 3px 3px 5px rgba(0, 0, 0, 0.3);
+}
