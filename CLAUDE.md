@@ -1,9 +1,10 @@
 # UkeGeeks Studio: notes for Claude
 
-A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele songbooks. It hosts the Song-a-Matic editor from `@ukegeeks/song-editor`. Plan: [docs/ROADMAP.md](docs/ROADMAP.md); why things are the way they are: [docs/DECISIONS.md](docs/DECISIONS.md). Current state and how to start: [docs/HANDOFF.md](docs/HANDOFF.md).
+A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele songbooks. It hosts the Song-a-Matic editor from `@ukegeeks/song-editor`. Plan: [docs/ROADMAP.md](docs/ROADMAP.md); task board: [docs/BOARD.md](docs/BOARD.md); why things are the way they are: [docs/DECISIONS.md](docs/DECISIONS.md). Current state and how to start: [docs/HANDOFF.md](docs/HANDOFF.md).
 
 ## Working with the owner (Buz)
 
+- **Tasks and branches:** work goes in numbered tasks on [docs/BOARD.md](docs/BOARD.md), one at a time. A task's branch is `feature/task-NNNN_short-name` (or `bugfix/task-NNNN_…`), for example `feature/task-0023_make-new-pickles`. New tasks take the next number; numbers never change when tasks are reordered. The task's PR updates the board (Doing → Done, with the PR number).
 - **Branches:** always edit on a `feature/…` or `bugfix/…` branch, never on `main`. Check the branch before the first edit and again before every commit: the owner merges PRs and switches checkouts to `main` mid-session.
 - **Commits:** one commit per finished chunk of work, not one big commit at the end. One PR per piece of work. Merge stacked PRs with "Create a merge commit", not squash.
 - **The owner pushes, publishes to npm, creates releases and changes GitHub settings.** Prepare the exact commands; don't run them.

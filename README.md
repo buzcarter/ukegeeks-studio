@@ -33,6 +33,7 @@ In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (fo
 
 | Shortcut | Menu item | What it does |
 |---|---|---|
+| Cmd+N | File > New Song… | Asks for a title and artist, then creates "Title - Artist.cpm" in the open songbook (never overwriting) and opens it. With no songbook open, picks one first. |
 | Cmd+O | File > Open… | Opens one song file on its own (any ChordPro type), without its folder. In the editor, asks about unsaved changes first. |
 | Shift+Cmd+O | File > Open Songbook… | Picks a songbook folder. In the editor, asks about unsaved changes first, then goes back to the song list. |
 | Cmd+S | File > Save | Saves the song (the editor's Save button). |
