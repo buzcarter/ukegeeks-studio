@@ -13,7 +13,8 @@
     "test": "node --test \"test/**/*.test.js\"",
     "vendor": "node scripts/vendor.js",
     "tauri": "tauri",
-    "dev": "tauri dev"
+    "dev": "tauri dev",
+    "preview": "npm run vendor && node scripts/preview/server.js"
   },
   "dependencies": {
     "@ukegeeks/ace-chordpro-extension": "1.0.0",
