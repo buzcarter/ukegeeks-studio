@@ -24,6 +24,7 @@ export const ALL_EXTENSIONS = ['.cpm', '.txt', '.cho', '.crd', '.chopro', '.chor
 
 const SETTINGS_EVENT = 'studio://settings';
 const LIBRARY_EVENT = 'studio://library';
+const FAVORITES_EVENT = 'studio://favorites';
 // before Settings existed, the song list's "Also list .cpm.txt songs" box (localStorage)
 const OLD_INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
 
@@ -214,7 +215,7 @@ export function removeSongbook(folder) {
   return tauri().core.invoke('library_remove', { folder });
 }
 
-/** Remembers the songbook selected in the sidebar, for the next launch. */
+/** Remembers the songbook (or FAVORITES_SELECTED) selected in the sidebar, for the next launch. */
 export function selectSongbook(folder) {
   return tauri().core.invoke('library_select', { folder })
     .catch((err) => console.warn('[studio] library_select:', err));
@@ -224,6 +225,52 @@ export function selectSongbook(folder) {
 export function onLibraryChanged(callback) {
   tauri().event.listen(LIBRARY_EVENT, (event) => callback(event.payload))
     .catch((err) => console.error('[studio] Library events:', err));
+}
+
+// ---- Favorites (src-tauri/src/favorites.rs) ----
+
+/** The Library's `selected` when the sidebar's Favorites was chosen last. */
+export const FAVORITES_SELECTED = 'list:favorites';
+const FAVORITES_ID = 'favorites';
+
+/**
+ * The Favorites: { lists: [{ id, name, songs: [{ folder, file }, …] }] }. One list
+ * today, "Favorites"; kept as lists so set lists can come later. Empty outside the app.
+ */
+export async function getFavorites() {
+  try {
+    return await tauri().core.invoke('favorites_get');
+  } catch (err) {
+    console.warn('[studio] favorites_get:', err);
+    return { lists: [] };
+  }
+}
+
+/** The starred songs, [{ folder, file }, …], in the order starred. */
+export function favoriteSongs(favorites) {
+  const list = favorites.lists.find((l) => l.id === FAVORITES_ID);
+  return list ? list.songs : [];
+}
+
+export function isStarred(favorites, folder, file) {
+  return favoriteSongs(favorites).some((s) => s.folder === folder && s.file === file);
+}
+
+/** Stars or unstars a song of a songbook in the Library. Resolves to the Favorites. */
+export function starSong(folder, file, starred) {
+  return tauri().core.invoke('favorites_star', { folder, file, starred });
+}
+
+/** A song's file was renamed: its favorite follows (if it's starred). */
+export function renameFavorite(folder, from, to) {
+  return tauri().core.invoke('favorites_rename', { folder, from, to })
+    .catch((err) => console.warn('[studio] favorites_rename:', err));
+}
+
+/** Runs callback(favorites) whenever a star changes, in any window. */
+export function onFavoritesChanged(callback) {
+  tauri().event.listen(FAVORITES_EVENT, (event) => callback(event.payload))
+    .catch((err) => console.error('[studio] Favorites events:', err));
 }
 
 /**

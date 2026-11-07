@@ -84,6 +84,22 @@ body {
   color: #fff;
 }
 
+/* Favorites, above the songbooks */
+.favoritesList {
+  flex: 0 0 auto;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #d9d2c4;
+}
+
+.favoritesIcon {
+  color: #c98a12;
+}
+
+.favoritesList button[aria-current="true"] .favoritesIcon {
+  color: #fdda61;
+}
+
 .songbookParent {
   opacity: 0.65;
   font-size: 12px;
@@ -200,7 +216,45 @@ main {
   border-bottom: 1px solid #e6e1d8;
 }
 
+/* a song: its ☆/★ (Favorites), then the link that opens it */
+.songRow {
+  display: flex;
+  align-items: baseline;
+}
+
+.songStar {
+  flex: 0 0 auto;
+  width: 26px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: #b9ad98;
+  font: 17px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  cursor: pointer;
+}
+
+.songStar:hover {
+  color: #c98a12;
+}
+
+.songStar[aria-pressed="true"] {
+  color: #e0a21b;
+}
+
+/* a favorite whose file is gone */
+.songRow.isMissing a {
+  opacity: 0.55;
+}
+
+.songMissing {
+  color: #b3261e;
+  font-size: 12px;
+  font-style: italic;
+}
+
 .songList a {
+  flex: 1;
+  min-width: 0;
   display: block;
   padding: 8px 6px;
   color: inherit;

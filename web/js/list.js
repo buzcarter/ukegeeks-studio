@@ -11,11 +11,16 @@
  *
  * The search box (Cmd+F) searches every songbook in the Library by title, artist or
  * lyrics (web/js/search.js); clearing it (or Esc) shows the songbook again.
+ *
+ * Favorites (src-tauri/src/favorites.rs): the ☆ beside every song (in a songbook, in
+ * search results, and in song windows) stars it. Favorites, at the top of the
+ * sidebar, lists the starred songs of every songbook, sorted by title.
  */
 import {
-  addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, getFolder, getLibrary, getSettings, loadSettings,
-  onLibraryChanged, onSettingsChanged, openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook,
-  renameSongbook, selectSongbook, setFolder, songbookName, songExtensions,
+  addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, FAVORITES_SELECTED, favoriteSongs, getFavorites, getFolder,
+  getLibrary, getSettings, isStarred, loadSettings, onFavoritesChanged, onLibraryChanged, onSettingsChanged,
+  openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook, renameSongbook, selectSongbook,
+  setFolder, songbookName, songExtensions, starSong,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 import { newSong } from './new-song.js';
@@ -28,9 +33,25 @@ const listEl = document.getElementById('songList');
 const songbooksEl = document.getElementById('songbookList');
 const removeBtn = document.getElementById('removeSongbook');
 const searchEl = document.getElementById('librarySearch');
+const favoritesBtn = document.getElementById('showFavorites');
 const firstStatus = statusEl.innerHTML;
 
 let library = { songbooks: [], selected: null };
+let favorites = { lists: [] };
+/** Favorites is selected in the sidebar (instead of a songbook) */
+let showingFavorites = false;
+// remembered for this window, like the open songbook (getFolder)
+const FAVORITES_KEY = 'studio.showingFavorites';
+function rememberFavorites(on) {
+  try {
+    if (on) sessionStorage.setItem(FAVORITES_KEY, '1');
+    else sessionStorage.removeItem(FAVORITES_KEY);
+  } catch { /* the Library's `selected` still has it */ }
+}
+function wasShowingFavorites() {
+  try { return sessionStorage.getItem(FAVORITES_KEY) === '1'; } catch { return false; }
+}
+const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 
 function showStatus(html, isError = false) {
   statusEl.innerHTML = html;
@@ -54,11 +75,116 @@ function showLibrary() {
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
   songbooksEl.innerHTML = items
     .map(({ folder, name, twin }) => `<li><button type="button" data-folder="${escapeHtml(folder)}" title="${escapeHtml(folder)}"`
-      + ` aria-current="${folder === open}">${escapeHtml(name)}`
+      + ` aria-current="${!showingFavorites && folder === open}">${escapeHtml(name)}`
       + (twin ? ` <span class="songbookParent">— ${escapeHtml(parentName(folder))}</span>` : '')
       + '</button></li>')
     .join('');
-  removeBtn.disabled = !inLibrary(open);
+  favoritesBtn.setAttribute('aria-current', String(showingFavorites));
+  removeBtn.disabled = showingFavorites || !inLibrary(open);
+}
+
+/**
+ * A song in the list: its ☆/★ (Favorites) and a link that opens it. inner: the
+ * link's HTML. missing: a favorite whose file is gone.
+ */
+function songRow({ folder, filename, inner, missing = false }) {
+  const starred = isStarred(favorites, folder, filename);
+  const label = starred ? 'Remove from Favorites' : 'Add to Favorites';
+  return `<li class="songRow${missing ? ' isMissing' : ''}">`
+    + `<button type="button" class="songStar" data-folder="${escapeHtml(folder)}" data-filename="${escapeHtml(filename)}"`
+    + ` aria-pressed="${starred}" title="${label}" aria-label="${label}">${starred ? '★' : '☆'}</button>`
+    + `<a href="#" data-folder="${escapeHtml(folder)}" data-filename="${escapeHtml(filename)}"${missing ? ' data-missing="1"' : ''}>`
+    + `${inner}</a></li>`;
+}
+
+/** The stars shown, after a star changed (here or in a song window). */
+function showStars() {
+  for (const star of listEl.querySelectorAll('button.songStar')) {
+    const starred = isStarred(favorites, star.dataset.folder, star.dataset.filename);
+    const label = starred ? 'Remove from Favorites' : 'Add to Favorites';
+    star.setAttribute('aria-pressed', String(starred));
+    star.textContent = starred ? '★' : '☆';
+    star.title = label;
+    star.setAttribute('aria-label', label);
+  }
+}
+
+/** Favorites changed: Favorites lists them again; elsewhere just the stars change. */
+function favoritesChanged(next) {
+  favorites = next;
+  if (showingFavorites && !searching()) showFavorites();
+  else showStars();
+}
+
+async function toggleStar(star) {
+  const starred = star.getAttribute('aria-pressed') !== 'true';
+  try {
+    favoritesChanged(await starSong(star.dataset.folder, star.dataset.filename, starred));
+  } catch (err) {
+    showStatus(escapeHtml(err.message || String(err)), true);
+  }
+}
+
+/** Whatever is selected in the sidebar, shown again (unless a search is showing). */
+function showSelected() {
+  const open = getFolder();
+  if (showingFavorites) showFavorites();
+  else if (open) showSongbook(open);
+  else showNothingOpen();
+}
+
+let favoritesRun = 0;
+
+/**
+ * Favorites: the starred songs of every songbook in the Library, sorted by title,
+ * each with its songbook. A starred song whose file is gone shows as "not found".
+ */
+async function showFavorites() {
+  if (searching()) return;
+  const run = ++favoritesRun;
+  const starred = favoriteSongs(favorites).filter((s) => inLibrary(s.folder));
+  if (!starred.length) {
+    listEl.innerHTML = '';
+    showStatus('<strong>Favorites</strong>: none yet. Click the ☆ beside a song, in any songbook, to add it here.');
+    return;
+  }
+  const entries = await Promise.all(starred.map(async ({ folder, file }) => {
+    const repo = openSongbook(folder);
+    const text = await repo.read(file);
+    const song = text == null ? null : parseSong(text);
+    return {
+      folder,
+      filename: file,
+      songbook: songbookName(library, folder),
+      title: fixLeadingArticle((song && song.title) || filenameToTitle(repo.baseName(file))),
+      details: song ? [song.artist, song.subtitle].filter(Boolean) : [],
+      missing: !song,
+    };
+  }));
+  if (run !== favoritesRun || !showingFavorites || searching()) return; // something else meanwhile
+  entries.sort((a, b) => collator.compare(a.title, b.title) || collator.compare(a.songbook, b.songbook));
+  const missing = entries.filter((e) => e.missing).length;
+  showStatus(`<strong>Favorites</strong>: ${entries.length === 1 ? '1 song' : `${entries.length} songs`}`
+    + (missing ? ` (${missing} not found)` : ''));
+  listEl.innerHTML = entries
+    .map((entry) => songRow({
+      ...entry,
+      inner: `<span class="songTitle">${escapeHtml(entry.title)}</span>`
+        + (entry.details.length ? ` <span class="songDetails">${entry.details.map(escapeHtml).join(' · ')}</span>` : '')
+        + `<span class="songSongbook" title="${escapeHtml(entry.folder)}">${escapeHtml(entry.songbook)}</span>`
+        + (entry.missing ? ' <span class="songMissing">not found</span>' : ''),
+    }))
+    .join('');
+}
+
+/** Clicking Favorites in the sidebar: shows them, ending a search. */
+async function selectFavorites() {
+  searchEl.value = '';
+  showingFavorites = true;
+  rememberFavorites(true);
+  showLibrary();
+  selectSongbook(FAVORITES_SELECTED);
+  await showFavorites();
 }
 
 async function showSongbook(folder) {
@@ -72,6 +198,7 @@ async function showSongbook(folder) {
     return;
   }
   const songs = await openSongbook(folder).getSongList();
+  if (showingFavorites || searching()) return; // chosen something else meanwhile
   const name = `<strong title="${escapeHtml(folder)}">${escapeHtml(songbookName(library, folder))}</strong>`;
   const count = songs.length === 1 ? '1 song' : `${songs.length} songs`;
   showStatus(`${name}: ${count}`);
@@ -88,10 +215,12 @@ async function showSongbook(folder) {
   listEl.innerHTML = songs
     .map((song) => {
       const details = [song.artist, song.subtitle].filter(Boolean).map(escapeHtml).join(' · ');
-      return `<li><a href="${escapeHtml(song.uri)}" data-filename="${escapeHtml(song.filename)}">`
-        + `<span class="songTitle">${escapeHtml(song.title)}</span>`
-        + (details ? ` <span class="songDetails">${details}</span>` : '')
-        + '</a></li>';
+      return songRow({
+        folder,
+        filename: song.filename,
+        inner: `<span class="songTitle">${escapeHtml(song.title)}</span>`
+          + (details ? ` <span class="songDetails">${details}</span>` : ''),
+      });
     })
     .join('');
 }
@@ -108,6 +237,8 @@ async function otherSongTypes(folder, listed) {
 
 /** Opens a songbook of the Library in this window and remembers it for next time. */
 async function selectFolder(folder) {
+  showingFavorites = false;
+  rememberFavorites(false);
   setFolder(folder);
   showLibrary();
   selectSongbook(folder);
@@ -143,9 +274,11 @@ async function removeFolder(folder) {
   }
   if (getFolder() === folder) {
     try { sessionStorage.removeItem('studio.songbookFolder'); } catch { /* nothing open anyway */ }
-    showNothingOpen();
+    if (!showingFavorites) showNothingOpen();
   }
   showLibrary();
+  // its favorites aren't shown while it's out of the Library
+  if (showingFavorites && !searching()) showFavorites();
 }
 
 /** File > Open… (Cmd+O): one song on its own, in its own window. */
@@ -169,7 +302,8 @@ async function renameFolder(folder) {
     return;
   }
   showLibrary();
-  if (getFolder() === folder) showSongbook(folder);
+  if (searching()) runSearch();
+  else if (showingFavorites || getFolder() === folder) showSelected();
 }
 
 songbooksEl.addEventListener('dblclick', (event) => {
@@ -227,7 +361,7 @@ function openFromSidebar(folder) {
   if (searching()) {
     searchEl.value = '';
     selectFolder(folder);
-  } else if (folder !== getFolder()) {
+  } else if (showingFavorites || folder !== getFolder()) {
     selectFolder(folder);
   }
 }
@@ -236,14 +370,27 @@ songbooksEl.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-folder]');
   if (button) openFromSidebar(button.dataset.folder);
 });
+favoritesBtn.addEventListener('click', () => {
+  if (!showingFavorites || searching()) selectFavorites();
+});
 
 // A song opens in its own window rather than in this one; a search result says
 // which songbook it's from
 listEl.addEventListener('click', (event) => {
+  const star = event.target.closest('button.songStar');
+  if (star) {
+    toggleStar(star);
+    return;
+  }
   const link = event.target.closest('a[data-filename]');
   const folder = link && (link.dataset.folder || getFolder());
   if (!link || !folder || event.defaultPrevented) return;
   event.preventDefault();
+  if (link.dataset.missing) {
+    showStatus(`“${escapeHtml(link.dataset.filename)}” isn't in <strong>${escapeHtml(songbookName(library, folder))}</strong> any more:`
+      + ' it was moved, renamed or deleted outside the app. Click its ★ to take it out of Favorites.', true);
+    return;
+  }
   openSongbookSong(folder, link.dataset.filename);
 });
 
@@ -265,8 +412,7 @@ onMenu('open-file', chooseSong);
 onSettingsChanged(() => {
   searchIndex = null;
   if (searching()) runSearch();
-  const open = getFolder();
-  if (open) showSongbook(open);
+  else showSelected();
 });
 
 // A songbook was added elsewhere (New Song… in a song window with none open)
@@ -275,7 +421,11 @@ onLibraryChanged((next) => {
   searchIndex = null;
   showLibrary();
   if (searching()) runSearch();
+  else if (showingFavorites) showFavorites(); // songbook names, or songbooks gone
 });
+
+// A song was starred or unstarred (here, or in a song window)
+onFavoritesChanged(favoritesChanged);
 
 // ---- Search ----
 
@@ -337,9 +487,7 @@ async function runSearch() {
   const query = searchEl.value.trim();
   const run = ++searchRun;
   if (!query) {
-    const open = getFolder();
-    if (open) showSongbook(open);
-    else showNothingOpen();
+    showSelected();
     return;
   }
   if (!searchIndex) {
@@ -361,12 +509,14 @@ async function runSearch() {
     ? `${results.length === 1 ? '1 song matches' : `${results.length} songs match`} ${quoted} in the Library`
     : `No songs in the Library match ${quoted}.`);
   listEl.innerHTML = results
-    .map(({ entry, snippet }) => `<li><a href="#" data-folder="${escapeHtml(entry.folder)}" data-filename="${escapeHtml(entry.filename)}">`
-      + `<span class="songTitle">${escapeHtml(entry.title)}</span>`
-      + (entry.artist ? ` <span class="songDetails">${escapeHtml(entry.artist)}</span>` : '')
-      + `<span class="songSongbook" title="${escapeHtml(entry.folder)}">${escapeHtml(entry.songbook)}</span>`
-      + (snippet ? `<span class="songSnippet">${markWords(snippet, query)}</span>` : '')
-      + '</a></li>')
+    .map(({ entry, snippet }) => songRow({
+      folder: entry.folder,
+      filename: entry.filename,
+      inner: `<span class="songTitle">${escapeHtml(entry.title)}</span>`
+        + (entry.artist ? ` <span class="songDetails">${escapeHtml(entry.artist)}</span>` : '')
+        + `<span class="songSongbook" title="${escapeHtml(entry.folder)}">${escapeHtml(entry.songbook)}</span>`
+        + (snippet ? `<span class="songSnippet">${markWords(snippet, query)}</span>` : ''),
+    }))
     .join('');
 }
 
@@ -394,19 +544,21 @@ document.addEventListener('keydown', (event) => {
 window.addEventListener('focus', () => {
   searchIndex = null;
   if (searching()) runSearch();
+  else if (showingFavorites) showFavorites(); // titles may have changed
 });
 
-// The songbook open in this window, else (if Settings says so) the one selected
-// last time.
+// The songbook (or Favorites) open in this window, else (if Settings says so) the
+// songbook, or Favorites, selected last time.
 async function showFirstSongbook() {
   await loadSettings();
-  library = await getLibrary();
+  [library, favorites] = await Promise.all([getLibrary(), getFavorites()]);
   let folder = getFolder();
   if (!inLibrary(folder)) folder = null;
-  if (!folder && getSettings().reopenLastSongbook && inLibrary(library.selected)) {
-    folder = library.selected;
-  }
-  if (folder) await selectFolder(folder);
+  const reopen = getSettings().reopenLastSongbook;
+  if (wasShowingFavorites()) await selectFavorites();
+  else if (!folder && reopen && library.selected === FAVORITES_SELECTED) await selectFavorites();
+  else if (!folder && reopen && inLibrary(library.selected)) await selectFolder(library.selected);
+  else if (folder) await selectFolder(folder);
   else {
     showLibrary();
     showNothingOpen();

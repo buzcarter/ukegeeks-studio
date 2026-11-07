@@ -5,8 +5,9 @@
  *
  * - Files live in localStorage under "fakefs:<path>". Two songbooks are seeded:
  *   /songs (a.cpm, b.cpm) and /other (z.cpm), both in the Library, /other selected.
- * - Settings, the recent lists and the Library live in localStorage too
- *   ("fakesettings", "fakerecent", "fakelibrary").
+ * - Settings, the recent lists, the Library and Favorites live in localStorage too
+ *   ("fakesettings", "fakerecent", "fakelibrary", "fakefavorites"). Starring tells
+ *   every open tab (a "storage" event), as Rust tells every window.
  * - Add Songbook: set __nextOpen to a folder first (one with files, like /songs).
  * - Dialogs answer from globals you set first: __nextOpen (a path, or null for
  *   Cancel), __nextSave, __nextAsk (true/false), __nextChoice (a button label for
@@ -88,6 +89,27 @@
       return saveLibrary(library);
     },
     library_select: ({ folder }) => saveLibrary({ ...commands.library_get(), selected: folder }),
+    favorites_get: () => read('fakefavorites', { lists: [{ id: 'favorites', name: 'Favorites', songs: [] }] }),
+    favorites_star: ({ folder, file, starred }) => {
+      if (starred && !commands.library_get().songbooks.some((s) => s.folder === folder)) {
+        throw `not a songbook in the Library: ${folder}`;
+      }
+      const favorites = commands.favorites_get();
+      const list = favorites.lists.find((l) => l.id === 'favorites');
+      const is = (s) => s.folder === folder && s.file === file;
+      if (!starred) list.songs = list.songs.filter((s) => !is(s));
+      else if (!list.songs.some(is)) list.songs.push({ folder, file });
+      return saveFavorites(favorites);
+    },
+    favorites_rename: ({ folder, from, to }) => {
+      const favorites = commands.favorites_get();
+      for (const list of favorites.lists) {
+        const has = (f) => list.songs.some((s) => s.folder === folder && s.file === f);
+        if (has(to)) list.songs = list.songs.filter((s) => !(s.folder === folder && s.file === from));
+        else list.songs.forEach((s) => { if (s.folder === folder && s.file === from) s.file = to; });
+      }
+      return saveFavorites(favorites);
+    },
     recent_add_song: (song) => {
       const recent = commands.recent_list();
       recent.songs = [song, ...recent.songs.filter((s) => !(s.folder === song.folder && s.filename === song.filename))];
@@ -117,6 +139,18 @@
     if (listeners['studio://library']) listeners['studio://library']({ payload: library });
     return library;
   }
+
+  function saveFavorites(favorites) {
+    localStorage.setItem('fakefavorites', JSON.stringify(favorites));
+    if (listeners['studio://favorites']) listeners['studio://favorites']({ payload: favorites });
+    return favorites;
+  }
+  // other tabs (song windows) hear about it too
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'fakefavorites' && listeners['studio://favorites']) {
+      listeners['studio://favorites']({ payload: JSON.parse(event.newValue) });
+    }
+  });
 
   const appWindow = {
     label: window.name === 'main' ? 'main' : 'song-1',
