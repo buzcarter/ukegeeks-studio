@@ -4,6 +4,14 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0017: search the Library (#20, 2026-11-07)
+
+- **A search box above the song list** (Cmd+F) searches every songbook in the Library by title, artist or lyrics. Esc, clearing it, or choosing a songbook goes back to the songbook.
+- **Lyrics without chords:** "hello world" finds "[C]Hello [G]world"; directives, comments and tabs are skipped. Case, accents and curly quotes don't matter.
+- **Every word must match;** title matches rank first, then artist, then lyrics.
+- **Results** show their songbook, and for a lyric match the line with the words marked. A result opens in its own window, from its own songbook.
+- **`web/js/search.js`** with 5 Node tests (`test/search.test.js`); `npm test` quiets Node's warning about loading it as an ES module.
+
 ### Task 0022: a songbook's right-click menu (#19, 2026-11-07)
 
 - **Right-click a songbook in the Library:** Open, New Song…, Rename…, and Remove from Library.

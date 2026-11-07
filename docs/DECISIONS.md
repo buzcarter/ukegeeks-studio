@@ -33,6 +33,17 @@ Agreed with the owner on 2026-11-07:
 - **Printing a whole songbook** (one PDF) is still Phase 4. Each song prints from its window.
 - **Staying open on a Mac with no windows** is task 0020, its own PR.
 
+### Search (task 0017)
+
+Chosen without a separate talk, to keep moving (2026-11-07); change freely:
+
+- **One search box above the song list, across the whole Library** (the story: "quickly play any song"). Clearing it, Esc, or choosing a songbook goes back to that songbook's songs.
+- **Title, artist and lyrics.** Lyrics are the song's words without chords, directives, comments or tabs, so "hello world" finds "[C]Hello [G]world". Case, accents and curly quotes don't matter.
+- **Every word must match somewhere;** a word can be part of a longer one. Title matches rank first, then artist, then lyrics; the whole search as a phrase ranks higher.
+- **Results show their songbook,** and for a lyric match the line with the words marked.
+- **Cmd+F in the Library window,** not a menu item: as a menu shortcut it would take Cmd+F from the editor's own Find in song windows.
+- **No saved index:** the songs are read when a search starts, and again whenever the Library window comes forward (songs may have changed in their windows). Plenty fast for hundreds of songs; revisit for thousands.
+
 ### How song windows work (task 0016)
 
 - **One window per song,** labeled `song-1`, `song-2`, …; the song list is `main`. Opening a song that's open brings its window forward (Rust keeps which file each window holds; the page tells it again after a rename or Save As).

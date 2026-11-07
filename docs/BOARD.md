@@ -14,7 +14,6 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What |
 |---|---|
-| 0017 | Search the Library by title, artist or song text |
 | 0018 | Favorites: songs starred from any songbook, in one list |
 | 0019 | A first-run welcome or short tour, so a new player gets the most out of the app |
 
@@ -31,6 +30,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0017 | Search the Library by title, artist or lyrics: a search box above the song list (Cmd+F), across every songbook | #20 |
 | 0022 | A songbook's right-click menu: Open, New Song… (in that songbook), Rename…, Remove from Library | #19 |
 | 0021 | Songbook names: asked when a folder is added (folders are often just "songs" or "cpm"), Rename… in the sidebar | #18 |
 | 0020 | On a Mac, the app stays running when its last window closes; clicking the Dock icon brings back the Library (elsewhere it still quits) | #17 |

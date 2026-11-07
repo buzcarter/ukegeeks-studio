@@ -38,6 +38,7 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 | `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
 | `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. Rust unit tests: `cargo test` in `src-tauri/`. |
 | `web/js/songbook-name.js` | The Songbook Name dialog (adding a songbook, Rename…). |
+| `web/js/search.js` | Searching the Library: lyrics without chords, folding case and accents, ranking. Plain functions, tested in `test/search.test.js`; `list.js` reads the songs and shows the results. |
 | `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
 | `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
@@ -45,7 +46,7 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 
 ## How to test
 
-- **`npm test`:** `SongRepository` and the ChordPro parsing (14 tests).
+- **`npm test`:** `SongRepository` and the ChordPro parsing, and search (19 tests). `cargo test` in `src-tauri/` has the Library's.
 - **`npm run preview`:** serves `web/` on http://localhost:8765 with a stand-in for `window.__TAURI__` (`scripts/preview/fake-tauri.js`). Files live in localStorage, and dialogs answer from globals (`__nextOpen`, `__nextSave`, `__nextChoice`, …). Drive menu items with `__menu('save')`, and read what the page asked Tauri to do in `__log`. Open it in Claude Code's browser pane. The fake's header comment explains it all.
 - **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors (`src-tauri/target/debug/ukegeeks-studio`, kill it after a few seconds), then ask the owner to try it, saying exactly what to click.
 - **Windows:** the Windows menu code (`cfg(not(target_os = "macos"))`) has never been compiled; only the Mac target is installed.
