@@ -8,6 +8,9 @@
  * name. Right-click a songbook for Open, New Song…, Rename… (or double-click it)
  * and Remove from Library (or −), which takes it out; its folder and songs stay on
  * disk.
+ *
+ * The search box (Cmd+F) searches every songbook in the Library by title, artist or
+ * lyrics (web/js/search.js); clearing it (or Esc) shows the songbook again.
  */
 import {
   addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, getFolder, getLibrary, getSettings, loadSettings,
@@ -16,11 +19,15 @@ import {
 } from './songbook.js';
 import { onMenu } from './menu.js';
 import { newSong } from './new-song.js';
+import { fold, makeEntry, searchSongs } from './search.js';
+
+const { parseSong, fixLeadingArticle, filenameToTitle } = globalThis.studioSongs;
 
 const statusEl = document.getElementById('songbookStatus');
 const listEl = document.getElementById('songList');
 const songbooksEl = document.getElementById('songbookList');
 const removeBtn = document.getElementById('removeSongbook');
+const searchEl = document.getElementById('librarySearch');
 const firstStatus = statusEl.innerHTML;
 
 let library = { songbooks: [], selected: null };
@@ -55,6 +62,7 @@ function showLibrary() {
 }
 
 async function showSongbook(folder) {
+  if (searching()) return; // the results stay until the search is cleared
   listEl.innerHTML = '';
   showStatus(`Reading <strong>${escapeHtml(songbookName(library, folder))}</strong>…`);
   try {
@@ -216,13 +224,21 @@ document.addEventListener('keydown', (event) => {
 
 songbooksEl.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-folder]');
-  if (button && button.dataset.folder !== getFolder()) selectFolder(button.dataset.folder);
+  if (!button) return;
+  // choosing a songbook ends a search
+  if (searching()) {
+    searchEl.value = '';
+    selectFolder(button.dataset.folder);
+  } else if (button.dataset.folder !== getFolder()) {
+    selectFolder(button.dataset.folder);
+  }
 });
 
-// A song opens in its own window rather than in this one
+// A song opens in its own window rather than in this one; a search result says
+// which songbook it's from
 listEl.addEventListener('click', (event) => {
   const link = event.target.closest('a[data-filename]');
-  const folder = getFolder();
+  const folder = link && (link.dataset.folder || getFolder());
   if (!link || !folder || event.defaultPrevented) return;
   event.preventDefault();
   openSongbookSong(folder, link.dataset.filename);
@@ -244,6 +260,8 @@ onMenu('open-file', chooseSong);
 
 // Settings changed which song types to list
 onSettingsChanged(() => {
+  searchIndex = null;
+  if (searching()) runSearch();
   const open = getFolder();
   if (open) showSongbook(open);
 });
@@ -251,7 +269,128 @@ onSettingsChanged(() => {
 // A songbook was added elsewhere (New Song… in a song window with none open)
 onLibraryChanged((next) => {
   library = next;
+  searchIndex = null;
   showLibrary();
+  if (searching()) runSearch();
+});
+
+// ---- Search ----
+
+/** Every song of the Library, ready for searchSongs(); built when a search starts. */
+let searchIndex = null;
+let searchRun = 0;
+
+const searching = () => searchEl.value.trim() !== '';
+
+/** Reads every songbook's songs. Songbooks that can't be read are skipped. */
+async function buildSearchIndex() {
+  const perSongbook = await Promise.all(library.songbooks.map(async ({ folder, name }) => {
+    const repo = openSongbook(folder);
+    const filenames = await repo.listFilenames().catch(() => []);
+    const songs = await Promise.all(filenames.map(async (filename) => {
+      const text = await repo.read(filename);
+      if (!text) return null;
+      const song = parseSong(text);
+      return makeEntry({
+        folder,
+        songbook: name,
+        filename,
+        title: fixLeadingArticle(song.title || filenameToTitle(repo.baseName(filename))),
+        artist: song.artist,
+        body: song.body,
+      });
+    }));
+    return songs.filter(Boolean);
+  }));
+  return perSongbook.flat();
+}
+
+/** The snippet with the search's words marked. */
+function markWords(text, query) {
+  const words = fold(query).split(' ').filter(Boolean);
+  const folded = fold(text);
+  // marks by position in the folded text, which lines up with the original only
+  // when folding kept its length; otherwise the snippet goes unmarked
+  if (folded.length !== text.length || !words.length) return escapeHtml(text);
+  const marks = new Array(text.length).fill(false);
+  for (const word of words) {
+    for (let i = folded.indexOf(word); i >= 0; i = folded.indexOf(word, i + 1)) {
+      marks.fill(true, i, i + word.length);
+    }
+  }
+  let html = '';
+  let open = false;
+  for (let i = 0; i < text.length; i += 1) {
+    if (marks[i] !== open) {
+      html += marks[i] ? '<mark>' : '</mark>';
+      open = marks[i];
+    }
+    html += escapeHtml(text[i]);
+  }
+  return open ? `${html}</mark>` : html;
+}
+
+async function runSearch() {
+  const query = searchEl.value.trim();
+  const run = ++searchRun;
+  if (!query) {
+    const open = getFolder();
+    if (open) showSongbook(open);
+    else showNothingOpen();
+    return;
+  }
+  if (!searchIndex) {
+    showStatus('Searching the Library…');
+    searchIndex = buildSearchIndex();
+  }
+  let entries;
+  try {
+    entries = await searchIndex;
+  } catch (err) {
+    searchIndex = null;
+    showStatus(escapeHtml(err.message || String(err)), true);
+    return;
+  }
+  if (run !== searchRun) return; // typed again meanwhile
+  const results = searchSongs(entries, query);
+  const quoted = `“${escapeHtml(query)}”`;
+  showStatus(results.length
+    ? `${results.length === 1 ? '1 song matches' : `${results.length} songs match`} ${quoted} in the Library`
+    : `No songs in the Library match ${quoted}.`);
+  listEl.innerHTML = results
+    .map(({ entry, snippet }) => `<li><a href="#" data-folder="${escapeHtml(entry.folder)}" data-filename="${escapeHtml(entry.filename)}">`
+      + `<span class="songTitle">${escapeHtml(entry.title)}</span>`
+      + (entry.artist ? ` <span class="songDetails">${escapeHtml(entry.artist)}</span>` : '')
+      + `<span class="songSongbook" title="${escapeHtml(entry.folder)}">${escapeHtml(entry.songbook)}</span>`
+      + (snippet ? `<span class="songSnippet">${markWords(snippet, query)}</span>` : '')
+      + '</a></li>')
+    .join('');
+}
+
+let searchTimer = null;
+searchEl.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 120);
+});
+searchEl.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && searchEl.value) {
+    event.preventDefault();
+    searchEl.value = '';
+    runSearch();
+  }
+});
+// Cmd+F (Ctrl+F on Windows) in this window: the search box
+document.addEventListener('keydown', (event) => {
+  if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'f') {
+    event.preventDefault();
+    searchEl.focus();
+    searchEl.select();
+  }
+});
+// Songs may have changed in their windows meanwhile: read them again next time
+window.addEventListener('focus', () => {
+  searchIndex = null;
+  if (searching()) runSearch();
 });
 
 // The songbook open in this window, else (if Settings says so) the one selected

@@ -154,6 +154,38 @@ main {
   padding: 10px 28px 40px;
 }
 
+.librarySearch {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  font: inherit;
+}
+
+/* a search result: which songbook it's in, and a line of the lyrics that matched */
+.songSongbook {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #e4dfd5;
+  color: #6b5a44;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.songSnippet {
+  display: block;
+  color: #777;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.songSnippet mark {
+  background: #fbe7a1;
+  color: inherit;
+}
+
 .status.isError {
   color: #b3261e;
 }
