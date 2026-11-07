@@ -203,6 +203,11 @@ async function main() {
   // File > New Song… (Cmd+N): asks about unsaved changes once the new song is named
   onMenu('new-song', () => newSong({ confirm: () => !isDirty() || confirmDiscard('Start a new song') }));
 
+  // File > Print… (Cmd+P): the song as shown, with the editor's print styles
+  // (ugsEditorPlus.print.css). On a Mac the print_page command opens the system Print
+  // dialog with sensible margins; elsewhere window.print() does.
+  onMenu('print', () => tauri().core.invoke('print_page').catch(() => window.print()));
+
   // File > Open… (Cmd+O): a song on its own
   onMenu('open-file', async () => {
     const newPath = await pickSongFile();

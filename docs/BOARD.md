@@ -14,7 +14,6 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What |
 |---|---|
-| 0010 | Print one song (File > Print…, Cmd+P), using the editor's print styles and paper sizes |
 | 0011 | File names follow song titles: a naming setting ("Title - Artist"), renaming a song's file when its title changes, with care for name clashes |
 | 0012 | The faux-wood look of the Song-a-Matic headers and dialogs in the app's own pages and dialogs (song list, Settings, New Song) |
 | 0013 | More than one songbook at once (the app points at several folders); today it's one at a time plus Open Recent |
@@ -31,6 +30,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0010 | File > Print… (Cmd+P): one song, with the editor's print styles; half-inch margins on a Mac | #10 |
 | 0009 | File > New Song… (Cmd+N) and a New Song… button on the song list: title and artist, then "Title - Artist.cpm" in the open songbook | #9 |
 | 0008 | File > Open… for one song on its own; Save As switches to the new file | #8 |
 | 0007 | Settings window (Cmd+,): song file types, reopening the last songbook | #7 |

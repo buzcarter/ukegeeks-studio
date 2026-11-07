@@ -1,9 +1,11 @@
 /**
  * The app menu's own items (built in src-tauri/src/lib.rs) arrive as a
- * "studio://menu" event with the item's id: "open-songbook", "save", "save-as",
- * "show-song-list", "quit". (Help's items open web pages from Rust.) File > Open Recent's items arrive as "studio://open-recent" with
- * { folder, song }, handled as "open-recent". Each page says what to do with
- * onMenu(); items a page doesn't handle do nothing, except Quit, which quits.
+ * "studio://menu" event with the item's id: "new-song", "open-file",
+ * "open-songbook", "save", "save-as", "print", "show-song-list", "quit". (Settings…
+ * and Help's items are handled in Rust.) File > Open Recent's items arrive as
+ * "studio://open-recent" with { folder, song, single }, handled as "open-recent".
+ * Each page says what to do with onMenu(); items a page doesn't handle do nothing,
+ * except Quit, which quits.
  *
  * The listener starts as soon as this module loads, so Quit works even on a page
  * that failed to open its song.

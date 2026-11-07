@@ -3,7 +3,7 @@
 //! limited to the songbook folder the user picks with the dialog plugin (see
 //! capabilities/).
 //!
-//! The menu's own items (New Song…, Open…, Open Songbook…, Save, Save As…, Show Song List, Quit) don't act here: they
+//! The menu's own items (New Song…, Open…, Open Songbook…, Save, Save As…, Print…, Show Song List, Quit) don't act here: they
 //! send a `studio://menu` event with the item's id to the page, which knows whether
 //! the song has unsaved changes (web/js/menu.js). Quitting goes through the page
 //! too, which then calls the `quit` command. File > Open Recent is in recent.rs.
@@ -22,6 +22,7 @@ const OPEN_FILE: &str = "open-file";
 const OPEN_SONGBOOK: &str = "open-songbook";
 const SAVE: &str = "save";
 const SAVE_AS: &str = "save-as";
+const PRINT: &str = "print";
 const QUIT: &str = "quit";
 const SHOW_SONG_LIST: &str = "show-song-list";
 // handled here: Settings opens its window, Help's items open a web page
@@ -63,6 +64,8 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
       &sep()?,
       &MenuItem::with_id(app, SAVE, "Save", true, Some("CmdOrCtrl+S"))?,
       &MenuItem::with_id(app, SAVE_AS, "Save As…", true, Some("CmdOrCtrl+Shift+S"))?,
+      &sep()?,
+      &MenuItem::with_id(app, PRINT, "Print…", true, Some("CmdOrCtrl+P"))?,
       &sep()?,
       // goes through the window's close request, so the editor asks about unsaved changes
       &PredefinedMenuItem::close_window(app, None)?,
@@ -216,6 +219,60 @@ fn save_song_file(app: AppHandle, path: String, text: String) -> Result<(), Stri
   Ok(())
 }
 
+/// File > Print…: the system Print dialog for this page, as a sheet on its window,
+/// with half-inch margins. (Tauri's own print sets the margins to zero, and printers
+/// clip what's at the paper's edge.) The paper size and other choices in the dialog
+/// carry over to the next print. Only on a Mac; elsewhere the page uses window.print().
+#[tauri::command]
+fn print_page(webview: tauri::Webview) -> Result<(), String> {
+  #[cfg(target_os = "macos")]
+  {
+    webview
+      .with_webview(|platform| unsafe { mac_print::run(platform.inner().cast()) })
+      .map_err(|err| err.to_string())
+  }
+  #[cfg(not(target_os = "macos"))]
+  {
+    let _ = webview;
+    Err("use window.print()".into())
+  }
+}
+
+#[cfg(target_os = "macos")]
+mod mac_print {
+  use objc2::msg_send;
+  use objc2::runtime::{AnyClass, AnyObject, Sel};
+
+  /// Half an inch, in points
+  const MARGIN: f64 = 36.0;
+  /// NSPrintingPaginationMode.fit: wide songs shrink to the page width
+  const FIT: isize = 1;
+
+  pub unsafe fn run(wk_webview: *mut AnyObject) {
+    let Some(print_info_class) = AnyClass::get(c"NSPrintInfo") else { return };
+    let info: *mut AnyObject = msg_send![print_info_class, sharedPrintInfo];
+    let _: () = msg_send![info, setTopMargin: MARGIN];
+    let _: () = msg_send![info, setBottomMargin: MARGIN];
+    let _: () = msg_send![info, setLeftMargin: MARGIN];
+    let _: () = msg_send![info, setRightMargin: MARGIN];
+    let _: () = msg_send![info, setHorizontalPagination: FIT];
+    // WKWebView's own print operation (macOS 11+), as wry does
+    let operation: *mut AnyObject = msg_send![wk_webview, printOperationWithPrintInfo: info];
+    let window: *mut AnyObject = msg_send![wk_webview, window];
+    if operation.is_null() || window.is_null() {
+      eprintln!("[studio] can't print: no print operation or window");
+      return;
+    }
+    let _: () = msg_send![
+      operation,
+      runOperationModalForWindow: window,
+      delegate: std::ptr::null_mut::<AnyObject>(),
+      didRunSelector: None::<Sel>,
+      contextInfo: std::ptr::null_mut::<std::ffi::c_void>()
+    ];
+  }
+}
+
 /// Ends the app. The pages call this once unsaved changes are saved or discarded.
 #[tauri::command]
 fn quit(app: AppHandle) {
@@ -238,7 +295,7 @@ pub fn run() {
         settings::show_window(app);
       } else if [HELP, CHORDPRO_HELP].contains(&id) {
         open_help(id);
-      } else if [NEW_SONG, OPEN_FILE, OPEN_SONGBOOK, SAVE, SAVE_AS, SHOW_SONG_LIST, QUIT].contains(&id) {
+      } else if [NEW_SONG, OPEN_FILE, OPEN_SONGBOOK, SAVE, SAVE_AS, PRINT, SHOW_SONG_LIST, QUIT].contains(&id) {
         if let Err(err) = app.emit(MENU_EVENT, id) {
           eprintln!("[studio] can't send menu item {id} to the page: {err}");
         }
@@ -247,6 +304,7 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       quit,
       save_song_file,
+      print_page,
       recent::recent_list,
       recent::recent_add_songbook,
       recent::recent_add_song,
