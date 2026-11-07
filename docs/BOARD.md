@@ -20,6 +20,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 ## Later
 
+- Duplicate a songbook (owner's "Duplicate(?)", 2026-11-07): copy its songs to a new folder the player picks. Not yet: the app may only write where it's pointed, so it needs its own "where does the copy go" step; confirm what's wanted first.
 - Ace as the default editor instead of the Edit Song box (maybe 1.2); how the Chord Builder fits with it.
 - Phase 3: add a song from a pasted songsheet.
 - Phase 4: make the songbook (one PDF), and a Songbook menu with it.
@@ -30,6 +31,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0022 | A songbook's right-click menu: Open, New Song… (in that songbook), Rename…, Remove from Library | #19 |
 | 0021 | Songbook names: asked when a folder is added (folders are often just "songs" or "cpm"), Rename… in the sidebar | #18 |
 | 0020 | On a Mac, the app stays running when its last window closes; clicking the Dock icon brings back the Library (elsewhere it still quits) | #17 |
 | 0013 | The Library: songbook folders in a sidebar beside the song list (`library.json`); Add Songbook to Library… replaces Open Songbook…; Open Recent lists songs only. Printing a whole songbook stays in Phase 4 | #16 |

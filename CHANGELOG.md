@@ -4,6 +4,13 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0022: a songbook's right-click menu (#19, 2026-11-07)
+
+- **Right-click a songbook in the Library:** Open, New Song…, Rename…, and Remove from Library.
+- **New Song… there** creates the song in that songbook, whichever one is open.
+- **The menu stays inside the window** near its edges.
+- **Board:** Duplicate a songbook is under Later, to talk through first.
+
 ### Task 0021: songbook names (#18, 2026-11-07)
 
 - **Adding a songbook asks for its name.** Folders are often just "songs" or "cpm", so the suggestion is the parent folder's name when the folder's is a plain one or another songbook has it. Picking a folder that's already in the Library offers to rename it.
