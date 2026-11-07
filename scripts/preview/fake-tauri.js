@@ -91,7 +91,6 @@
     quit_cancel: () => {},
     open_song_window: ({ path, url }) => { window.open(url, `song:${path}`); },
     song_window_path: () => {},
-    show_song_list: () => { window.open('index.html', 'main'); },
   };
 
   // the app's window labels: "main" for the song list, "song-N" for songs
@@ -101,6 +100,7 @@
     async setTitle(title) { log('title', title); },
     async onCloseRequested(callback) { window.__close = callback; },
     async destroy() { log('destroy'); },
+    async close() { log('close'); if (window.__close) await window.__close({ preventDefault() { log('close prevented'); } }); },
   };
 
   window.__TAURI__ = {
