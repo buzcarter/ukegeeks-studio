@@ -4,8 +4,8 @@
  * the editor page.
  */
 import {
-  checkAccess, escapeHtml, folderName, getFolder, includeCpmTxt, openSongbook, pickFolder,
-  setIncludeCpmTxt, TXT_SONG_EXTENSION,
+  addRecentSongbook, checkAccess, escapeHtml, folderName, getFolder, includeCpmTxt, openRecent,
+  openSongbook, pickFolder, recentList, setFolder, setIncludeCpmTxt, TXT_SONG_EXTENSION,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 
@@ -27,6 +27,7 @@ async function showSongbook(folder) {
     showStatus(escapeHtml(err.message), true);
     return;
   }
+  addRecentSongbook(folder);
   const songs = await openSongbook(folder).getSongList();
   const name = `<strong title="${escapeHtml(folder)}">${escapeHtml(folderName(folder))}</strong>`;
   const count = songs.length === 1 ? '1 song' : `${songs.length} songs`;
@@ -62,6 +63,7 @@ async function chooseSongbook() {
 document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
 // File > Open Songbook… (Cmd+O). Save and Save As do nothing here; Quit quits.
 onMenu('open-songbook', chooseSongbook);
+onMenu('open-recent', openRecent);
 
 includeTxtBox.checked = includeCpmTxt();
 includeTxtBox.addEventListener('change', () => {
@@ -70,13 +72,18 @@ includeTxtBox.addEventListener('change', () => {
   if (open) showSongbook(open);
 });
 
-const folder = getFolder();
-if (folder) {
-  showSongbook(folder);
+// The songbook open in this run of the app, else the last one opened (File > Open Recent).
+async function showFirstSongbook() {
+  let folder = getFolder();
+  if (!folder) {
+    folder = (await recentList()).songbooks[0];
+    if (folder) setFolder(folder);
+  }
+  if (folder) await showSongbook(folder);
 }
 
 // index.html?open=1: the editor's File > Open Songbook… came here to show the picker
-if (new URLSearchParams(location.search).has('open')) {
-  history.replaceState(null, '', 'index.html');
-  chooseSongbook();
-}
+// (over the songbook that's open, which stays if the picker is cancelled)
+const showPicker = new URLSearchParams(location.search).has('open');
+if (showPicker) history.replaceState(null, '', 'index.html');
+showFirstSongbook().then(() => showPicker && chooseSongbook());

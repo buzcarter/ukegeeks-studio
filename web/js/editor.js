@@ -12,7 +12,9 @@
  * editor switches to the new file; anywhere else, it's a copy (the app has no access
  * to that folder beyond the one file).
  */
-import { escapeHtml, getFolder, openSongbook, SONG_EXTENSION, tauri } from './songbook.js';
+import {
+  addRecentSong, escapeHtml, getFolder, openRecent, openSongbook, SONG_EXTENSION, tauri,
+} from './songbook.js';
 import { onMenu, quitApp } from './menu.js';
 
 const container = document.getElementById('songEditor');
@@ -33,9 +35,10 @@ function splitPath(path) {
 
 const cleanPath = (path) => path.replace(/[\/\\]+$/, '').normalize('NFC');
 
-// Until a song is open (or if it can't be), File > Open Songbook… just goes to the
-// list's picker; main() replaces this with one that asks about unsaved changes.
+// Until a song is open (or if it can't be), File > Open Songbook… and Open Recent
+// just go; main() replaces these with ones that ask about unsaved changes.
 onMenu('open-songbook', () => { location.href = 'index.html?open=1'; });
+onMenu('open-recent', openRecent);
 
 function showProblem(message) {
   container.innerHTML = `<p class="studioProblem">${escapeHtml(message)} <a href="index.html">Back to the songs</a></p>`;
@@ -67,6 +70,7 @@ async function main() {
 
   let savedText = null;
   const songName = song.title || filename;
+  addRecentSong(folder, filename, songName);
 
   const editor = ugsEditorPlus.songAmatic.mount(container, {
     song: song.body,
@@ -174,6 +178,12 @@ async function main() {
   onMenu('open-songbook', async () => {
     if (isDirty() && !(await confirmDiscard('Open another songbook'))) return;
     location.href = 'index.html?open=1';
+  });
+
+  // File > Open Recent
+  onMenu('open-recent', async (item) => {
+    if (isDirty() && !(await confirmDiscard(item.song ? 'Open another song' : 'Open another songbook'))) return;
+    openRecent(item);
   });
 
   // Quit (Cmd+Q, or Quit in the Dock)

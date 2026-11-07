@@ -27,7 +27,7 @@ npm run dev
 
 The first `npm run dev` downloads and compiles Tauri, which takes a few minutes and about 1.5 GB of disk in `src-tauri/target/`. Later runs start in seconds. `cargo clean` in `src-tauri/` gives the space back.
 
-In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (tick "Also list `.cpm.txt` songs" for the Songbook's `cpm/` folder). Click a song to open it in the editor; **Save** writes the file. The app remembers the folder until you quit it.
+In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (tick "Also list `.cpm.txt` songs" for the Songbook's `cpm/` folder). Click a song to open it in the editor; **Save** writes the file. **File > Open Recent** lists the last 10 songbooks and songs, and the app reopens the last songbook when it starts.
 
 ### Menu shortcuts
 
@@ -50,7 +50,7 @@ Editing files under `web/` reloads the window. `npm test` runs the tests for the
 | `web/js/songs.js` | Reads song titles and artists, sorts the list, saves songs. From the Songbook's `server/lib/songs.js`, changed to use Tauri's file access. |
 | `web/vendor/` | The editor, Song Formatter and Ace, copied from `node_modules/` by `scripts/vendor.js` each time the app starts. Not committed. |
 | `web/fonts/` | The fonts the editor's color themes use, so the app works offline. |
-| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. |
+| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` builds the menu; `src/recent.rs` keeps File > Open Recent in `recent.json` (in `~/Library/Application Support/org.ukegeeks.studio/`). |
 
 ## Part of the UkeGeeks family
 

@@ -28,11 +28,11 @@ Done means: it runs on the owner's Mac from a dev build, opens `~/Code/UkeGeeks/
 The owner's list from 2026-11-06, after the prototype worked. Roughly in order; items move to "done" as they land.
 
 - **`.cpm` is the file extension.** Songs are `*.cpm` files. `.cpm.txt` exists only because Apache serves unknown types badly and most people can't change MIME types; a setting also lists `*.cpm.txt` files. This applies to every UkeGeeks module and app, not just Studio (the Songbook still uses `.cpm.txt`).
-- **Unsaved changes.** An `isDirty` flag; warn before leaving a song or closing the window (and quitting) with unsaved changes.
-- **Save As.**
+- **Unsaved changes.** (Done.) An `isDirty` flag; warn before leaving a song or closing the window (and quitting) with unsaved changes.
+- **Save As.** (Done, with the app menu.)
 - **File names follow song titles.** A naming convention, as a setting: "Title - Artist" (as the Songbook's New Song does) or similar. Renaming a song's file when its title changes, with care for collisions.
 - **Songbooks are folders**, and the app can point at more than one. A songbook export is far off (Phase 4): copying files into a folder is easy enough for now.
-- **Recent songbooks and songs (MRU lists)**, which also means remembering folders across launches (Tauri's persisted-scope plugin).
+- **Recent songbooks and songs (MRU lists)**, which also means remembering folders across launches. (Done: File > Open Recent. Instead of Tauri's persisted-scope plugin, which would keep every folder ever picked, the app allows the recent list's folders again at startup; see `src-tauri/src/recent.rs`.)
 - **Settings** for the above, kept by the app.
 - **Keep the faux-wood look** of the Song-a-Matic headers and dialogs in the app's own chrome and dialogs. Hokey, but it's UkeGeeks.
 - **Print.** One song, nicely; the editor already has print styles and paper sizes.
