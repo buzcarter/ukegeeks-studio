@@ -5,12 +5,37 @@
  *
  * Save writes the file (temp file + rename, see SongRepository.update). The song is
  * "dirty" while the Edit Song text differs from what was last opened or saved: the
- * window title says "Edited", and going back to the list or closing the window asks
- * first.
+ * window title says "Edited", and going back to the list, closing the window,
+ * File > Open Songbook… and Quit ask first.
+ *
+ * File > Save As… writes the song under a new name: in the songbook folder, the
+ * editor switches to the new file; anywhere else, it's a copy (the app has no access
+ * to that folder beyond the one file).
  */
-import { escapeHtml, getFolder, openSongbook, tauri } from './songbook.js';
+import { escapeHtml, getFolder, openSongbook, SONG_EXTENSION, tauri } from './songbook.js';
+import { onMenu, quitApp } from './menu.js';
 
 const container = document.getElementById('songEditor');
+const statusEl = document.getElementById('studioStatus');
+
+/** A short message in the bar at the bottom right ("Saved a copy to …"). */
+function showStatus(message) {
+  statusEl.textContent = message;
+  statusEl.title = message;
+  statusEl.hidden = !message;
+}
+
+/** A path from the Save dialog, split into its folder and filename. */
+function splitPath(path) {
+  const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+  return { dir: path.slice(0, i), name: path.slice(i + 1) };
+}
+
+const cleanPath = (path) => path.replace(/[\/\\]+$/, '').normalize('NFC');
+
+// Until a song is open (or if it can't be), File > Open Songbook… just goes to the
+// list's picker; main() replaces this with one that asks about unsaved changes.
+onMenu('open-songbook', () => { location.href = 'index.html?open=1'; });
 
 function showProblem(message) {
   container.innerHTML = `<p class="studioProblem">${escapeHtml(message)} <a href="index.html">Back to the songs</a></p>`;
@@ -92,6 +117,70 @@ async function main() {
 
   window.studioEditor = editor; // studioEditor.getSong() in the Web Inspector console
   window.studioIsDirty = isDirty;
+
+  // File > Save (Cmd+S): the editor's own Save button, so its "Saved …" message and
+  // "problem saving" alert show as usual. The button saves the Edit Song box, which
+  // gets Fullscreen's text only when Fullscreen closes: copy it in first.
+  function save() {
+    const box = document.getElementById('chordProSource');
+    const button = document.getElementById('saveBtn');
+    if (!box || !button) return;
+    box.value = currentText();
+    button.click();
+  }
+  onMenu('save', save);
+
+  // File > Save As… (Shift+Cmd+S). The native dialog asks before replacing a file;
+  // nothing else is overwritten.
+  onMenu('save-as', async () => {
+    const path = await tauri().dialog.save({
+      title: 'Save As',
+      defaultPath: songbook.pathFor(filename),
+      filters: [{ name: 'ChordPro song', extensions: [SONG_EXTENSION.slice(1)] }],
+    });
+    if (typeof path !== 'string') return;
+    const { dir, name } = splitPath(path);
+    const text = currentText();
+    try {
+      if (cleanPath(dir) !== cleanPath(folder)) {
+        // elsewhere: the dialog gave access to this one file, so write it directly
+        await tauri().fs.writeTextFile(path, text);
+        showStatus(`Saved a copy to ${path}`);
+        return;
+      }
+      if (name.normalize('NFC') === filename.normalize('NFC')) {
+        save();
+        return;
+      }
+      if (!songbook.isSongFilename(name)) {
+        await tauri().dialog.message(`Songs are "${SONG_EXTENSION}" files, so "${name}" wouldn't be listed. Choose Save As again and use a name that ends in "${SONG_EXTENSION}".`, {
+          title: 'Save As', kind: 'warning',
+        });
+        return;
+      }
+      await songbook.update(name, text); // temp file + rename, like Save
+    } catch (err) {
+      console.error(`[studio] saving as ${path}:`, err);
+      await tauri().dialog.message(`There was a problem saving "${name}". (${err && err.message ? err.message : err})`, {
+        title: 'Save As', kind: 'error',
+      });
+      return;
+    }
+    // now editing the new file; the old one keeps its last saved text
+    location.href = songbook.songUri(name);
+  });
+
+  // File > Open Songbook… (Cmd+O): back to the list, which shows the picker.
+  onMenu('open-songbook', async () => {
+    if (isDirty() && !(await confirmDiscard('Open another songbook'))) return;
+    location.href = 'index.html?open=1';
+  });
+
+  // Quit (Cmd+Q, or Quit in the Dock)
+  onMenu('quit', async () => {
+    if (isDirty() && !(await confirmDiscard('Quit'))) return;
+    await quitApp();
+  });
 
   document.getElementById('backToSongs').addEventListener('click', async (event) => {
     if (!isDirty()) return;

@@ -27,7 +27,18 @@ npm run dev
 
 The first `npm run dev` downloads and compiles Tauri, which takes a few minutes and about 1.5 GB of disk in `src-tauri/target/`. Later runs start in seconds. `cargo clean` in `src-tauri/` gives the space back.
 
-In the window, click **Open Songbook…** and pick a folder of `*.cpm.txt` files, for example the Songbook's `cpm/` folder. Click a song to open it in the editor; **Save** writes the file. The app remembers the folder until you quit it.
+In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (tick "Also list `.cpm.txt` songs" for the Songbook's `cpm/` folder). Click a song to open it in the editor; **Save** writes the file. The app remembers the folder until you quit it.
+
+### Menu shortcuts
+
+| Shortcut | Menu item | What it does |
+|---|---|---|
+| Cmd+O | File > Open Songbook… | Picks a songbook folder. In the editor, asks about unsaved changes first, then goes back to the song list. |
+| Cmd+S | File > Save | Saves the song (the editor's Save button). |
+| Shift+Cmd+S | File > Save As… | Saves under a new name. In the songbook folder, the editor switches to the new file; anywhere else, it saves a copy. |
+| Cmd+W | File > Close Window | Closes the window, asking about unsaved changes first. |
+| Cmd+Q | UkeGeeks Studio > Quit | Quits, asking about unsaved changes first (so does Quit in the Dock). |
+| Cmd+Z, Shift+Cmd+Z, Cmd+X, Cmd+C, Cmd+V, Cmd+A | Edit | Undo, Redo, Cut, Copy, Paste, Select All in the text boxes. |
 
 Editing files under `web/` reloads the window. `npm test` runs the tests for the song list code.
 

@@ -7,6 +7,7 @@ import {
   checkAccess, escapeHtml, folderName, getFolder, includeCpmTxt, openSongbook, pickFolder,
   setIncludeCpmTxt, TXT_SONG_EXTENSION,
 } from './songbook.js';
+import { onMenu } from './menu.js';
 
 const statusEl = document.getElementById('songbookStatus');
 const listEl = document.getElementById('songList');
@@ -49,14 +50,18 @@ async function showSongbook(folder) {
     .join('');
 }
 
-document.getElementById('openSongbook').addEventListener('click', async () => {
+async function chooseSongbook() {
   try {
     const folder = await pickFolder();
     if (folder) await showSongbook(folder);
   } catch (err) {
     showStatus(escapeHtml(err.message || String(err)), true);
   }
-});
+}
+
+document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
+// File > Open Songbook… (Cmd+O). Save and Save As do nothing here; Quit quits.
+onMenu('open-songbook', chooseSongbook);
 
 includeTxtBox.checked = includeCpmTxt();
 includeTxtBox.addEventListener('change', () => {
@@ -68,4 +73,10 @@ includeTxtBox.addEventListener('change', () => {
 const folder = getFolder();
 if (folder) {
   showSongbook(folder);
+}
+
+// index.html?open=1: the editor's File > Open Songbook… came here to show the picker
+if (new URLSearchParams(location.search).has('open')) {
+  history.replaceState(null, '', 'index.html');
+  chooseSongbook();
 }

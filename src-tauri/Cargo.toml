@@ -26,3 +26,8 @@ tauri-plugin-fs = "2"
 # (it's most of target/'s size). The app's own crate keeps it.
 [profile.dev.package."*"]
 debug = false
+
+# Quit from the Dock asks about unsaved changes (src/lib.rs, dock_quit). Already
+# built as part of Tauri, so it adds nothing to compile.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
