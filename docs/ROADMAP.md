@@ -44,8 +44,9 @@ The same Tauri project built for iPadOS. Needs full Xcode; today the machine has
 - **App name:** UkeGeeks Studio (2026-11-07). "UkeGeeks Songbook" stays the name of the self-hosted web app.
 - **Repo:** its own, buzcarter/ukegeeks-studio, depending on the npm packages.
 - **Editor package:** `@ukegeeks/song-editor` (published 1.0.0-beta.1 and 1.0.1-beta.1).
+- **Bundle identifier:** `org.ukegeeks.studio`.
+- **Theme fonts:** bundled in `web/fonts/` (OFL and Apache 2.0), not loaded from Google Fonts, so the app works offline.
 
 ## Still open
 
-- Bundle identifier: suggestion `org.ukegeeks.studio`.
 - Windows: when to start building and testing there.
