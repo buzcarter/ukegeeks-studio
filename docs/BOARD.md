@@ -30,8 +30,9 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
-| 0017 | Search the Library by title, artist or lyrics: a search box above the song list (Cmd+F), across every songbook | #20 |
-| 0022 | A songbook's right-click menu: Open, New Song… (in that songbook), Rename…, Remove from Library | #19 |
+| 0023 | A new handoff after the Library (docs/HANDOFF.md) | #19 |
+| 0017 | Search the Library by title, artist or lyrics: a search box above the song list (Cmd+F), across every songbook | pushed to `main` |
+| 0022 | A songbook's right-click menu: Open, New Song… (in that songbook), Rename…, Remove from Library | pushed to `main` |
 | 0021 | Songbook names: asked when a folder is added (folders are often just "songs" or "cpm"), Rename… in the sidebar | #18 |
 | 0020 | On a Mac, the app stays running when its last window closes; clicking the Dock icon brings back the Library (elsewhere it still quits) | #17 |
 | 0013 | The Library: songbook folders in a sidebar beside the song list (`library.json`); Add Songbook to Library… replaces Open Songbook…; Open Recent lists songs only. Printing a whole songbook stays in Phase 4 | #16 |

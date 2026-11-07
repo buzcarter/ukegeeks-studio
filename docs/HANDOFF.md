@@ -1,26 +1,30 @@
-# Handoff: after Phase 2.5
+# Handoff: after the Library
 
-Written 2026-11-07, after PRs #1–#13 were merged. Read [CLAUDE.md](../CLAUDE.md) first (how the owner works), then [BOARD.md](BOARD.md) (what's next), [DECISIONS.md](DECISIONS.md) (why things are the way they are) and [ROADMAP.md](ROADMAP.md) (the phases). [CHANGELOG.md](../CHANGELOG.md) has every PR.
+Written 2026-11-07 (late), after the Library work (tasks 0013, 0016, 0017, 0020–0022) reached `main`; refreshed from the handoff written after Phase 2.5. Read [CLAUDE.md](../CLAUDE.md) first (how the owner works), then [BOARD.md](BOARD.md) (what's next), [DECISIONS.md](DECISIONS.md) (why things are the way they are) and [ROADMAP.md](ROADMAP.md) (the phases). [CHANGELOG.md](../CHANGELOG.md) has every PR.
 
 ## Where things stand
 
 UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothing is released or bundled yet.
 
-- **Songbooks:**
-  - The Library: the main window's sidebar lists the songbooks (folders) you added with Add Songbook to Library… (Shift+Cmd+O, or +); − or right-click removes one. The selected one's songs are listed like the Songbook sorts them.
-  - Each song opens in its own window; File > Open Recent has the last 10 songs, and the last songbook is selected at launch.
+- **The Library (main window):**
+  - A sidebar of songbooks: folders added with Add Songbook to Library… (Shift+Cmd+O, +, or the header's Add Songbook…), each with a name the player gives it (folders are often just "songs" or "cpm"). Kept in `library.json`.
+  - Right-click a songbook: Open, New Song… (in that songbook), Rename… (or double-click), Remove from Library (or −; the folder stays on disk).
+  - The selected songbook's songs, sorted like the Songbook. It's selected again at launch.
+  - **Search** (Cmd+F, the box above the songs): every songbook, by title, artist or lyrics (chords ignored). Results show their songbook and a lyric line.
+- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name and a Close button. File > Open Recent lists the last 10 songs.
+- **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
 - **Songs:**
   - The Song-a-Matic editor (`@ukegeeks/song-editor`) edits a song.
   - Save (Cmd+S) writes it; Save As… (Shift+Cmd+S) saves under a new name.
   - New Song… (Cmd+N) and Open… (Cmd+O, one song on its own, outside a songbook).
   - Print… (Cmd+P).
   - File names follow titles: saving a song whose title or artist changed renames its file, never over another.
-- **Unsaved changes:** "Edited" in the window title. Leaving the song asks Save & … / Discard Edits / Continue Editing.
-- **Settings** (Cmd+,): which song file types to list, how files are named, renaming on/off, reopening the last songbook.
+- **Unsaved changes:** "Edited" in the window title. Closing the window or quitting asks Save & … / Discard Edits / Continue Editing; Quit asks each song window in turn. Save says where it saved ("Saved x.cpm in Beach Party").
+- **Settings** (Cmd+,): which song file types to list, how files are named, renaming on/off, selecting the last songbook at launch.
 - **Menus:** File, Edit, View, Window and Help, laid out per OS. The editor keeps its own controls.
 - **Look:** the Song-a-Matic's faux-wood look on the app's own pages and dialogs (`web/css/wood.css`).
 
-Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than one songbook at once**, which is next on the board. Talk it through with the owner before building: what "several songbooks" should look like isn't decided.
+Phase 2.5 is done, and so is most of the Library from the owner's user stories (DECISIONS.md, "The Library and song windows"). **Next on the board: task 0018, Favorites** ("quickly find my favorite songs that span songbooks so I may practice songs in any order"). Ask the owner first: just a star and one list, or set lists in an order of their own? Then 0019, a first-run welcome/tour.
 
 ## How the code is laid out
 
@@ -48,7 +52,9 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 
 - **`npm test`:** `SongRepository` and the ChordPro parsing, and search (19 tests). `cargo test` in `src-tauri/` has the Library's.
 - **`npm run preview`:** serves `web/` on http://localhost:8765 with a stand-in for `window.__TAURI__` (`scripts/preview/fake-tauri.js`). Files live in localStorage, and dialogs answer from globals (`__nextOpen`, `__nextSave`, `__nextChoice`, …). Drive menu items with `__menu('save')`, and read what the page asked Tauri to do in `__log`. Open it in Claude Code's browser pane. The fake's header comment explains it all.
-- **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors (`src-tauri/target/debug/ukegeeks-studio`, kill it after a few seconds), then ask the owner to try it, saying exactly what to click.
+- **The preview server reads `fake-tauri.js` once at start:** after changing it, stop and start the preview. Its seeded data lives in the browser's localStorage (`fakefs:…`, `fakelibrary`, …); clear a key to reseed it.
+- **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors, then ask the owner to try it, saying exactly what to click. Launch it as `./target/debug/ukegeeks-studio & pid=$!; sleep 6; kill $pid`. **Never `pkill` by name:** that also kills the owner's own `npm run dev`, which runs the same binary.
+- **Commands for the owner:** the desktop app's `!` shell doesn't load their profile, so cargo isn't on its PATH. Give them `cd ~/Code/ukegeeks-studio && PATH="$HOME/.cargo/bin:$PATH" npm run dev`.
 - **Windows:** the Windows menu code (`cfg(not(target_os = "macos"))`) has never been compiled; only the Mac target is installed.
 
 ## Tauri lessons (2.12.5; checked, don't relearn)
@@ -76,9 +82,18 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 
 About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental dev builds take seconds. Say so before release builds or new Rust targets, and offer `cargo clean` in `src-tauri/` when space gets tight.
 
+## Working notes from the last session
+
+- **Merges:** the owner sometimes pushes a finished branch straight to `main` instead of opening a PR (tasks 0016, 0017, 0022), and deletes branches after merging. So check `git fetch` and `gh pr list` before assuming what's merged, and cut each new branch from `origin/main`.
+- **PR numbers** in BOARD.md and CHANGELOG.md are a guess (the next number) until GitHub assigns one; fix them when they turn out different.
+- **Two open branches that both add a row to the board and a CHANGELOG entry** conflict; stack the second on the first and say which to merge first.
+
 ## Open threads
 
-- **Task 0013** (several songbooks): needs a conversation with the owner first.
+- **Task 0018, Favorites:** ask the owner what it should be (above), then build.
+- **Task 0019, first-run welcome/tour:** after Favorites, so it shows the app as it will be.
+- **Duplicate a songbook** (on the board under Later): the owner floated it with a "?"; confirm what's meant first. Copying needs somewhere the app may write.
+- **Not tried in the real app by the owner yet,** as far as this session knows: search, the songbook right-click menu, songbook names, and staying open on a Mac. Ask how they went.
 - **Phase 3:** add a song from a pasted songsheet, using the editor's `ugsEditorPlus.reformat`.
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
