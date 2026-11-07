@@ -53,6 +53,10 @@ On Windows the menu bar is inside the window and there's no app menu: About move
 
 A folder may hold `.txt` files that aren't songs; they show up with a title from the filename. Good enough.
 
+### Unsaved changes: three choices (2026-11-06, task 0014)
+
+Leaving a song with unsaved changes asks **Save & …** / **Discard Edits** / **Continue Editing**, the owner's wording. The first button says what comes next: Save & Close, Save & Quit, Save & Go Back, Save & Open, Save & Open Songbook, Save & Start New Song. It's the dialog plugin's native message with three custom buttons. Continue Editing is its cancel button, so Esc never throws edits away; the Mac shows the buttons as Save, Discard, Continue Editing. If saving fails, the app says so and stays on the song.
+
 ### File names follow song titles (2026-11-06, task 0011)
 
 - **Setting "Name song files":** "Title - Artist" (the Songbook's New Song, and the default), "Title", or "Artist - Title". Used by New Song and by renames.
