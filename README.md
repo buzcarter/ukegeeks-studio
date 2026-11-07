@@ -27,15 +27,15 @@ npm run dev
 
 The first `npm run dev` downloads and compiles Tauri, which takes a few minutes and about 1.5 GB of disk in `src-tauri/target/`. Later runs start in seconds. `cargo clean` in `src-tauri/` gives the space back.
 
-In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (for the Songbook's `cpm/` folder, turn on `.txt` files in Settings, Cmd+,). Click a song to open it in the editor; **Save** writes the file. **File > Open Recent** lists the last 10 songbooks and songs, and the app reopens the last songbook when it starts (a setting).
+In the window, click **Add Songbook…** (or **+** under the Library) and pick a folder of `*.cpm` files (for the Songbook's `cpm/` folder, turn on `.txt` files in Settings, Cmd+,). Each folder you add is a songbook in the Library sidebar; click one to list its songs. Click a song to open it in its own window; **Save** writes the file. **−** or right-click > Remove from Library takes a songbook out of the Library (the folder stays on disk). **File > Open Recent** lists the last 10 songs, and the app selects the last songbook when it starts (a setting).
 
 ### Menu shortcuts
 
 | Shortcut | Menu item | What it does |
 |---|---|---|
-| Cmd+N | File > New Song… | Asks for a title and artist, then creates "Title - Artist.cpm" in the open songbook (never overwriting) and opens it. With no songbook open, picks one first. |
-| Cmd+O | File > Open… | Opens one song file on its own (any ChordPro type), without its folder. In the editor, asks about unsaved changes first. |
-| Shift+Cmd+O | File > Open Songbook… | Picks a songbook folder. In the editor, asks about unsaved changes first, then goes back to the song list. |
+| Cmd+N | File > New Song… | Asks for a title and artist, then creates "Title - Artist.cpm" in the selected songbook (never overwriting) and opens it in a new window. With no songbook selected, adds one to the Library first. |
+| Cmd+O | File > Open… | Opens one song file on its own (any ChordPro type, from anywhere, not just the Library) in a new window, without access to its folder. |
+| Shift+Cmd+O | File > Add Songbook to Library… | Picks a folder and adds it to the Library sidebar. |
 | Cmd+S | File > Save | Saves the song (the editor's Save button). |
 | Shift+Cmd+S | File > Save As… | Saves under a new name, and the editor switches to the new file: in the songbook folder as one of its songs, anywhere else as a song on its own. |
 | Cmd+, | UkeGeeks Studio > Settings… | Which song file types the list shows (`.cpm`, `.txt`, other ChordPro extensions), how song files are named (and renamed when a song's title or artist changes), and whether to reopen the last songbook. Kept in `settings.json`. |
@@ -57,7 +57,7 @@ Editing files under `web/` reloads the window. `npm test` runs the tests for the
 | `web/js/songs.js` | Reads song titles and artists, sorts the list, saves songs. From the Songbook's `server/lib/songs.js`, changed to use Tauri's file access. |
 | `web/vendor/` | The editor, Song Formatter and Ace, copied from `node_modules/` by `scripts/vendor.js` each time the app starts. Not committed. |
 | `web/fonts/` | The fonts the editor's color themes use, so the app works offline. |
-| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` builds the menu; `src/recent.rs` keeps File > Open Recent in `recent.json` and `src/settings.rs` the settings in `settings.json` (both in `~/Library/Application Support/org.ukegeeks.studio/`). |
+| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` builds the menu; `src/windows.rs` the song windows; `src/library.rs` keeps the Library in `library.json`, `src/recent.rs` File > Open Recent in `recent.json` and `src/settings.rs` the settings in `settings.json` (all in `~/Library/Application Support/org.ukegeeks.studio/`). |
 
 ## Part of the UkeGeeks family
 

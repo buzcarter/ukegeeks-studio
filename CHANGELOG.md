@@ -4,6 +4,16 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0013: the Library (#16, 2026-11-07)
+
+- **The Library sidebar:** the main window lists the songbooks you added, by name (two with the same name show their parent folder). Click one to list its songs; it's selected again at the next launch (Settings: "Select the songbook I used last").
+- **Adding:** File > Add Songbook to Library… (Shift+Cmd+O; it was Open Songbook…), the + under the sidebar, or the header's Add Songbook…. New Song… with no songbook selected adds one first.
+- **Removing:** − under the sidebar, or right-click a songbook > Remove from Library. The folder and its songs stay on disk.
+- **`src-tauri/src/library.rs`:** `library.json` with the folders and the one selected last; the folders are allowed again at launch; only folders the Open dialog allowed can be added. Every window hears when it changes (`studio://library`).
+- **Open Recent lists songs only.** The first time, the Library starts from its songbooks.
+- **`npm run preview`:** the fake Tauri keeps a Library, seeded with /songs and /other.
+- **Board:** task 0020 (on a Mac, stay running with no windows).
+
 ### Task 0016 fixes: Close button, where the song is saved (#15, 2026-11-07)
 
 - **Close** replaces "← Songs" in a song window's corner bar. It asks about unsaved changes like the red button and Cmd+W. Cmd+L still brings the song list forward.
