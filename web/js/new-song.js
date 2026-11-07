@@ -3,12 +3,12 @@
  * and artist, then creates "Title - Artist.cpm" (or as Settings names files) in the open songbook
  * (SongRepository.create: a unique name, never overwrites) and opens it in its own window.
  *
- * With no songbook open, the Open Songbook dialog comes first. The dialog here is the
+ * With no songbook open, Add Songbook to Library comes first. The dialog here is the
  * page's own (<dialog>): the dialog plugin has no text input.
  */
 import {
-  escapeHtml, folderName, getFolder, getSettings, joinPath, loadSettings, openSongbook, openSongbookSong,
-  openSongFile, pickFolder, SONG_EXTENSION, songFileBase, tauri,
+  addSongbook, escapeHtml, folderName, getFolder, getSettings, joinPath, loadSettings, openSongbook,
+  openSongbookSong, openSongFile, SONG_EXTENSION, songFileBase, tauri,
 } from './songbook.js';
 
 /** Shows the New Song dialog. Resolves to { title, artist }, or null if cancelled. */
@@ -58,7 +58,7 @@ function askTitleAndArtist(songbookName) {
 export async function newSong() {
   let folder = getFolder();
   if (!folder) {
-    folder = await pickFolder();
+    folder = await addSongbook();
     if (!folder) return;
   }
   const answer = await askTitleAndArtist(folderName(folder));

@@ -27,7 +27,7 @@ const FILE_NAMINGS: [&str; 3] = ["title-artist", "title", "artist-title"];
 pub struct Settings {
   /// which song files the list shows, from KNOWN_EXTENSIONS
   pub song_extensions: Vec<String>,
-  /// open the last songbook when the app starts
+  /// select the Library's last-used songbook when the app starts
   pub reopen_last_songbook: bool,
   /// how new songs are named, and renamed: one of FILE_NAMINGS
   pub file_naming: String,

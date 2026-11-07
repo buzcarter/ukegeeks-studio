@@ -4,14 +4,15 @@
  * files, dialogs or menus.
  *
  * - Files live in localStorage under "fakefs:<path>". Two songbooks are seeded:
- *   /songs (a.cpm, b.cpm) and /other (z.cpm), with /other as the recent songbook.
- * - Settings and the recent lists live in localStorage too ("fakesettings",
- *   "fakerecent").
+ *   /songs (a.cpm, b.cpm) and /other (z.cpm), both in the Library, /other selected.
+ * - Settings, the recent lists and the Library live in localStorage too
+ *   ("fakesettings", "fakerecent", "fakelibrary").
+ * - Add Songbook: set __nextOpen to a folder first (one with files, like /songs).
  * - Dialogs answer from globals you set first: __nextOpen (a path, or null for
  *   Cancel), __nextSave, __nextAsk (true/false), __nextChoice (a button label for
  *   message() with custom buttons; used once).
- * - Menu items: __menu('save'), __menu('quit'), …; Open Recent: __recent({ folder,
- *   song, single }); settings changed: __settings({ ... }).
+ * - Menu items: __menu('save'), __menu('quit'), …; settings changed:
+ *   __settings({ ... }). (Open Recent's songs open windows from Rust: not faked.)
  * - Closing the window: await __close({ preventDefault() {} }).
  * - Windows: each browser tab is one. The song list is "main"; opening a song
  *   (open_song_window) opens a tab named after its path, so opening it again goes
@@ -66,11 +67,20 @@
   // the app's own Rust commands (src-tauri/src/*.rs)
   const commands = {
     recent_list: () => read('fakerecent', { songbooks: [], songs: [] }),
-    recent_add_songbook: ({ folder }) => {
-      const recent = commands.recent_list();
-      recent.songbooks = [folder, ...recent.songbooks.filter((f) => f !== folder)];
-      localStorage.setItem('fakerecent', JSON.stringify(recent));
+    library_get: () => read('fakelibrary', { songbooks: [], selected: null }),
+    library_add: ({ folder }) => {
+      const library = commands.library_get();
+      if (!library.songbooks.includes(folder)) library.songbooks.push(folder);
+      library.selected = folder;
+      return saveLibrary(library);
     },
+    library_remove: ({ folder }) => {
+      const library = commands.library_get();
+      library.songbooks = library.songbooks.filter((f) => f !== folder);
+      if (library.selected === folder) library.selected = null;
+      return saveLibrary(library);
+    },
+    library_select: ({ folder }) => saveLibrary({ ...commands.library_get(), selected: folder }),
     recent_add_song: (song) => {
       const recent = commands.recent_list();
       recent.songs = [song, ...recent.songs.filter((s) => !(s.folder === song.folder && s.filename === song.filename))];
@@ -95,6 +105,12 @@
 
   // the app's window labels: "main" for the song list, "song-N" for songs
   if (!window.name) window.name = location.pathname.endsWith('editor.html') ? 'song:?' : 'main';
+  function saveLibrary(library) {
+    localStorage.setItem('fakelibrary', JSON.stringify(library));
+    if (listeners['studio://library']) listeners['studio://library']({ payload: library });
+    return library;
+  }
+
   const appWindow = {
     label: window.name === 'main' ? 'main' : 'song-1',
     async setTitle(title) { log('title', title); },
@@ -133,13 +149,15 @@
   };
 
   window.__menu = (id) => listeners['studio://menu']({ payload: id });
-  window.__recent = (payload) => listeners['studio://open-recent']({ payload });
   window.__settings = (payload) => listeners['studio://settings']({ payload });
 
   if (!localStorage.getItem(`${LS}/songs/a.cpm`)) {
     localStorage.setItem(`${LS}/songs/a.cpm`, '{title: Alpha}\n[C]Hello [G]world');
     localStorage.setItem(`${LS}/songs/b.cpm`, '{title: Beta}\n[F]Hi');
     localStorage.setItem(`${LS}/other/z.cpm`, '{title: Zed}\n[C]z');
-    localStorage.setItem('fakerecent', JSON.stringify({ songbooks: ['/other'], songs: [] }));
+    localStorage.setItem('fakerecent', JSON.stringify({ songbooks: [], songs: [] }));
+  }
+  if (!localStorage.getItem('fakelibrary')) {
+    localStorage.setItem('fakelibrary', JSON.stringify({ songbooks: ['/songs', '/other'], selected: '/other' }));
   }
 })();

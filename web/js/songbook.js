@@ -1,11 +1,11 @@
 /**
  * The open songbook: which folder it is, and a SongRepository that reads and
- * writes its songs through Tauri's fs plugin.
+ * writes its songs through Tauri's fs plugin. And the Library: the songbooks the
+ * player added (src-tauri/src/library.rs), whose folders the app may read again at
+ * every launch without the Open dialog.
  *
- * The open folder is remembered for this run of the app (sessionStorage). Across
- * launches, the app keeps a list of recent songbooks and songs (File > Open
- * Recent, src-tauri/src/recent.rs), whose folders it may read again without the
- * Open dialog.
+ * The open folder is remembered per window for this run of the app
+ * (sessionStorage). File > Open Recent lists recent songs (src-tauri/src/recent.rs).
  */
 import './songs.js';
 
@@ -22,6 +22,7 @@ export const TXT_SONG_EXTENSION = '.cpm.txt';
 export const ALL_EXTENSIONS = ['.cpm', '.txt', '.cho', '.crd', '.chopro', '.chord', '.chordpro', '.pro'];
 
 const SETTINGS_EVENT = 'studio://settings';
+const LIBRARY_EVENT = 'studio://library';
 // before Settings existed, the song list's "Also list .cpm.txt songs" box (localStorage)
 const OLD_INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
 
@@ -120,10 +121,13 @@ export function setFolder(folder) {
   }
 }
 
-/** Shows the Open dialog. Returns the chosen folder, or null if cancelled. */
+/**
+ * Shows the Open dialog for a songbook folder. Returns the chosen folder, or null if
+ * cancelled. Use addSongbook() to put it in the Library too.
+ */
 export async function pickFolder() {
   const folder = await tauri().dialog.open({
-    title: 'Open Songbook',
+    title: 'Add Songbook to Library',
     directory: true,
     multiple: false,
     // the songs sit directly in the folder; no access to its subfolders is needed
@@ -135,22 +139,44 @@ export async function pickFolder() {
 }
 
 /**
- * The recent lists: { songbooks: [folder, …], songs: [{ folder, filename, title }, …] },
- * most recent first. Empty outside the app.
+ * The Library: { songbooks: [folder, …] (in the order added), selected: folder or
+ * null }. Empty outside the app.
  */
-export async function recentList() {
+export async function getLibrary() {
   try {
-    return await tauri().core.invoke('recent_list');
+    return await tauri().core.invoke('library_get');
   } catch (err) {
-    console.warn('[studio] recent_list:', err);
-    return { songbooks: [], songs: [] };
+    console.warn('[studio] library_get:', err);
+    return { songbooks: [], selected: null };
   }
 }
 
-/** Puts an open songbook at the top of File > Open Recent. */
-export function addRecentSongbook(folder) {
-  return tauri().core.invoke('recent_add_songbook', { folder })
-    .catch((err) => console.warn('[studio] recent_add_songbook:', err));
+/**
+ * Picks a folder and adds it to the Library (selected, and open in this window).
+ * Resolves to the folder, or null if cancelled.
+ */
+export async function addSongbook() {
+  const folder = await pickFolder();
+  if (!folder) return null;
+  await tauri().core.invoke('library_add', { folder });
+  return folder;
+}
+
+/** Takes a songbook out of the Library; its folder stays on disk. Resolves to the Library. */
+export function removeSongbook(folder) {
+  return tauri().core.invoke('library_remove', { folder });
+}
+
+/** Remembers the songbook selected in the sidebar, for the next launch. */
+export function selectSongbook(folder) {
+  return tauri().core.invoke('library_select', { folder })
+    .catch((err) => console.warn('[studio] library_select:', err));
+}
+
+/** Runs callback(library) whenever the Library changes, in any window. */
+export function onLibraryChanged(callback) {
+  tauri().event.listen(LIBRARY_EVENT, (event) => callback(event.payload))
+    .catch((err) => console.error('[studio] Library events:', err));
 }
 
 /**

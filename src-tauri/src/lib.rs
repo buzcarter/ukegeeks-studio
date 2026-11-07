@@ -6,10 +6,11 @@
 //! Each song opens in its own window (windows.rs). The menu's own items (New Song…,
 //! Open…, Save, Save As…, Print…) don't act here: they send a `studio://menu` event
 //! with the item's id to the window in front, which knows whether its song has
-//! unsaved changes (web/js/menu.js). Open Songbook… and Show Song List go to the song
-//! list. Quit asks each song window in turn (windows.rs). File > Open Recent is in
+//! unsaved changes (web/js/menu.js). Add Songbook to Library… and Show Song List go
+//! to the song list, whose sidebar is the Library (library.rs). Quit asks each song window in turn (windows.rs). File > Open Recent is in
 //! recent.rs.
 
+mod library;
 mod recent;
 mod settings;
 mod windows;
@@ -19,6 +20,7 @@ use tauri::{AppHandle, Manager, RunEvent, WindowEvent};
 
 const NEW_SONG: &str = "new-song";
 const OPEN_FILE: &str = "open-file";
+/// File > Add Songbook to Library… (the id is from when it was Open Songbook…)
 const OPEN_SONGBOOK: &str = "open-songbook";
 const SAVE: &str = "save";
 const SAVE_AS: &str = "save-as";
@@ -59,7 +61,7 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
     &[
       &MenuItem::with_id(app, NEW_SONG, "New Song…", true, Some("CmdOrCtrl+N"))?,
       &MenuItem::with_id(app, OPEN_FILE, "Open…", true, Some("CmdOrCtrl+O"))?,
-      &MenuItem::with_id(app, OPEN_SONGBOOK, "Open Songbook…", true, Some("CmdOrCtrl+Shift+O"))?,
+      &MenuItem::with_id(app, OPEN_SONGBOOK, "Add Songbook to Library…", true, Some("CmdOrCtrl+Shift+O"))?,
       open_recent,
       &sep()?,
       &MenuItem::with_id(app, SAVE, "Save", true, Some("CmdOrCtrl+S"))?,
@@ -310,7 +312,10 @@ pub fn run() {
       save_song_file,
       print_page,
       recent::recent_list,
-      recent::recent_add_songbook,
+      library::library_get,
+      library::library_add,
+      library::library_remove,
+      library::library_select,
       recent::recent_add_song,
       settings::settings_get,
       settings::settings_set,
@@ -323,6 +328,8 @@ pub fn run() {
     .setup(|app| {
       let handle = app.handle();
       let recent = recent::load(handle);
+      let old_songbooks = recent::take_songbooks(handle, &recent);
+      app.manage(library::load(handle, &old_songbooks));
       let open_recent = recent::build_submenu(handle, &recent)?;
       app.manage(recent);
       app.manage(settings::load(handle));

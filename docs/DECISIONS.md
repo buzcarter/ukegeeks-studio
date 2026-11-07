@@ -19,13 +19,26 @@ Every later piece (the Library's sidebar, search results, Favorites) ends in "op
 
 Windows, not tabs or a split view: the editor finds its parts by id, so it's one song per page. A window per song keeps that true and needs no change to `@ukegeeks/song-editor` (whose TypeScript conversion is someone else's work now). Copy and paste between windows just works.
 
+### The Library (task 0013)
+
+Agreed with the owner on 2026-11-07:
+
+- **The main window is the Library:** a sidebar of songbooks, the selected one's songs beside it. Songs open in their own windows.
+- **Add Songbook to Library…** (Shift+Cmd+O, the + button, or the header's Add Songbook…) replaces Open Songbook…. A songbook stays until it's removed (− or right-click > Remove from Library), which never touches the folder.
+- **One folder is one songbook.** Subfolders aren't scanned; add one to make it a songbook of its own.
+- **Open Recent lists songs only.** The first time, the Library starts from Open Recent's songbooks. The setting "Open the last songbook" became "Select the songbook I used last".
+- **Kept in `library.json`,** like recent.json: the folders are allowed again at launch, only folders the Open dialog already allowed can be added, and removing one ends its access at the next launch. A songbook whose folder is gone stays listed (a drive may just be unplugged); choosing it says the folder can't be read.
+- **The sidebar sorts by name;** two songbooks with the same name ("cpm") show their parent folder's name too.
+- **Printing a whole songbook** (one PDF) is still Phase 4. Each song prints from its window.
+- **Staying open on a Mac with no windows** is task 0020, its own PR.
+
 ### How song windows work (task 0016)
 
 - **One window per song,** labeled `song-1`, `song-2`, …; the song list is `main`. Opening a song that's open brings its window forward (Rust keeps which file each window holds; the page tells it again after a rename or Save As).
 - **The address carries the folder** (`editor.html?folder=…&song=…`): each window has its own session storage, so a new window doesn't know the open songbook.
 - **Menu items go to the window in front.** Open Songbook… and recent songbooks go to the song list; a recent song opens its window. Show Song List reopens the list if it was closed.
 - **Unsaved changes are asked only on close and Quit,** since opening another song no longer leaves this one. Quit asks each song window in turn, bringing it forward; Continue Editing anywhere stops quitting.
-- **For now the app still ends when its last window closes,** as before. Whether it should stay running on a Mac with no windows (the Mac norm) is for the Library task (0013), which decides what the main window is.
+- **For now the app still ends when its last window closes,** as before. On a Mac it will stay running (task 0020).
 
 ## Menus, settings and new songs (2026-11-06)
 

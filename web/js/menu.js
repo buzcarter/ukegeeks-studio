@@ -2,10 +2,9 @@
  * The app menu's own items (built in src-tauri/src/lib.rs) arrive as a
  * "studio://menu" event with the item's id, sent to one window only
  * (src-tauri/src/windows.rs): "new-song", "open-file", "save", "save-as", "print" to
- * the window in front; "open-songbook" to the song list; "quit" to each song window in
- * turn. (Settings…, Help's items and Show Song List are handled in Rust.) A recent
- * songbook arrives at the song list as "studio://open-recent" with { folder },
- * handled as "open-recent"; a recent song opens in its own window. Each page says
+ * the window in front; "open-songbook" (File > Add Songbook to Library…) to the song
+ * list; "quit" to each song window in turn. (Settings…, Help's items, Show Song List
+ * and Open Recent's songs are handled in Rust.) Each page says
  * what to do with onMenu(); items a page doesn't handle do nothing, except Quit,
  * which says yes.
  *
@@ -13,7 +12,6 @@
  * that failed to open its song.
  */
 const MENU_EVENT = 'studio://menu';
-const OPEN_RECENT_EVENT = 'studio://open-recent';
 
 const handlers = new Map();
 
@@ -58,6 +56,4 @@ if (window.__TAURI__) {
   const target = { kind: 'AnyLabel', label: window.__TAURI__.window.getCurrentWindow().label };
   listen(MENU_EVENT, (event) => handle(event.payload), { target })
     .catch((err) => console.error('[studio] menu events:', err));
-  listen(OPEN_RECENT_EVENT, (event) => handle('open-recent', event.payload), { target })
-    .catch((err) => console.error('[studio] Open Recent events:', err));
 }

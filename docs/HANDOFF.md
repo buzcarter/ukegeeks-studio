@@ -7,8 +7,8 @@ Written 2026-11-07, after PRs #1–#13 were merged. Read [CLAUDE.md](../CLAUDE.m
 UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothing is released or bundled yet.
 
 - **Songbooks:**
-  - Open Songbook… (Shift+Cmd+O) picks a folder of ChordPro songs; the song list sorts them like the Songbook.
-  - File > Open Recent has the last 10 songbooks and songs, and the last songbook reopens at launch.
+  - The Library: the main window's sidebar lists the songbooks (folders) you added with Add Songbook to Library… (Shift+Cmd+O, or +); − or right-click removes one. The selected one's songs are listed like the Songbook sorts them.
+  - Each song opens in its own window; File > Open Recent has the last 10 songs, and the last songbook is selected at launch.
 - **Songs:**
   - The Song-a-Matic editor (`@ukegeeks/song-editor`) edits a song.
   - Save (Cmd+S) writes it; Save As… (Shift+Cmd+S) saves under a new name.
@@ -36,7 +36,8 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 | `web/css/wood.css` | The faux-wood look. |
 | `src-tauri/src/lib.rs` | The menu and where its items go, the `save_song_file` and `print_page` commands, and Dock > Quit. |
 | `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
-| `src-tauri/src/recent.rs`, `settings.rs` | Open Recent and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
+| `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbook folders, the one selected last; folders allowed again at launch. |
+| `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
 | `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
 | `scripts/preview/` | `npm run preview`: the pages in a browser with a fake Tauri. |

@@ -14,7 +14,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What |
 |---|---|
-| 0013 | The Library: several folders, each its own songbook, in a sidebar beside the song list; view or print each one on its own (one-PDF printing stays in Phase 4) |
+| 0020 | On a Mac, the app stays running when its last window closes; clicking the Dock icon brings back the Library. (Windows still quits.) |
 | 0017 | Search the Library by title, artist or song text |
 | 0018 | Favorites: songs starred from any songbook, in one list |
 | 0019 | A first-run welcome or short tour, so a new player gets the most out of the app |
@@ -31,6 +31,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0013 | The Library: songbook folders in a sidebar beside the song list (`library.json`); Add Songbook to Library… replaces Open Songbook…; Open Recent lists songs only. Printing a whole songbook stays in Phase 4 | #16 |
 | 0016 | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | pushed to `main`; fixes #15 |
 | 0015 | CHANGELOG.md, a new handoff (docs/HANDOFF.md), `npm run preview` (the pages in a browser with a fake Tauri) | #14 |
 | 0014 | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #10 |
