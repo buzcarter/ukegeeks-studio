@@ -6,10 +6,12 @@
 //! The menu's own items (Open Songbook…, Save, Save As…, Quit) don't act here: they
 //! send a `studio://menu` event with the item's id to the page, which knows whether
 //! the song has unsaved changes (web/js/menu.js). Quitting goes through the page
-//! too, which then calls the `quit` command.
+//! too, which then calls the `quit` command. File > Open Recent is in recent.rs.
+
+mod recent;
 
 use tauri::menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{AppHandle, Emitter, Manager, RunEvent, Runtime};
+use tauri::{AppHandle, Emitter, Manager, RunEvent};
 
 /// The event the pages listen for; the payload is the menu item's id.
 const MENU_EVENT: &str = "studio://menu";
@@ -19,7 +21,7 @@ const SAVE: &str = "save";
 const SAVE_AS: &str = "save-as";
 const QUIT: &str = "quit";
 
-fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
+fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Result<Menu<tauri::Wry>> {
   let about = AboutMetadata {
     name: Some("UkeGeeks Studio".into()),
     copyright: Some("Copyright 2026 Buz Carter. GPL-3.0.".into()),
@@ -53,6 +55,7 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     true,
     &[
       &MenuItem::with_id(app, OPEN_SONGBOOK, "Open Songbook…", true, Some("CmdOrCtrl+O"))?,
+      open_recent,
       &PredefinedMenuItem::separator(app)?,
       &MenuItem::with_id(app, SAVE, "Save", true, Some("CmdOrCtrl+S"))?,
       &MenuItem::with_id(app, SAVE_AS, "Save As…", true, Some("CmdOrCtrl+Shift+S"))?,
@@ -93,7 +96,7 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 }
 
 /// Asks the page to quit: it checks for unsaved changes, then calls `quit`.
-fn request_quit<R: Runtime>(app: &AppHandle<R>) {
+fn request_quit(app: &AppHandle) {
   if let Err(err) = app.emit(MENU_EVENT, QUIT) {
     eprintln!("[studio] can't send quit to the page: {err}");
     app.exit(0);
@@ -113,17 +116,29 @@ pub fn run() {
   let app = tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_fs::init())
-    .menu(build_menu)
     .on_menu_event(|app, event| {
       let id = event.id().as_ref();
+      if recent::on_menu_event(app, id) {
+        return;
+      }
       if [OPEN_SONGBOOK, SAVE, SAVE_AS, QUIT].contains(&id) {
         if let Err(err) = app.emit(MENU_EVENT, id) {
           eprintln!("[studio] can't send menu item {id} to the page: {err}");
         }
       }
     })
-    .invoke_handler(tauri::generate_handler![quit])
+    .invoke_handler(tauri::generate_handler![
+      quit,
+      recent::recent_list,
+      recent::recent_add_songbook,
+      recent::recent_add_song,
+    ])
     .setup(|app| {
+      let handle = app.handle();
+      let recent = recent::load(handle);
+      let open_recent = recent::build_submenu(handle, &recent)?;
+      app.manage(recent);
+      app.set_menu(build_menu(handle, &open_recent)?)?;
       #[cfg(target_os = "macos")]
       dock_quit::install(app.handle().clone());
       #[cfg(not(target_os = "macos"))]
