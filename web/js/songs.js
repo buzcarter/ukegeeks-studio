@@ -277,7 +277,9 @@ class SongRepository {
    */
   async update(filename, text) {
     const target = this.pathFor(filename);
-    const tmp = this.pathFor(`.${randomHex(6)}.ugs-tmp`);
+    // No leading dot (the Songbook's was ".<hex>.ugs-tmp"): on macOS the folder access
+    // Tauri grants doesn't cover dotfiles. Not a ".cpm.txt" name, so never listed.
+    const tmp = this.pathFor(`${filename}.${randomHex(6)}.ugs-tmp`);
     try {
       await this.fs.writeTextFile(tmp, text, { createNew: true });
       await this.fs.rename(tmp, target);

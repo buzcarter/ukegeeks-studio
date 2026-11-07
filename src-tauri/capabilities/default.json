@@ -1,11 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window: pick a songbook folder, then read and write the songs in it. There are no fixed fs scopes; the dialog plugin adds the folder the user picks while the app runs.",
+  "description": "The main window: pick a songbook folder, then read and write the songs in it. There are no fixed fs scopes; the dialog plugin adds the folder the user picks (and the files directly in it) while the app runs. dialog:allow-message is for the unsaved-changes question (dialog.ask).",
   "windows": ["main"],
   "permissions": [
     "core:default",
     "dialog:allow-open",
+    "dialog:allow-message",
     "fs:allow-read-dir",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",

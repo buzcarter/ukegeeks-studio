@@ -20,6 +20,12 @@
   text-decoration: underline;
 }
 
+.studioProblem {
+  margin: 3em;
+  font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: #b3261e;
+}
+
 @media print {
   .studioBar {
     display: none;
