@@ -20,15 +20,14 @@ Built with [Tauri 2](https://tauri.app/) for macOS and Windows; the same project
 
 <img src="docs/images/ukegeeks-mascot-192.png" alt="The UkeGeeks mascot, a dinosaur playing the ukulele" width="96" height="96" align="right">
 
-
-| Piece | What it does |
-|---|---|
-| **UkeGeeks Studio** (this repo) | The desktop app |
-| [Song Editor](https://github.com/buzcarter/song-editor) (`@ukegeeks/song-editor`) | The Song-a-Matic editor: menus, dialogs, Chord Builder, fullscreen editing. [Demo](https://buzcarter.github.io/song-editor/) |
-| [Song Formatter](https://github.com/buzcarter/song-formatter) (`@ukegeeks/song-formatter`) | Reads ChordPro, draws the songsheet and SVG chord diagrams |
-| [ACE ChordPro Extension](https://github.com/buzcarter/ace-chordpro-extension) (`@ukegeeks/ace-chordpro-extension`) | Highlighting and autocomplete for the fullscreen editor |
-| [UkeGeeks Songbook](https://github.com/buzcarter/UkeGeeks) | The self-hosted web songbook |
-| [ukegeeks.org](https://ukegeeks.org) | The home site |
+| Module                                                                        | Package                                                                                                    | What it does                                                                                                                 |
+|-------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| **UkeGeeks Studio**                                                           | [this repo](https://github.com/buzcarter/ukegeeks-studio)                                                  | The desktop app                                                                                                              |
+| [Song Editor](https://github.com/buzcarter/song-editor)                       | [npmjs `@ukegeeks/song-editor`](https://www.npmjs.com/package/@ukegeeks/song-editor)                       | The Song-a-Matic editor: menus, dialogs, Chord Builder, fullscreen editing. [Demo](https://buzcarter.github.io/song-editor/) |
+| [Song Formatter](https://github.com/buzcarter/song-formatter)                 | [npmjs `@ukegeeks/song-formatter`](https://www.npmjs.com/package/@ukegeeks/song-formatter)                 | Reads ChordPro, draws the songsheet and SVG chord diagrams [Demo](https://buzcarter.github.io/song-formatter/)               |
+| [ACE ChordPro Extension](https://github.com/buzcarter/ace-chordpro-extension) | [npmjs `@ukegeeks/ace-chordpro-extension`](https://www.npmjs.com/package/@ukegeeks/ace-chordpro-extension) | Highlighting and autocomplete for the fullscreen editor[Demo](https://buzcarter.github.io/ace-chordpro-extension/)           |
+| [UkeGeeks Songbook](https://github.com/buzcarter/UkeGeeks)                    | [GitHub](https://github.com/buzcarter/ukegeeks)                                                            | The self-hosted web songbook[Demo](https://buzcarter.github.io/UkeGeeks/)                                                    |
+| [ukegeeks.org](https://ukegeeks.org)                                          |                                                                                                            | The home site with tutorials, examples, & videos                                                                             |
 
 ## License
 
