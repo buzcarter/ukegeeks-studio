@@ -1,7 +1,7 @@
 /**
  * The app menu's own items (built in src-tauri/src/lib.rs) arrive as a
  * "studio://menu" event with the item's id: "open-songbook", "save", "save-as",
- * "quit". File > Open Recent's items arrive as "studio://open-recent" with
+ * "show-song-list", "quit". (Help's items open web pages from Rust.) File > Open Recent's items arrive as "studio://open-recent" with
  * { folder, song }, handled as "open-recent". Each page says what to do with
  * onMenu(); items a page doesn't handle do nothing, except Quit, which quits.
  *

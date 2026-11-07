@@ -36,9 +36,12 @@ In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (ti
 | Cmd+O | File > Open Songbook… | Picks a songbook folder. In the editor, asks about unsaved changes first, then goes back to the song list. |
 | Cmd+S | File > Save | Saves the song (the editor's Save button). |
 | Shift+Cmd+S | File > Save As… | Saves under a new name. In the songbook folder, the editor switches to the new file; anywhere else, it saves a copy. |
+| Cmd+L | View > Show Song List | Goes back to the song list, asking about unsaved changes first. |
 | Cmd+W | File > Close Window | Closes the window, asking about unsaved changes first. |
 | Cmd+Q | UkeGeeks Studio > Quit | Quits, asking about unsaved changes first (so does Quit in the Dock). |
 | Cmd+Z, Shift+Cmd+Z, Cmd+X, Cmd+C, Cmd+V, Cmd+A | Edit | Undo, Redo, Cut, Copy, Paste, Select All in the text boxes. |
+
+View > Enter Full Screen and Help (UkeGeeks Studio Help, ChordPro Reference) have no shortcuts. On Windows the shortcuts use Ctrl instead of Cmd, Quit is File > Exit, and About is in Help. The editor's own controls (themes, transpose, the Chord Builder) stay in the editor.
 
 Editing files under `web/` reloads the window. `npm test` runs the tests for the song list code.
 

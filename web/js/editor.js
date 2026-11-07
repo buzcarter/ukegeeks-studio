@@ -35,10 +35,11 @@ function splitPath(path) {
 
 const cleanPath = (path) => path.replace(/[\/\\]+$/, '').normalize('NFC');
 
-// Until a song is open (or if it can't be), File > Open Songbook… and Open Recent
-// just go; main() replaces these with ones that ask about unsaved changes.
+// Until a song is open (or if it can't be), File > Open Songbook…, Open Recent and
+// View > Show Song List just go; main() replaces these with ones that ask about unsaved changes.
 onMenu('open-songbook', () => { location.href = 'index.html?open=1'; });
 onMenu('open-recent', openRecent);
+onMenu('show-song-list', () => { location.href = 'index.html'; });
 
 function showProblem(message) {
   container.innerHTML = `<p class="studioProblem">${escapeHtml(message)} <a href="index.html">Back to the songs</a></p>`;
@@ -196,6 +197,12 @@ async function main() {
     if (!isDirty()) return;
     event.preventDefault();
     if (await confirmDiscard('Go back to the songs')) location.href = 'index.html';
+  });
+
+  // View > Show Song List (Cmd+L): the same as "← Songs"
+  onMenu('show-song-list', async () => {
+    if (isDirty() && !(await confirmDiscard('Go back to the songs'))) return;
+    location.href = 'index.html';
   });
 
   // Closing the window (red button, Cmd+W). Once this listener exists, Tauri closes
