@@ -4,8 +4,8 @@
  * the editor page.
  */
 import {
-  addRecentSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, folderName, getFolder, getSettings,
-  loadSettings, onSettingsChanged, openRecent, openSongbook, pickFolder, recentList, setFolder,
+  addRecentSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, fileUri, folderName, getFolder, getSettings,
+  loadSettings, pickSongFile, onSettingsChanged, openRecent, openSongbook, pickFolder, recentList, setFolder,
   songExtensions,
 } from './songbook.js';
 import { onMenu } from './menu.js';
@@ -72,9 +72,22 @@ async function chooseSongbook() {
   }
 }
 
+/** File > Open… (Cmd+O): one song on its own, in the editor. */
+async function chooseSong() {
+  try {
+    const path = await pickSongFile();
+    if (path) location.href = fileUri(path);
+  } catch (err) {
+    showStatus(escapeHtml(err.message || String(err)), true);
+  }
+}
+
 document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
-// File > Open Songbook… (Cmd+O). Save and Save As do nothing here; Quit quits.
+document.getElementById('openSong').addEventListener('click', chooseSong);
+// File > Open Songbook… (Shift+Cmd+O) and Open… (Cmd+O). Save and Save As do nothing
+// here; Quit quits.
 onMenu('open-songbook', chooseSongbook);
+onMenu('open-file', chooseSong);
 onMenu('open-recent', openRecent);
 
 // Settings changed which song types to list

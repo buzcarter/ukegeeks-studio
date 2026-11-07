@@ -134,16 +134,62 @@ export function addRecentSongbook(folder) {
     .catch((err) => console.warn('[studio] recent_add_songbook:', err));
 }
 
-/** Puts an open song at the top of File > Open Recent. */
-export function addRecentSong(folder, filename, title) {
-  return tauri().core.invoke('recent_add_song', { folder, filename, title })
+/**
+ * Puts an open song at the top of File > Open Recent. single: opened on its own
+ * (File > Open…), not from a songbook.
+ */
+export function addRecentSong(folder, filename, title, single = false) {
+  return tauri().core.invoke('recent_add_song', { folder, filename, title, single })
     .catch((err) => console.warn('[studio] recent_add_song:', err));
 }
 
-/** Opens an item from File > Open Recent: { folder, song } (song is a filename, or null). */
-export function openRecent({ folder, song }) {
+/**
+ * Opens an item from File > Open Recent: { folder, song, single } (song is a filename,
+ * or null for a songbook; single: a song opened on its own, not from a songbook).
+ */
+export function openRecent({ folder, song, single }) {
+  if (song && single) {
+    location.href = fileUri(joinPath(folder, song));
+    return;
+  }
   setFolder(folder);
   location.href = song ? `editor.html?song=${encodeURIComponent(song)}` : 'index.html';
+}
+
+/** The editor page for a song opened on its own, by its full path. */
+export function fileUri(path) {
+  return `editor.html?file=${encodeURIComponent(path)}`;
+}
+
+/** A path split into its folder and filename. */
+export function splitPath(path) {
+  const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+  return { dir: path.slice(0, i), name: path.slice(i + 1) };
+}
+
+export function joinPath(folder, name) {
+  const sep = folder.includes('\\') && !folder.includes('/') ? '\\' : '/';
+  return folder.replace(/[\/\\]+$/, '') + sep + name;
+}
+
+/**
+ * File > Open…: shows the Open dialog for one song file, of any song type (not
+ * just the ones Settings lists). Resolves to its path, or null if cancelled. The
+ * dialog gives the app access to that file only.
+ */
+export async function pickSongFile() {
+  const path = await tauri().dialog.open({
+    title: 'Open Song',
+    multiple: false,
+    directory: false,
+    filters: [{ name: 'ChordPro songs', extensions: ALL_EXTENSIONS.map((ext) => ext.slice(1)) }],
+  });
+  return typeof path === 'string' ? path : null;
+}
+
+/** Writes a song opened on its own, or saved somewhere new (temp file + rename, in Rust). */
+export function saveSongFile(path, text) {
+  return tauri().core.invoke('save_song_file', { path, text });
 }
 
 /** The folder's last part, for display ("cpm" for ".../UkeGeeks/cpm"). */
