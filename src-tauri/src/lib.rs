@@ -3,7 +3,7 @@
 //! limited to the songbook folder the user picks with the dialog plugin (see
 //! capabilities/).
 //!
-//! The menu's own items (Open Songbook…, Save, Save As…, Show Song List, Quit) don't act here: they
+//! The menu's own items (Open…, Open Songbook…, Save, Save As…, Show Song List, Quit) don't act here: they
 //! send a `studio://menu` event with the item's id to the page, which knows whether
 //! the song has unsaved changes (web/js/menu.js). Quitting goes through the page
 //! too, which then calls the `quit` command. File > Open Recent is in recent.rs.
@@ -17,6 +17,7 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 /// The event the pages listen for; the payload is the menu item's id.
 const MENU_EVENT: &str = "studio://menu";
 
+const OPEN_FILE: &str = "open-file";
 const OPEN_SONGBOOK: &str = "open-songbook";
 const SAVE: &str = "save";
 const SAVE_AS: &str = "save-as";
@@ -54,7 +55,8 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
     "File",
     true,
     &[
-      &MenuItem::with_id(app, OPEN_SONGBOOK, "Open Songbook…", true, Some("CmdOrCtrl+O"))?,
+      &MenuItem::with_id(app, OPEN_FILE, "Open…", true, Some("CmdOrCtrl+O"))?,
+      &MenuItem::with_id(app, OPEN_SONGBOOK, "Open Songbook…", true, Some("CmdOrCtrl+Shift+O"))?,
       open_recent,
       &sep()?,
       &MenuItem::with_id(app, SAVE, "Save", true, Some("CmdOrCtrl+S"))?,
@@ -181,6 +183,37 @@ fn request_quit(app: &AppHandle) {
   }
 }
 
+/// Saves a song opened on its own (File > Open…) or saved somewhere new (Save As…):
+/// a temp file next to it, then a rename, like the pages' Save in a songbook. Only
+/// for a file the app was given (the Open or Save dialog, or File > Open Recent).
+/// Rust writes the temp file because the app has no access to the file's folder.
+#[tauri::command]
+fn save_song_file(app: AppHandle, path: String, text: String) -> Result<(), String> {
+  use tauri_plugin_fs::FsExt;
+  let target = std::path::PathBuf::from(&path);
+  let name = target.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+  if !target.is_absolute() || name.is_empty() || !app.fs_scope().is_allowed(&target) {
+    return Err(format!("not a file the app may write: {path}"));
+  }
+  let stamp = std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .map(|d| d.subsec_nanos())
+    .unwrap_or(0);
+  // not a dotfile, as in SongRepository.update; ".ugs-tmp" is never listed as a song
+  let tmp = target.with_file_name(format!("{name}.{:x}{:x}.ugs-tmp", std::process::id(), stamp));
+  let result = std::fs::OpenOptions::new()
+    .write(true)
+    .create_new(true)
+    .open(&tmp)
+    .and_then(|mut file| std::io::Write::write_all(&mut file, text.as_bytes()))
+    .and_then(|_| std::fs::rename(&tmp, &target));
+  if let Err(err) = result {
+    let _ = std::fs::remove_file(&tmp);
+    return Err(format!("can't save {path}: {err}"));
+  }
+  Ok(())
+}
+
 /// Ends the app. The pages call this once unsaved changes are saved or discarded.
 #[tauri::command]
 fn quit(app: AppHandle) {
@@ -203,7 +236,7 @@ pub fn run() {
         settings::show_window(app);
       } else if [HELP, CHORDPRO_HELP].contains(&id) {
         open_help(id);
-      } else if [OPEN_SONGBOOK, SAVE, SAVE_AS, SHOW_SONG_LIST, QUIT].contains(&id) {
+      } else if [OPEN_FILE, OPEN_SONGBOOK, SAVE, SAVE_AS, SHOW_SONG_LIST, QUIT].contains(&id) {
         if let Err(err) = app.emit(MENU_EVENT, id) {
           eprintln!("[studio] can't send menu item {id} to the page: {err}");
         }
@@ -211,6 +244,7 @@ pub fn run() {
     })
     .invoke_handler(tauri::generate_handler![
       quit,
+      save_song_file,
       recent::recent_list,
       recent::recent_add_songbook,
       recent::recent_add_song,

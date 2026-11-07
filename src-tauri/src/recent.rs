@@ -31,6 +31,9 @@ pub struct RecentSong {
   pub folder: String,
   pub filename: String,
   pub title: String,
+  /// opened on its own (File > Open…): the app may read the file, not its folder
+  #[serde(default)]
+  pub single: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
@@ -46,6 +49,7 @@ pub struct Recent {
 struct OpenRecent {
   folder: String,
   song: Option<String>,
+  single: bool,
 }
 
 pub struct RecentState {
@@ -68,11 +72,17 @@ pub fn load(app: &AppHandle) -> RecentState {
   recent.songs.retain(|song| Path::new(&song.folder).join(&song.filename).is_file());
 
   let scope = app.fs_scope();
-  let folders = recent.songbooks.iter().chain(recent.songs.iter().map(|song| &song.folder));
+  let folders = recent.songbooks.iter().chain(recent.songs.iter().filter(|s| !s.single).map(|s| &s.folder));
   for folder in folders {
     // as the Open dialog does: the folder and the files directly in it
     if let Err(err) = scope.allow_directory(folder, false) {
       eprintln!("[studio] can't allow recent folder {folder}: {err}");
+    }
+  }
+  // songs opened on their own: just the file, as the Open dialog does
+  for song in recent.songs.iter().filter(|s| s.single) {
+    if let Err(err) = scope.allow_file(Path::new(&song.folder).join(&song.filename)) {
+      eprintln!("[studio] can't allow recent song {}: {err}", song.filename);
     }
   }
 
@@ -189,10 +199,10 @@ pub fn on_menu_event(app: &AppHandle, id: &str) -> bool {
     return true;
   } else if let Some(i) = id.strip_prefix(SONGBOOK_ID).and_then(|i| i.parse::<usize>().ok()) {
     let recent = state.list.lock().unwrap();
-    recent.songbooks.get(i).map(|folder| OpenRecent { folder: folder.clone(), song: None })
+    recent.songbooks.get(i).map(|folder| OpenRecent { folder: folder.clone(), song: None, single: false })
   } else if let Some(i) = id.strip_prefix(SONG_ID).and_then(|i| i.parse::<usize>().ok()) {
     let recent = state.list.lock().unwrap();
-    recent.songs.get(i).map(|s| OpenRecent { folder: s.folder.clone(), song: Some(s.filename.clone()) })
+    recent.songs.get(i).map(|s| OpenRecent { folder: s.folder.clone(), song: Some(s.filename.clone()), single: s.single })
   } else {
     return false;
   };
@@ -225,7 +235,7 @@ pub fn recent_add_songbook(app: AppHandle, state: State<RecentState>, folder: St
 }
 
 /// Puts a song at the top of the list. Only a file directly in a folder the app may
-/// already read.
+/// already read, or (single) a file the app may read on its own.
 #[tauri::command]
 pub fn recent_add_song(
   app: AppHandle,
@@ -233,12 +243,19 @@ pub fn recent_add_song(
   folder: String,
   filename: String,
   title: String,
+  single: bool,
 ) -> Result<(), String> {
   let bare = !filename.is_empty() && !filename.starts_with('.') && !filename.contains(['/', '\\']);
-  if !bare || !app.fs_scope().is_allowed(&folder) {
-    return Err(format!("not a song in an open folder: {filename}"));
+  let allowed = if single {
+    app.fs_scope().is_allowed(Path::new(&folder).join(&filename))
+  } else {
+    app.fs_scope().is_allowed(&folder)
+  };
+  if !bare || !allowed {
+    return Err(format!("not a song the app may open: {filename}"));
   }
-  let song = RecentSong { folder, filename, title: if title.trim().is_empty() { "Untitled".into() } else { title } };
+  let title = if title.trim().is_empty() { "Untitled".into() } else { title };
+  let song = RecentSong { folder, filename, title, single };
   update(&app, &state, |recent| {
     recent.songs.retain(|s| !(s.folder == song.folder && s.filename == song.filename));
     recent.songs.insert(0, song);
