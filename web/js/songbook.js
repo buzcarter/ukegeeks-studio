@@ -12,32 +12,70 @@ import './songs.js';
 const { SongRepository } = globalThis.studioSongs;
 
 const FOLDER_KEY = 'studio.songbookFolder';
-const INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
 
-// Songs are "*.cpm" files. "*.cpm.txt" is how the Songbook names them (Apache serves
-// unknown file types badly); a setting lists those too.
+// Songs are "*.cpm" files, and new songs get ".cpm". Settings can list other song
+// file types too (src-tauri/src/settings.rs); ".txt" also covers "*.cpm.txt", how the
+// Songbook names its songs (Apache serves unknown file types badly).
 export const SONG_EXTENSION = '.cpm';
 export const TXT_SONG_EXTENSION = '.cpm.txt';
+/** Every extension Settings offers, in its order. */
+export const ALL_EXTENSIONS = ['.cpm', '.txt', '.cho', '.crd', '.chopro', '.chord', '.chordpro', '.pro'];
 
-/** Setting: also list "*.cpm.txt" songs. Kept by the app across launches (localStorage). */
-export function includeCpmTxt() {
+const SETTINGS_EVENT = 'studio://settings';
+// before Settings existed, the song list's "Also list .cpm.txt songs" box (localStorage)
+const OLD_INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
+
+let settings = { songExtensions: [SONG_EXTENSION], reopenLastSongbook: true };
+
+/**
+ * Reads the app's settings (settings.json, kept by Rust); call before using
+ * getSettings() or songExtensions(). Outside the app, the defaults.
+ */
+export async function loadSettings() {
   try {
-    return localStorage.getItem(INCLUDE_TXT_KEY) === '1';
+    settings = await tauri().core.invoke('settings_get');
+    await moveOldIncludeTxt();
+  } catch (err) {
+    console.warn('[studio] settings_get:', err);
+  }
+  return settings;
+}
+
+/** The old "Also list .cpm.txt songs" box becomes the ".txt" song type in Settings. */
+async function moveOldIncludeTxt() {
+  let old = null;
+  try {
+    old = localStorage.getItem(OLD_INCLUDE_TXT_KEY);
+    localStorage.removeItem(OLD_INCLUDE_TXT_KEY);
   } catch {
-    return false;
+    return;
+  }
+  if (old === '1' && !settings.songExtensions.includes('.txt')) {
+    await saveSettings({ ...settings, songExtensions: [...settings.songExtensions, '.txt'] });
   }
 }
 
-export function setIncludeCpmTxt(on) {
-  try {
-    localStorage.setItem(INCLUDE_TXT_KEY, on ? '1' : '0');
-  } catch {
-    /* the setting lasts for this page only */
-  }
+export function getSettings() {
+  return settings;
 }
 
-export function songExtensions() {
-  return includeCpmTxt() ? [SONG_EXTENSION, TXT_SONG_EXTENSION] : [SONG_EXTENSION];
+/** Saves new settings; resolves to them as kept. Every window hears about it. */
+export async function saveSettings(next) {
+  settings = await tauri().core.invoke('settings_set', { settings: next });
+  return settings;
+}
+
+/** Runs callback(settings) whenever the settings change (in the Settings window). */
+export function onSettingsChanged(callback) {
+  tauri().event.listen(SETTINGS_EVENT, (event) => {
+    settings = event.payload;
+    callback(settings);
+  }).catch((err) => console.error('[studio] settings events:', err));
+}
+
+/** The extensions for SongRepository: the chosen ones, plus ".cpm.txt" with ".txt". */
+export function songExtensions(extensions = settings.songExtensions) {
+  return extensions.includes('.txt') ? [...extensions, TXT_SONG_EXTENSION] : [...extensions];
 }
 
 export function tauri() {
