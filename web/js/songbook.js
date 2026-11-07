@@ -25,7 +25,26 @@ const SETTINGS_EVENT = 'studio://settings';
 // before Settings existed, the song list's "Also list .cpm.txt songs" box (localStorage)
 const OLD_INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
 
-let settings = { songExtensions: [SONG_EXTENSION], reopenLastSongbook: true };
+let settings = {
+  songExtensions: [SONG_EXTENSION],
+  reopenLastSongbook: true,
+  fileNaming: 'title-artist',
+  renameWithTitle: true,
+};
+
+/**
+ * A song's filename without its extension, from its title and artist, as Settings'
+ * "File names" says: "Title - Artist" (the Songbook's, and the default), "Title", or
+ * "Artist - Title". Just the title when there's no artist; '' with no title.
+ */
+export function songFileBase(title, artist, naming = settings.fileNaming) {
+  const { scrubForTag } = globalThis.studioSongs;
+  const t = scrubForTag(title);
+  const a = scrubForTag(artist);
+  if (!t) return '';
+  if (!a || naming === 'title') return t;
+  return naming === 'artist-title' ? `${a} - ${t}` : `${t} - ${a}`;
+}
 
 /**
  * Reads the app's settings (settings.json, kept by Rust); call before using

@@ -179,3 +179,33 @@ test('create names new songs "Title - Artist" and never overwrites', async () =>
   assert.equal(await nodeFs.readFile(path.join(dir, 'hello - me.cpm.txt'), 'utf8'), 'existing');
   assert.equal(await repo.create('{Odd}/Title', ''), ' Odd Title.cpm.txt'.trim());
 });
+
+test('create takes a base name instead of "Title - Artist"', async () => {
+  const { repo } = await songbook({});
+  assert.equal(await repo.create('Hello', 'Me', 'Me - Hello'), 'Me - Hello.cpm.txt');
+  assert.equal(await repo.create('Hello', 'Me', 'Me - Hello'), 'Me - Hello (2).cpm.txt');
+});
+
+test('updateAs saves under a new name, keeps the extension, never overwrites', async () => {
+  const { dir, repo } = await songbook({ 'old.cpm.txt': 'old', 'Taken.cpm.txt': 'other song' });
+  const name = await repo.updateAs('old.cpm.txt', 'Taken', 'new text');
+  assert.equal(name, 'Taken (2).cpm.txt');
+  assert.deepEqual((await nodeFs.readdir(dir)).sort(), ['Taken (2).cpm.txt', 'Taken.cpm.txt']);
+  assert.equal(await nodeFs.readFile(path.join(dir, name), 'utf8'), 'new text');
+  assert.equal(await nodeFs.readFile(path.join(dir, 'Taken.cpm.txt'), 'utf8'), 'other song');
+});
+
+test('updateAs is a plain update when the name stays (or changes only in case)', async () => {
+  const { dir, repo } = await songbook({ 'hello.cpm.txt': 'old' });
+  assert.equal(await repo.updateAs('hello.cpm.txt', 'Hello', 'new'), 'hello.cpm.txt');
+  assert.equal(await repo.updateAs('hello.cpm.txt', '', 'newer'), 'hello.cpm.txt');
+  assert.deepEqual(await nodeFs.readdir(dir), ['hello.cpm.txt']);
+  assert.equal(await nodeFs.readFile(path.join(dir, 'hello.cpm.txt'), 'utf8'), 'newer');
+});
+
+test('updateAs can rename back to a name the song itself had', async () => {
+  const { repo } = await songbook({ 'A.cpm.txt': 'a' });
+  const b = await repo.updateAs('A.cpm.txt', 'B', 'b');
+  assert.equal(b, 'B.cpm.txt');
+  assert.equal(await repo.updateAs(b, 'A', 'a again'), 'A.cpm.txt');
+});

@@ -15,8 +15,8 @@
  * (the Save dialog gives access to that one file).
  */
 import {
-  addRecentSong, escapeHtml, fileUri, getFolder, loadSettings, openRecent, openSongbook, pickSongFile,
-  saveSongFile, SONG_EXTENSION, splitPath, tauri,
+  addRecentSong, escapeHtml, fileUri, getFolder, getSettings, loadSettings, openRecent, openSongbook, pickSongFile,
+  saveSongFile, SONG_EXTENSION, songFileBase, splitPath, tauri,
 } from './songbook.js';
 import { onMenu, quitApp } from './menu.js';
 import { newSong } from './new-song.js';
@@ -92,26 +92,57 @@ async function main() {
     showProblem(opened.problem);
     return;
   }
-  const { song, filename, folder, songbook, path } = opened;
+  const { song, folder, songbook } = opened;
+  // the file can be renamed on save (Settings: rename when the title or artist changes)
+  let { filename, path } = opened;
+  let named = { title: song.title, artist: song.artist };
 
   let savedText = null;
-  const songName = song.title || filename;
+  let songName = song.title || filename;
   addRecentSong(folder, filename, songName, !songbook);
+
+  /**
+   * Writes the song. In a songbook, when its title or artist changed since it was
+   * opened or last saved, the file gets the name Settings says ("Title - Artist.cpm")
+   * and the page follows it. A song on its own keeps its name: the app may write only
+   * that file.
+   */
+  async function write(text) {
+    const parsed = parseSong(text);
+    const retitled = parsed.title !== named.title || parsed.artist !== named.artist;
+    if (!songbook) {
+      await opened.write(text);
+    } else if (retitled && getSettings().renameWithTitle) {
+      const newName = await songbook.updateAs(filename, songFileBase(parsed.title, parsed.artist), text);
+      if (newName !== filename) {
+        filename = newName;
+        path = songbook.pathFor(newName);
+        history.replaceState(null, '', songbook.songUri(newName));
+      }
+    } else {
+      await songbook.update(filename, text);
+    }
+    named = { title: parsed.title, artist: parsed.artist };
+    songName = parsed.title || filename;
+    addRecentSong(folder, filename, songName, !songbook);
+  }
 
   const editor = ugsEditorPlus.songAmatic.mount(container, {
     song: song.body,
     // @ukegeeks/ace-chordpro-extension's dist/, copied in by scripts/vendor.js
     aceUrl: 'vendor/ace/',
     save: async (text) => {
+      const before = filename;
       try {
-        await opened.write(text);
+        await write(text);
       } catch (err) {
         console.error(`[studio] saving ${filename}:`, err);
         throw err; // the editor shows its "problem saving" alert
       }
       savedText = text;
+      shownDirty = null; // the title may have changed too
       showDirty();
-      return `Saved ${filename}`;
+      return filename === before ? `Saved ${filename}` : `Saved as ${filename}`;
     },
   });
 

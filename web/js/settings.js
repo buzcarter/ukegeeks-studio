@@ -9,6 +9,8 @@ import { getSettings, loadSettings, saveSettings } from './songbook.js';
 
 const typeBoxes = [...document.querySelectorAll('input[name="songType"]')];
 const reopenBox = document.getElementById('reopenLastSongbook');
+const namingSelect = document.getElementById('fileNaming');
+const renameBox = document.getElementById('renameWithTitle');
 const typeProblem = document.getElementById('songTypeProblem');
 const saveProblem = document.getElementById('saveProblem');
 
@@ -20,6 +22,8 @@ function show(settings) {
     box.checked = extensionsOf(box).some((ext) => settings.songExtensions.includes(ext));
   }
   reopenBox.checked = settings.reopenLastSongbook;
+  namingSelect.value = settings.fileNaming;
+  renameBox.checked = settings.renameWithTitle;
 }
 
 async function save() {
@@ -30,7 +34,13 @@ async function save() {
     return;
   }
   try {
-    show(await saveSettings({ ...getSettings(), songExtensions, reopenLastSongbook: reopenBox.checked }));
+    show(await saveSettings({
+      ...getSettings(),
+      songExtensions,
+      reopenLastSongbook: reopenBox.checked,
+      fileNaming: namingSelect.value,
+      renameWithTitle: renameBox.checked,
+    }));
     saveProblem.hidden = true;
   } catch (err) {
     console.error('[studio] settings_set:', err);
@@ -39,5 +49,5 @@ async function save() {
   }
 }
 
-for (const box of [...typeBoxes, reopenBox]) box.addEventListener('change', save);
+for (const input of [...typeBoxes, reopenBox, namingSelect, renameBox]) input.addEventListener('change', save);
 show(await loadSettings());

@@ -260,32 +260,68 @@ class SongRepository {
   }
 
   /**
-   * Creates a new song stub named "Title - Artist" plus the first song extension (made unique if taken).
+   * A filename that isn't taken: base + ext, else "base (2)" + ext, and so on.
+   * Tauri's errors are plain strings with no "EEXIST" code, so this picks a name that
+   * isn't in the listing (macOS and Windows filenames ignore case) instead of retrying.
+   * @param {string} [except] a filename that doesn't count as taken (the song being renamed)
+   */
+  async availableFilename(base, ext = this.ext, except = null) {
+    const taken = new Set((await this.listFilenames()).filter((n) => n !== except).map(foldName));
+    for (let n = 1; n <= 50; n++) {
+      const candidate = (n === 1 ? base : `${base} (${n})`) + ext;
+      if (!taken.has(foldName(candidate))) return candidate;
+    }
+    // pathological: 50 songs with the same name, fall back to a random suffix
+    return `${base}.${randomHex(4)}${ext}`;
+  }
+
+  /**
+   * Creates a new song stub named "Title - Artist" (or the given base name) plus the
+   * first song extension (made unique if taken).
+   * @param {string} [baseName] the filename without extension, if not "Title - Artist"
    * @returns {Promise<string>} the new filename
    */
-  async create(title, artist) {
+  async create(title, artist, baseName) {
     const cleanTitle = scrubForTag(title);
     const cleanArtist = scrubForTag(artist);
 
-    let base = scrubForFilename(cleanArtist ? `${cleanTitle} - ${cleanArtist}` : cleanTitle) || 'untitled';
+    const base = scrubForFilename(baseName || (cleanArtist ? `${cleanTitle} - ${cleanArtist}` : cleanTitle)) || 'untitled';
     const content =
       `{title: ${cleanTitle || 'untitled'}}\n` +
       `{artist: ${cleanArtist || 'traditional'}}\n` +
       '\nTYPE_YOUR_SONG_HERE\n';
 
-    // Tauri's errors are plain strings with no "EEXIST" code, so pick a name that isn't
-    // in the listing (macOS and Windows filenames ignore case) instead of retrying.
-    const taken = new Set((await this.listFilenames()).map((n) => n.normalize('NFC').toLowerCase()));
-    let filename = null;
-    for (let n = 1; n <= 50 && !filename; n++) {
-      const candidate = (n === 1 ? base : `${base} (${n})`) + this.ext;
-      if (!taken.has(candidate.normalize('NFC').toLowerCase())) filename = candidate;
-    }
-    // pathological: 50 songs with the same name, fall back to a random suffix
-    filename = filename || `${base}.${randomHex(4)}${this.ext}`;
+    const filename = await this.availableFilename(base);
     // createNew fails if the file exists: never overwrites, even if one appeared since the listing
     await this.fs.writeTextFile(this.pathFor(filename), content, { createNew: true });
     return filename;
+  }
+
+  /**
+   * Saves a song under a new name: baseName plus the song's own extension (".cpm.txt"
+   * stays ".cpm.txt"), made unique if taken. The new file is created new, so nothing is
+   * overwritten; then the old file is removed. When the name wouldn't change (or only in
+   * case), it's a plain update().
+   * @param {string} filename must come from resolve()
+   * @returns {Promise<string>} the song's filename now
+   */
+  async updateAs(filename, baseName, text) {
+    const ext = this.extensionOf(filename) || this.ext;
+    const base = scrubForFilename(baseName);
+    if (!base || foldName(base + ext) === foldName(filename)) {
+      await this.update(filename, text);
+      return filename;
+    }
+    const newName = await this.availableFilename(base, ext, filename);
+    await this.fs.writeTextFile(this.pathFor(newName), text, { createNew: true });
+    try {
+      await this.fs.remove(this.pathFor(filename));
+    } catch (err) {
+      // the song is saved under its new name; the old file stays behind
+      console.error(`[songs] remove ${filename} after renaming to ${newName}: ${errorMessage(err)}`);
+    }
+    this.cache.delete(filename);
+    return newName;
   }
 
   /**
@@ -307,6 +343,11 @@ class SongRepository {
     }
     this.cache.delete(filename);
   }
+}
+
+/** Filenames as macOS and Windows compare them: ignoring case and Unicode form. */
+function foldName(name) {
+  return name.normalize('NFC').toLowerCase();
 }
 
 /** Tauri rejects with plain strings; Node with Error objects. */

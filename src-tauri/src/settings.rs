@@ -19,6 +19,9 @@ pub const SETTINGS_WINDOW: &str = "settings";
 /// (chordpro.org); ".cho" is ChordPro's recommended default.
 const KNOWN_EXTENSIONS: [&str; 8] = [".cpm", ".txt", ".cho", ".crd", ".chopro", ".chord", ".chordpro", ".pro"];
 
+/// How song files are named from their title and artist (the pages build the names).
+const FILE_NAMINGS: [&str; 3] = ["title-artist", "title", "artist-title"];
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
@@ -26,16 +29,25 @@ pub struct Settings {
   pub song_extensions: Vec<String>,
   /// open the last songbook when the app starts
   pub reopen_last_songbook: bool,
+  /// how new songs are named, and renamed: one of FILE_NAMINGS
+  pub file_naming: String,
+  /// rename a song's file when its title or artist changes
+  pub rename_with_title: bool,
 }
 
 impl Default for Settings {
   fn default() -> Self {
-    Settings { song_extensions: vec![".cpm".into()], reopen_last_songbook: true }
+    Settings {
+      song_extensions: vec![".cpm".into()],
+      reopen_last_songbook: true,
+      file_naming: FILE_NAMINGS[0].into(),
+      rename_with_title: true,
+    }
   }
 }
 
 impl Settings {
-  /// Known extensions only, in KNOWN_EXTENSIONS order, at least one.
+  /// Known extensions only, in KNOWN_EXTENSIONS order, at least one; a known naming.
   fn cleaned(mut self) -> Self {
     let wanted: Vec<String> = self.song_extensions.iter().map(|ext| ext.to_lowercase()).collect();
     self.song_extensions = KNOWN_EXTENSIONS
@@ -45,6 +57,9 @@ impl Settings {
       .collect();
     if self.song_extensions.is_empty() {
       self.song_extensions = Settings::default().song_extensions;
+    }
+    if !FILE_NAMINGS.contains(&self.file_naming.as_str()) {
+      self.file_naming = FILE_NAMINGS[0].into();
     }
     self
   }
@@ -99,7 +114,7 @@ pub fn show_window(app: &AppHandle) {
   }
   let built = WebviewWindowBuilder::new(app, SETTINGS_WINDOW, WebviewUrl::App("settings.html".into()))
     .title("Settings")
-    .inner_size(520.0, 420.0)
+    .inner_size(520.0, 560.0)
     .resizable(false)
     .minimizable(false)
     .maximizable(false)
