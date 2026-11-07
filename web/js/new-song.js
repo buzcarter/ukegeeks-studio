@@ -1,14 +1,14 @@
 /**
  * File > New Song… (Cmd+N), and the song list's New Song… button: asks for a title
  * and artist, then creates "Title - Artist.cpm" (or as Settings names files) in the open songbook
- * (SongRepository.create: a unique name, never overwrites) and opens it.
+ * (SongRepository.create: a unique name, never overwrites) and opens it in its own window.
  *
  * With no songbook open, the Open Songbook dialog comes first. The dialog here is the
  * page's own (<dialog>): the dialog plugin has no text input.
  */
 import {
-  escapeHtml, fileUri, folderName, getFolder, getSettings, joinPath, loadSettings, openSongbook,
-  pickFolder, SONG_EXTENSION, songFileBase, tauri,
+  escapeHtml, folderName, getFolder, getSettings, joinPath, loadSettings, openSongbook, openSongbookSong,
+  openSongFile, pickFolder, SONG_EXTENSION, songFileBase, tauri,
 } from './songbook.js';
 
 /** Shows the New Song dialog. Resolves to { title, artist }, or null if cancelled. */
@@ -54,12 +54,8 @@ function askTitleAndArtist(songbookName) {
   });
 }
 
-/**
- * Asks for a title and artist and creates the song. confirm(), if given, runs after
- * the dialog and before anything is created; returning false stops (the editor asks
- * about unsaved changes there).
- */
-export async function newSong({ confirm } = {}) {
+/** Asks for a title and artist, creates the song and opens it in its own window. */
+export async function newSong() {
   let folder = getFolder();
   if (!folder) {
     folder = await pickFolder();
@@ -67,7 +63,6 @@ export async function newSong({ confirm } = {}) {
   }
   const answer = await askTitleAndArtist(folderName(folder));
   if (!answer) return;
-  if (confirm && !(await confirm())) return;
 
   await loadSettings();
   let filename;
@@ -83,7 +78,7 @@ export async function newSong({ confirm } = {}) {
     return;
   }
   // If Settings doesn't list .cpm songs, open it on its own rather than "not found"
-  location.href = getSettings().songExtensions.includes(SONG_EXTENSION)
-    ? openSongbook(folder).songUri(filename)
-    : fileUri(joinPath(folder, filename));
+  await (getSettings().songExtensions.includes(SONG_EXTENSION)
+    ? openSongbookSong(folder, filename)
+    : openSongFile(joinPath(folder, filename)));
 }

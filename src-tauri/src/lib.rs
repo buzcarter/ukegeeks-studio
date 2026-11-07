@@ -3,19 +3,19 @@
 //! limited to the songbook folder the user picks with the dialog plugin (see
 //! capabilities/).
 //!
-//! The menu's own items (New Song…, Open…, Open Songbook…, Save, Save As…, Print…, Show Song List, Quit) don't act here: they
-//! send a `studio://menu` event with the item's id to the page, which knows whether
-//! the song has unsaved changes (web/js/menu.js). Quitting goes through the page
-//! too, which then calls the `quit` command. File > Open Recent is in recent.rs.
+//! Each song opens in its own window (windows.rs). The menu's own items (New Song…,
+//! Open…, Save, Save As…, Print…) don't act here: they send a `studio://menu` event
+//! with the item's id to the window in front, which knows whether its song has
+//! unsaved changes (web/js/menu.js). Open Songbook… and Show Song List go to the song
+//! list. Quit asks each song window in turn (windows.rs). File > Open Recent is in
+//! recent.rs.
 
 mod recent;
 mod settings;
+mod windows;
 
 use tauri::menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
-
-/// The event the pages listen for; the payload is the menu item's id.
-const MENU_EVENT: &str = "studio://menu";
+use tauri::{AppHandle, Manager, RunEvent, WindowEvent};
 
 const NEW_SONG: &str = "new-song";
 const OPEN_FILE: &str = "open-file";
@@ -180,12 +180,16 @@ fn open_help(id: &str) {
   }
 }
 
-/// Asks the page to quit: it checks for unsaved changes, then calls `quit`.
+/// Asks each song window about unsaved changes, then ends the app (windows.rs).
 fn request_quit(app: &AppHandle) {
-  if let Err(err) = app.emit(MENU_EVENT, QUIT) {
-    eprintln!("[studio] can't send quit to the page: {err}");
-    app.exit(0);
-  }
+  windows::request_quit(app);
+}
+
+/// Ends the app, once every song window agreed.
+pub(crate) fn exit_app(app: &AppHandle) {
+  #[cfg(target_os = "macos")]
+  dock_quit::allow();
+  app.exit(0);
 }
 
 /// Saves a song opened on its own (File > Open…) or saved somewhere new (Save As…):
@@ -273,14 +277,6 @@ mod mac_print {
   }
 }
 
-/// Ends the app. The pages call this once unsaved changes are saved or discarded.
-#[tauri::command]
-fn quit(app: AppHandle) {
-  #[cfg(target_os = "macos")]
-  dock_quit::allow();
-  app.exit(0);
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   let app = tauri::Builder::default()
@@ -295,14 +291,23 @@ pub fn run() {
         settings::show_window(app);
       } else if [HELP, CHORDPRO_HELP].contains(&id) {
         open_help(id);
-      } else if [NEW_SONG, OPEN_FILE, OPEN_SONGBOOK, SAVE, SAVE_AS, PRINT, SHOW_SONG_LIST, QUIT].contains(&id) {
-        if let Err(err) = app.emit(MENU_EVENT, id) {
-          eprintln!("[studio] can't send menu item {id} to the page: {err}");
-        }
+      } else if id == QUIT {
+        request_quit(app);
+      } else if id == SHOW_SONG_LIST {
+        windows::show_main(app, "");
+      } else if id == OPEN_SONGBOOK {
+        // the song list shows the picker; opened afresh, it reads ?open=1
+        windows::send_to_main(app, "open=1", windows::MENU_EVENT, OPEN_SONGBOOK);
+      } else if [NEW_SONG, OPEN_FILE, SAVE, SAVE_AS, PRINT].contains(&id) {
+        windows::send_menu(app, id);
       }
     })
     .invoke_handler(tauri::generate_handler![
-      quit,
+      windows::quit,
+      windows::quit_cancel,
+      windows::open_song_window,
+      windows::song_window_path,
+      windows::show_song_list,
       save_song_file,
       print_page,
       recent::recent_list,
@@ -311,12 +316,9 @@ pub fn run() {
       settings::settings_get,
       settings::settings_set,
     ])
-    // Settings belongs to the main window: close it too, so the app can end
     .on_window_event(|window, event| {
-      if window.label() == "main" && matches!(event, WindowEvent::Destroyed) {
-        if let Some(settings) = window.app_handle().get_webview_window(settings::SETTINGS_WINDOW) {
-          let _ = settings.close();
-        }
+      if matches!(event, WindowEvent::Destroyed) {
+        windows::on_destroyed(window.app_handle(), window.label());
       }
     })
     .setup(|app| {
@@ -325,6 +327,7 @@ pub fn run() {
       let open_recent = recent::build_submenu(handle, &recent)?;
       app.manage(recent);
       app.manage(settings::load(handle));
+      app.manage(windows::WindowsState::default());
       app.set_menu(build_menu(handle, &open_recent)?)?;
       #[cfg(target_os = "macos")]
       dock_quit::install(app.handle().clone());

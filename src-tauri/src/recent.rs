@@ -13,13 +13,13 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::menu::{IsMenuItem, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{AppHandle, Emitter, Manager, State, Wry};
+use tauri::{AppHandle, Manager, State, Wry};
 use tauri_plugin_fs::FsExt;
 
 const MAX_ITEMS: usize = 10;
 
-/// Sent to the page when a recent item is chosen; payload: { folder, song } (song is
-/// a filename, or null for a songbook).
+/// Sent to the song list when a recent songbook is chosen; payload: { folder, song:
+/// null, single: false }. A recent song opens in its own window instead.
 const OPEN_RECENT_EVENT: &str = "studio://open-recent";
 
 const SONGBOOK_ID: &str = "recent-songbook-";
@@ -206,9 +206,21 @@ pub fn on_menu_event(app: &AppHandle, id: &str) -> bool {
   } else {
     return false;
   };
-  if let Some(open) = open {
-    if let Err(err) = app.emit(OPEN_RECENT_EVENT, open) {
-      eprintln!("[studio] can't send Open Recent to the page: {err}");
+  let Some(open) = open else { return true };
+  use crate::windows::{encode, open_song, send_to_main};
+  match &open.song {
+    // a songbook: the song list shows it (opened afresh, it reads ?folder=)
+    None => send_to_main(app, &format!("folder={}", encode(&open.folder)), OPEN_RECENT_EVENT, open.clone()),
+    Some(filename) => {
+      let path = Path::new(&open.folder).join(filename).to_string_lossy().into_owned();
+      let url = if open.single {
+        format!("editor.html?file={}", encode(&path))
+      } else {
+        format!("editor.html?folder={}&song={}", encode(&open.folder), encode(filename))
+      };
+      if let Err(err) = open_song(app, &path, &url) {
+        eprintln!("[studio] Open Recent: {err}");
+      }
     }
   }
   true

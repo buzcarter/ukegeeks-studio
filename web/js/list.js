@@ -1,12 +1,12 @@
 /**
- * The song list: Open Songbook… picks a folder; its songs are listed sorted by
- * title, like the Songbook ("The Rose" sorts as "Rose, The"). Each one opens in
- * the editor page.
+ * The song list (the main window): Open Songbook… picks a folder; its songs are
+ * listed sorted by title, like the Songbook ("The Rose" sorts as "Rose, The"). Each
+ * one opens in its own window (or comes forward, if it's open).
  */
 import {
-  addRecentSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, fileUri, folderName, getFolder, getSettings,
-  loadSettings, pickSongFile, onSettingsChanged, openRecent, openSongbook, pickFolder, recentList, setFolder,
-  songExtensions,
+  addRecentSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, folderName, getFolder, getSettings, loadSettings,
+  onSettingsChanged, openSongbook, openSongbookSong, openSongFile, pickFolder, pickSongFile, recentList,
+  setFolder, songExtensions,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 import { newSong } from './new-song.js';
@@ -46,7 +46,7 @@ async function showSongbook(folder) {
   listEl.innerHTML = songs
     .map((song) => {
       const details = [song.artist, song.subtitle].filter(Boolean).map(escapeHtml).join(' · ');
-      return `<li><a href="${escapeHtml(song.uri)}">`
+      return `<li><a href="${escapeHtml(song.uri)}" data-filename="${escapeHtml(song.filename)}">`
         + `<span class="songTitle">${escapeHtml(song.title)}</span>`
         + (details ? ` <span class="songDetails">${details}</span>` : '')
         + '</a></li>';
@@ -73,15 +73,24 @@ async function chooseSongbook() {
   }
 }
 
-/** File > Open… (Cmd+O): one song on its own, in the editor. */
+/** File > Open… (Cmd+O): one song on its own, in its own window. */
 async function chooseSong() {
   try {
     const path = await pickSongFile();
-    if (path) location.href = fileUri(path);
+    if (path) await openSongFile(path);
   } catch (err) {
     showStatus(escapeHtml(err.message || String(err)), true);
   }
 }
+
+// A song opens in its own window rather than in this one
+listEl.addEventListener('click', (event) => {
+  const link = event.target.closest('a[data-filename]');
+  const folder = getFolder();
+  if (!link || !folder || event.defaultPrevented) return;
+  event.preventDefault();
+  openSongbookSong(folder, link.dataset.filename);
+});
 
 document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
 document.getElementById('openSong').addEventListener('click', chooseSong);
@@ -91,7 +100,11 @@ onMenu('new-song', () => newSong());
 // here; Quit quits.
 onMenu('open-songbook', chooseSongbook);
 onMenu('open-file', chooseSong);
-onMenu('open-recent', openRecent);
+// File > Open Recent, a songbook (a recent song opens in its own window)
+onMenu('open-recent', ({ folder }) => {
+  setFolder(folder);
+  return showSongbook(folder);
+});
 
 // Settings changed which song types to list
 onSettingsChanged(() => {
@@ -111,8 +124,11 @@ async function showFirstSongbook() {
   if (folder) await showSongbook(folder);
 }
 
-// index.html?open=1: the editor's File > Open Songbook… came here to show the picker
-// (over the songbook that's open, which stays if the picker is cancelled)
-const showPicker = new URLSearchParams(location.search).has('open');
-if (showPicker) history.replaceState(null, '', 'index.html');
+// The song list was closed and opened again (src-tauri/src/windows.rs):
+// index.html?open=1 for File > Open Songbook… (the picker shows over the last
+// songbook, which stays if it's cancelled); index.html?folder=… for a recent songbook.
+const params = new URLSearchParams(location.search);
+const showPicker = params.has('open');
+if (params.get('folder')) setFolder(params.get('folder'));
+if (location.search) history.replaceState(null, '', 'index.html');
 showFirstSongbook().then(() => showPicker && chooseSongbook());

@@ -1,25 +1,25 @@
 /**
- * The editor page: editor.html?song=<file> opens that song from the open songbook;
+ * The editor page, one per song window (src-tauri/src/windows.rs):
+ * editor.html?folder=<folder>&song=<file> opens that song from a songbook;
  * editor.html?file=<path> opens a song on its own (File > Open…), with access to
- * just that file. One song per page (the editor finds its parts by id), so opening another song
- * means loading this page again.
+ * just that file. One song per page (the editor finds its parts by id), so other
+ * songs open in windows of their own.
  *
  * Save writes the file (temp file + rename: SongRepository.update in a songbook,
  * the save_song_file command for a song on its own). The song is
  * "dirty" while the Edit Song text differs from what was last opened or saved: the
- * window title says "Edited", and leaving the song (the song list, another song or
- * songbook, closing the window, Quit) asks first: Save & …, Discard Edits, or
- * Continue Editing.
+ * window title says "Edited", and closing the window or quitting asks first: Save &
+ * Close / Save & Quit, Discard Edits, or Continue Editing.
  *
- * File > Save As… writes the song under a new name and switches to it: in the
+ * File > Save As… writes the song under a new name and switches this window to it: in the
  * songbook folder, as a song of the songbook; anywhere else, as a song on its own
  * (the Save dialog gives access to that one file).
  */
 import {
-  addRecentSong, escapeHtml, fileUri, getFolder, getSettings, loadSettings, openRecent, openSongbook, pickSongFile,
-  saveSongFile, SONG_EXTENSION, songFileBase, splitPath, tauri,
+  addRecentSong, escapeHtml, fileUri, getFolder, getSettings, loadSettings, openSongbook, openSongFile, pickSongFile,
+  saveSongFile, setFolder, showSongList, SONG_EXTENSION, songFileBase, splitPath, tauri,
 } from './songbook.js';
-import { onMenu, quitApp } from './menu.js';
+import { cancelQuit, onMenu, quitApp } from './menu.js';
 import { newSong } from './new-song.js';
 
 const { parseSong } = globalThis.studioSongs;
@@ -27,20 +27,28 @@ const container = document.getElementById('songEditor');
 
 const cleanPath = (path) => path.replace(/[\/\\]+$/, '').normalize('NFC');
 
-// Until a song is open (or if it can't be), File > New Song…, Open…, Open Songbook…, Open Recent
-// and View > Show Song List just go; main() replaces these with ones that ask about
-// unsaved changes.
+// File > Open… (Cmd+O) and New Song… (Cmd+N) open other windows; this song stays.
 onMenu('open-file', async () => {
   const path = await pickSongFile();
-  if (path) location.href = fileUri(path);
+  if (path) await openSongFile(path);
 });
 onMenu('new-song', () => newSong());
-onMenu('open-songbook', () => { location.href = 'index.html?open=1'; });
-onMenu('open-recent', openRecent);
-onMenu('show-song-list', () => { location.href = 'index.html'; });
+
+// "← Songs" brings the song list forward (it's another window)
+document.getElementById('backToSongs').addEventListener('click', (event) => {
+  if (!window.__TAURI__) return;
+  event.preventDefault();
+  showSongList().catch((err) => console.error('[studio] show_song_list:', err));
+});
 
 function showProblem(message) {
-  container.innerHTML = `<p class="studioProblem">${escapeHtml(message)} <a href="index.html">Back to the songs</a></p>`;
+  container.innerHTML = `<p class="studioProblem">${escapeHtml(message)}</p>`;
+}
+
+/** Tells Rust which file this window holds, so opening it again brings this window forward. */
+function tellPath(path) {
+  return tauri().core.invoke('song_window_path', { path })
+    .catch((err) => console.warn('[studio] song_window_path:', err));
 }
 
 /**
@@ -63,8 +71,10 @@ async function openSong(params) {
     return { song, filename: name, folder: dir, path: file, write: (t) => saveSongFile(file, t) };
   }
 
-  const folder = getFolder();
+  // a new window doesn't know the open songbook: it comes in the address
+  const folder = params.get('folder') || getFolder();
   if (!folder) return { problem: 'No songbook is open.' };
+  setFolder(folder); // File > New Song… in this window adds to this songbook
   await loadSettings(); // which song file types the songbook has
   const songbook = openSongbook(folder);
   const id = params.get('song');
@@ -91,6 +101,7 @@ async function main() {
   let savedText = null;
   let songName = song.title || filename;
   addRecentSong(folder, filename, songName, !songbook);
+  tellPath(path);
 
   /**
    * Writes the song. In a songbook, when its title or artist changed since it was
@@ -109,6 +120,7 @@ async function main() {
         filename = newName;
         path = songbook.pathFor(newName);
         history.replaceState(null, '', songbook.songUri(newName));
+        tellPath(path);
       }
     } else {
       await songbook.update(filename, text);
@@ -171,10 +183,9 @@ async function main() {
   window.studioIsDirty = isDirty;
 
   /**
-   * Before leaving the song (another song or songbook, the song list, closing, Quit):
-   * with unsaved changes, asks "Save & …" / Discard Edits / Continue Editing. Resolves
-   * true to go on (saved or discarded), false to stay. Esc is Continue Editing. If
-   * saving fails, says so and stays.
+   * Before closing the window or quitting: with unsaved changes, asks "Save & …" /
+   * Discard Edits / Continue Editing. Resolves true to go on (saved or discarded),
+   * false to stay. Esc is Continue Editing. If saving fails, says so and stays.
    * @param {string} saveLabel the first button, for what comes next ("Save & Quit")
    */
   async function readyToLeave(saveLabel) {
@@ -254,50 +265,15 @@ async function main() {
     location.href = songbook.songUri(name);
   });
 
-  // File > New Song… (Cmd+N): asks about unsaved changes once the new song is named
-  onMenu('new-song', () => newSong({ confirm: () => readyToLeave('Save & Start New Song') }));
-
   // File > Print… (Cmd+P): the song as shown, with the editor's print styles
   // (ugsEditorPlus.print.css). On a Mac the print_page command opens the system Print
   // dialog with sensible margins; elsewhere window.print() does.
   onMenu('print', () => tauri().core.invoke('print_page').catch(() => window.print()));
 
-  // File > Open… (Cmd+O): a song on its own
-  onMenu('open-file', async () => {
-    const newPath = await pickSongFile();
-    if (!newPath) return;
-    if (!(await readyToLeave('Save & Open'))) return;
-    location.href = fileUri(newPath);
-  });
-
-  // File > Open Songbook… (Shift+Cmd+O): back to the list, which shows the picker.
-  onMenu('open-songbook', async () => {
-    if (!(await readyToLeave('Save & Open Songbook'))) return;
-    location.href = 'index.html?open=1';
-  });
-
-  // File > Open Recent
-  onMenu('open-recent', async (item) => {
-    if (!(await readyToLeave('Save & Open'))) return;
-    openRecent(item);
-  });
-
-  // Quit (Cmd+Q, or Quit in the Dock)
+  // Quit (Cmd+Q, or Quit in the Dock): Rust asks each song window in turn
   onMenu('quit', async () => {
-    if (!(await readyToLeave('Save & Quit'))) return;
-    await quitApp();
-  });
-
-  document.getElementById('backToSongs').addEventListener('click', async (event) => {
-    if (!isDirty()) return;
-    event.preventDefault();
-    if (await readyToLeave('Save & Go Back')) location.href = 'index.html';
-  });
-
-  // View > Show Song List (Cmd+L): the same as "← Songs"
-  onMenu('show-song-list', async () => {
-    if (!(await readyToLeave('Save & Go Back'))) return;
-    location.href = 'index.html';
+    if (await readyToLeave('Save & Quit')) await quitApp();
+    else await cancelQuit();
   });
 
   // Closing the window (red button, Cmd+W). Once this listener exists, Tauri closes

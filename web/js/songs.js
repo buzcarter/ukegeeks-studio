@@ -191,11 +191,12 @@ class SongRepository {
   }
 
   /**
-   * The app's editor page for a song (one song per page). The whole filename, since
-   * "x.cpm" and "x.cpm.txt" can sit side by side.
+   * The app's editor page for a song (one song per page, in its own window). The
+   * folder goes along, since a new window doesn't know the open songbook; the whole
+   * filename, since "x.cpm" and "x.cpm.txt" can sit side by side.
    */
   songUri(filename) {
-    return 'editor.html?song=' + encodeURIComponent(filename);
+    return 'editor.html?folder=' + encodeURIComponent(this.dir) + '&song=' + encodeURIComponent(filename);
   }
 
   async buildEntry(filename) {

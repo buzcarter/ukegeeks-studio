@@ -162,22 +162,40 @@ export function addRecentSong(folder, filename, title, single = false) {
     .catch((err) => console.warn('[studio] recent_add_song:', err));
 }
 
-/**
- * Opens an item from File > Open Recent: { folder, song, single } (song is a filename,
- * or null for a songbook; single: a song opened on its own, not from a songbook).
- */
-export function openRecent({ folder, song, single }) {
-  if (song && single) {
-    location.href = fileUri(joinPath(folder, song));
-    return;
-  }
-  setFolder(folder);
-  location.href = song ? `editor.html?song=${encodeURIComponent(song)}` : 'index.html';
-}
-
 /** The editor page for a song opened on its own, by its full path. */
 export function fileUri(path) {
   return `editor.html?file=${encodeURIComponent(path)}`;
+}
+
+/**
+ * Opens a song in its own window, or brings its window forward if it's open
+ * (src-tauri/src/windows.rs). path: the song's file; url: its editor page.
+ */
+export async function openSongWindow(path, url) {
+  try {
+    await tauri().core.invoke('open_song_window', { path, url });
+  } catch (err) {
+    console.error(`[studio] opening ${path}:`, err);
+    await tauri().dialog.message(`There was a problem opening "${splitPath(path).name}". (${err && err.message ? err.message : err})`, {
+      title: 'Open', kind: 'error',
+    });
+  }
+}
+
+/** Opens a song of a songbook in its own window. */
+export function openSongbookSong(folder, filename) {
+  const songbook = openSongbook(folder);
+  return openSongWindow(songbook.pathFor(filename), songbook.songUri(filename));
+}
+
+/** Opens a song on its own (File > Open…) in its own window. */
+export function openSongFile(path) {
+  return openSongWindow(path, fileUri(path));
+}
+
+/** Brings the song list forward (opening it if it was closed). */
+export function showSongList() {
+  return tauri().core.invoke('show_song_list');
 }
 
 /** A path split into its folder and filename. */

@@ -90,7 +90,10 @@ test('getSongList: songs only, sorted like the Songbook', async () => {
   assert.equal(rose.filename, 'the-rose.cpm.txt');
   assert.equal(rose.artist, 'Bette');
   assert.equal(rose.hasInfo, true);
-  assert.equal(rose.uri, 'editor.html?song=the-rose.cpm.txt');
+  // the folder goes along: a new song window doesn't know the open songbook
+  const slashed = new SongRepository({ songDirectory: '/My Songs/', fileExtensions: ['.cpm'], maxFileSize: 1, fs: tauriLikeFs() });
+  assert.equal(slashed.songUri('the-rose.cpm.txt'), 'editor.html?folder=%2FMy%20Songs&song=the-rose.cpm.txt');
+  assert.match(rose.uri, /&song=the-rose\.cpm\.txt$/);
   assert.equal(list[2].hasInfo, false);
 });
 
@@ -122,7 +125,7 @@ test('several song extensions: .cpm first, .cpm.txt too', async () => {
   const both = (await songbook(files, ['.cpm', '.cpm.txt'])).repo;
   const list = await both.getSongList();
   assert.deepEqual(list.map((s) => s.filename), ['a.cpm', 'a.cpm.txt', 'b.cpm.txt', 'C.CPM']);
-  assert.deepEqual(list.map((s) => s.uri).slice(0, 2), ['editor.html?song=a.cpm', 'editor.html?song=a.cpm.txt']);
+  assert.deepEqual(list.map((s) => s.uri.replace(/^.*&/, '')).slice(0, 2), ['song=a.cpm', 'song=a.cpm.txt']);
   assert.equal(both.baseName('a.cpm.txt'), 'a');
   assert.equal(both.baseName('C.CPM'), 'C');
   // a bare name tries the extensions in order

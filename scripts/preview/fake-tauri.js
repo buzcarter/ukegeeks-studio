@@ -13,6 +13,9 @@
  * - Menu items: __menu('save'), __menu('quit'), …; Open Recent: __recent({ folder,
  *   song, single }); settings changed: __settings({ ... }).
  * - Closing the window: await __close({ preventDefault() {} }).
+ * - Windows: each browser tab is one. The song list is "main"; opening a song
+ *   (open_song_window) opens a tab named after its path, so opening it again goes
+ *   to that tab, like the app's song windows. Quit answers are logged.
  * - Everything the pages ask Tauri to do is logged in window.__log.
  *
  * In the console, for example:
@@ -85,9 +88,16 @@
     },
     print_page: () => {},
     quit: () => {},
+    quit_cancel: () => {},
+    open_song_window: ({ path, url }) => { window.open(url, `song:${path}`); },
+    song_window_path: () => {},
+    show_song_list: () => { window.open('index.html', 'main'); },
   };
 
+  // the app's window labels: "main" for the song list, "song-N" for songs
+  if (!window.name) window.name = location.pathname.endsWith('editor.html') ? 'song:?' : 'main';
   const appWindow = {
+    label: window.name === 'main' ? 'main' : 'song-1',
     async setTitle(title) { log('title', title); },
     async onCloseRequested(callback) { window.__close = callback; },
     async destroy() { log('destroy'); },
