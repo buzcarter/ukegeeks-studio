@@ -1,53 +1,79 @@
-# Handoff: starting Phase 2
+# Handoff: after Phase 2.5
 
-Written 2026-11-07 at the end of the session that pulled the editor out of the Songbook. Read [CLAUDE.md](../CLAUDE.md) and [ROADMAP.md](ROADMAP.md) first.
+Written 2026-11-07, after PRs #1–#13 were merged. Read [CLAUDE.md](../CLAUDE.md) first (how the owner works), then [BOARD.md](BOARD.md) (what's next), [DECISIONS.md](DECISIONS.md) (why things are the way they are) and [ROADMAP.md](ROADMAP.md) (the phases). [CHANGELOG.md](../CHANGELOG.md) has every PR.
 
 ## Where things stand
 
-- **Song Editor** (`@ukegeeks/song-editor`): Phase 1 is done. On npm, `beta` is 1.0.1-beta.1 (a README-only change) and `latest` is 1.0.0-beta.1; the code is the same. Demo: https://buzcarter.github.io/song-editor/ (`npm run demo` in its repo serves it locally on port 8098).
-- **UkeGeeks Songbook** uses the package since PR #37, with no visible change. Its default branch is now `main` (PR #38).
-- **Song Formatter** is 1.0.0-beta.1 (`latest` and `beta`). **ACE ChordPro Extension** is 1.0.0.
-- **This repo** has only README, LICENSE, CLAUDE.md and these docs. No app code yet.
+UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothing is released or bundled yet.
 
-## Phase 2 goal
+- **Songbooks:**
+  - Open Songbook… (Shift+Cmd+O) picks a folder of ChordPro songs; the song list sorts them like the Songbook.
+  - File > Open Recent has the last 10 songbooks and songs, and the last songbook reopens at launch.
+- **Songs:**
+  - The Song-a-Matic editor (`@ukegeeks/song-editor`) edits a song.
+  - Save (Cmd+S) writes it; Save As… (Shift+Cmd+S) saves under a new name.
+  - New Song… (Cmd+N) and Open… (Cmd+O, one song on its own, outside a songbook).
+  - Print… (Cmd+P).
+  - File names follow titles: saving a song whose title or artist changed renames its file, never over another.
+- **Unsaved changes:** "Edited" in the window title. Leaving the song asks Save & … / Discard Edits / Continue Editing.
+- **Settings** (Cmd+,): which song file types to list, how files are named, renaming on/off, reopening the last songbook.
+- **Menus:** File, Edit, View, Window and Help, laid out per OS. The editor keeps its own controls.
+- **Look:** the Song-a-Matic's faux-wood look on the app's own pages and dialogs (`web/css/wood.css`).
 
-A Tauri 2 Mac app, run from a dev build: open a folder of ChordPro songs (`~/Code/UkeGeeks/cpm/` has 16 samples), list them, open one in the editor, and Save writes the file. Details in [ROADMAP.md](ROADMAP.md).
+Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than one songbook at once**, which is next on the board. Talk it through with the owner before building: what "several songbooks" should look like isn't decided.
 
-## What the editor needs from its host page
+## How the code is laid out
 
-All from the Song Editor's README; read it in `node_modules/@ukegeeks/song-editor/README.md` once installed.
+| Where | What |
+|---|---|
+| `web/index.html`, `web/js/list.js` | The song list. |
+| `web/editor.html`, `web/js/editor.js` | The editor page: `?song=<file>` from the open songbook, `?file=<path>` for a song on its own. One song per page (the editor finds its parts by id), so changing songs reloads the page. |
+| `web/settings.html`, `web/js/settings.js` | The Settings window. It doesn't load `menu.js`, on purpose. |
+| `web/js/songbook.js` | The open folder, settings, recent lists, paths, and the Tauri helpers the pages share. |
+| `web/js/songs.js` | `SongRepository` and the ChordPro parsing, from the Songbook's `server/lib/songs.js`. Tested in `test/songs.test.js`. |
+| `web/js/menu.js` | Menu events from Rust → `onMenu(id, handler)`. |
+| `web/js/new-song.js`, `web/css/dialog.css` | The New Song dialog (the page's own `<dialog>`). |
+| `web/css/wood.css` | The faux-wood look. |
+| `src-tauri/src/lib.rs` | The menu, the `quit`, `save_song_file` and `print_page` commands, and Dock > Quit. |
+| `src-tauri/src/recent.rs`, `settings.rs` | Open Recent and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
+| `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
+| `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
+| `scripts/preview/` | `npm run preview`: the pages in a browser with a fake Tauri. |
 
-- **Load order:** Song Formatter's `song-formatter.bundle.js`, then `ugsEditorPlus.min.js`. Styles: `ukeGeeks.music.css` (from Song Formatter), then `ugsEditorPlus.min.css`, which **must** have `title="ugsEditorCss"` (the editor edits its rules to resize fonts and diagrams), plus `ugsEditorPlus.print.css` with `media="print"`.
-- **Files:** the package's `dist/` is laid out like a web page: `dist/js/`, `dist/css/`, `dist/img/editor/`. Copy those folders side by side into the app's web folder: the CSS and `mount()` find the images at `../img/editor/`.
-- **Mounting:** `ugsEditorPlus.songAmatic.mount(element, { song, save, aceUrl, ...options })` returns `{ getSong() }`. `save(text)` returns a message, or a promise of one, which the editor shows next to Save; a rejection shows a "problem saving" alert. Without `save` there's no Save button.
-- **One editor per page:** it finds its parts by element id. Opening another song means a fresh page (for example, a song list page and an editor page, navigating between them), not a second `mount()`.
-- **Fullscreen** lazy-loads `ace-chordpro.min.js` from `aceUrl` (default: `ace/` next to `ugsEditorPlus.min.js`), from `@ukegeeks/ace-chordpro-extension`'s `dist/`.
-- The color themes use Google Fonts. An offline desktop app should either bundle those fonts or accept the fallback fonts; decide with the owner.
+## How to test
 
-The Song Editor repo's demo is a small, working host page to copy from: `demo/index.html` and `demo/demo.js`, with `scripts/site.js` mapping the package files into place.
+- **`npm test`:** `SongRepository` and the ChordPro parsing (14 tests).
+- **`npm run preview`:** serves `web/` on http://localhost:8765 with a stand-in for `window.__TAURI__` (`scripts/preview/fake-tauri.js`). Files live in localStorage, and dialogs answer from globals (`__nextOpen`, `__nextSave`, `__nextChoice`, …). Drive menu items with `__menu('save')`, and read what the page asked Tauri to do in `__log`. Open it in Claude Code's browser pane. The fake's header comment explains it all.
+- **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors (`src-tauri/target/debug/ukegeeks-studio`, kill it after a few seconds), then ask the owner to try it, saying exactly what to click.
+- **Windows:** the Windows menu code (`cfg(not(target_os = "macos"))`) has never been compiled; only the Mac target is installed.
 
-## Reusing the Songbook's song handling
+## Tauri lessons (2.12.5; checked, don't relearn)
 
-`~/Code/UkeGeeks/server/lib/songs.js` (Node, 2 spaces) has what the song list needs: `parseSong(text)` (title, subtitle, artist, album and meta from ChordPro), `fixLeadingArticle` ("The Rose" sorts as "Rose, The"), `filenameToTitle`, and `scrubForFilename` (safe, Unicode-friendly filenames for new songs). `SongRepository` shows how the Songbook lists, sorts and saves songs, and why song ids are never joined onto paths directly. Copy the pure functions unchanged first ("move, don't rewrite"); the file access becomes Tauri's.
+- **Page scripts:** `web/` is plain static files with no bundler. `app.withGlobalTauri` gives `window.__TAURI__.{core,dialog,fs,window,event}`, and the pages are ES modules.
+- **Folder access:**
+  - The Open dialog grants the picked folder plus the files directly in it, for one run of the app. That grant doesn't cover dotfiles on macOS, which is why temp files are `<song>.<hex>.ugs-tmp`.
+  - The Save dialog grants just the chosen file. Writing next to such a file goes through Rust (`save_song_file`).
+  - Recent folders are granted again at startup by `recent.rs`.
+- **App commands:** commands the app defines itself (`#[tauri::command]`) need no capability for local pages. Plugin and core commands do. Check permission names in `~/.cargo/registry/src/*/tauri-plugin-*-2.*/permissions/` and the tauri crate's `permissions/`, rather than guessing.
+- **Quitting:** the built-in Quit item and Dock > Quit (NSApp `terminate:`) end the app with no event. Quit is therefore a custom item that asks the page first, and Dock > Quit is caught by adding `applicationShouldTerminate:` to tao's app delegate. `RunEvent::ExitRequested { code: None }` only comes when the last window closes.
+- **Closing:** once a page listens with `onCloseRequested`, the window closes only through `destroy()`.
+- **Dialogs:** `dialog.message()` with `buttons: { yes, no, cancel }` returns the clicked label, and Esc returns the cancel label. `dialog.ask` uses the `dialog:allow-message` permission.
+- **The page's own `<dialog>`:** its `close` event can come late or not at all in a background page, so answer from submit, `cancel` and button clicks instead.
+- **Printing:** `window.print()` on a Mac prints with zero margins, which printers clip. `print_page` opens WKWebView's print sheet with half-inch margins.
+- **Unsaved changes:** the dirty check compares with the editor's own text right after mount, not the file's, because the Edit Song box decodes HTML entities.
+- **Fullscreen:** while it's open, Ace's editor sits outside the editor's container, and `getSong()` doesn't see its text; `editor.js` reads Ace directly.
+- **Menu:** it's built in `setup()` (so Open Recent can be rebuilt), and menu calls are safe from any thread.
+- **Rust dependencies:** `objc2`, `serde` and `serde_json` are direct dependencies, but Tauri already builds them, so they cost nothing extra.
 
-## Tauri notes
+## Disk
 
-- Versions on npm on 2026-11-07: `@tauri-apps/cli` and `@tauri-apps/api` 2.12.4, `@tauri-apps/plugin-fs` 2.7.1, `@tauri-apps/plugin-dialog` 2.8.4. The Tauri CLI isn't installed globally; use it from devDependencies (`npx tauri`).
-- File access goes through Tauri 2 **capabilities** and the fs plugin's scopes. The user picks the songbook folder with the dialog plugin; allow reading and writing inside it.
-- Tauri applies a Content Security Policy. The editor injects Ace's script on demand and sets inline styles; check the console when Fullscreen opens.
-- The app's web code can be plain static files (no bundler needed), with a small Node script that copies the three packages' files in, like the Songbook's `scripts/build.js` does with its `VENDORED` list.
-- The first `cargo` build downloads and compiles a lot. Mind the disk space note in CLAUDE.md.
+About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental dev builds take seconds. Say so before release builds or new Rust targets, and offer `cargo clean` in `src-tauri/` when space gets tight.
 
-## Suggested first steps
+## Open threads
 
-1. Agree with the owner on a short plan: project layout, how the web files get copied in, the folder-picking and saving flow, and the bundle identifier (suggestion: `org.ukegeeks.studio`).
-2. On a `feature/` branch: scaffold the Tauri 2 app and get an empty window running (`npx tauri dev`). Commit.
-3. Host the editor with one bundled sample song. Check: diagrams, transpose, tunings, Chord Builder, Fullscreen. Commit.
-4. Pick a folder, list its songs (sorted like the Songbook), open one, Save writes the file. Commit.
-5. Write down how to run it in the README.
-
-## Things that went wrong last time
-
-- The owner's `!` commands ran in the session folder instead of the repo they were meant for: a push, a tag and an `npm publish` went to the wrong repo. The Songbook's `"private": true` stopped the publish. Hence the `cd ~/Code/<repo> &&` rule.
-- A commit landed on a local `main` because the owner had merged and switched branches mid-session. Hence "check the branch again before every commit".
-- `npm publish` with npm 11 needs `--tag` for prerelease versions, and asks for a browser sign-in. A new package name also gets an untagged `0.0.0-stage` placeholder version from npm; it's harmless.
+- **Task 0013** (several songbooks): needs a conversation with the owner first.
+- **Phase 3:** add a song from a pasted songsheet, using the editor's `ugsEditorPlus.reformat`.
+- **Phase 5 work that's already visible:**
+  - The dev build has no app icon; dialogs show a folder icon.
+  - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
+- **The song-editor TypeScript conversion** happens in another repo (`~/Code/ukegeeks-unnamed-editor-project`). Don't touch it from here; when a new `@ukegeeks/song-editor` is published, updating it here is its own task.
