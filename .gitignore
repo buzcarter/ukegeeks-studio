@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+
+# copied in from the @ukegeeks packages by scripts/vendor.js
+web/vendor/
+
+# Rust build output (several GB; `cargo clean` in src-tauri/ frees it)
+src-tauri/target/
+src-tauri/gen/schemas/
