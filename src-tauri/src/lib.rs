@@ -307,7 +307,6 @@ pub fn run() {
       windows::quit_cancel,
       windows::open_song_window,
       windows::song_window_path,
-      windows::show_song_list,
       save_song_file,
       print_page,
       recent::recent_list,

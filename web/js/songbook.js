@@ -193,11 +193,6 @@ export function openSongFile(path) {
   return openSongWindow(path, fileUri(path));
 }
 
-/** Brings the song list forward (opening it if it was closed). */
-export function showSongList() {
-  return tauri().core.invoke('show_song_list');
-}
-
 /** A path split into its folder and filename. */
 export function splitPath(path) {
   const i = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));

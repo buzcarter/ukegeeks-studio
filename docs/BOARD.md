@@ -31,7 +31,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
-| 0016 | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | #15 |
+| 0016 | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | pushed to `main`; fixes #15 |
 | 0015 | CHANGELOG.md, a new handoff (docs/HANDOFF.md), `npm run preview` (the pages in a browser with a fake Tauri) | #14 |
 | 0014 | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #10 |
 | 0012 | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #13 |

@@ -10,12 +10,34 @@
   box-shadow: 0 5px 8px rgba(0, 0, 0, 0.65);
 }
 
-.studioBar a {
+.studioBar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
   color: #f4e19f; /* the wood strip is in wood.css */
-  text-decoration: none;
 }
 
-.studioBar a:hover {
+/* where the song lives: the songbook's (or folder's) name, the full path on hover */
+.studioPlace {
+  font-weight: normal;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.studioPlace:empty {
+  display: none;
+}
+
+.studioClose {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.studioClose:hover {
   color: #fdda61;
 }
 

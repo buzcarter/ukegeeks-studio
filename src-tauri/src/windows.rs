@@ -191,12 +191,6 @@ pub fn song_window_path(window: tauri::Window, state: State<WindowsState>, path:
   }
 }
 
-/// View > Show Song List (Cmd+L), and the song windows' "Songs" button
-#[tauri::command]
-pub fn show_song_list(app: AppHandle) {
-  show_main(&app, "");
-}
-
 /// Quit, Cmd+Q or from the Dock: asks each song window about unsaved changes, one at
 /// a time, then ends the app. While a song window is being asked, asking again just
 /// brings it forward.

@@ -4,10 +4,16 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
-### Task 0016: each song in its own window (#15, 2026-11-07)
+### Task 0016 fixes: Close button, where the song is saved (#15, 2026-11-07)
+
+- **Close** replaces "← Songs" in a song window's corner bar. It asks about unsaved changes like the red button and Cmd+W. Cmd+L still brings the song list forward.
+- **Where the song lives:** the bar shows "Songbook: <name>" (or "Folder: <name>" for a song on its own), with the full path on hover. Save's message says where too: "Saved Beta.cpm in My Songs".
+- **Board and changelog:** task 0016 went to `main` directly, not through a PR.
+
+### Task 0016: each song in its own window (pushed to main, 2026-11-07)
 
 - **Song windows:** a song opens in a window of its own, from the song list, File > Open…, New Song… or Open Recent, so several songs can be open at once to compare and copy between. Opening a song that's already open brings its window forward. New windows sit a little below and right of the one in front.
-- **The song list stays put:** it's the main window; "← Songs" and View > Show Song List (Cmd+L) bring it forward, reopening it if it was closed. File > Open Songbook… and recent songbooks go to it.
+- **The song list stays put:** it's the main window; View > Show Song List (Cmd+L) brings it forward, reopening it if it was closed. File > Open Songbook… and recent songbooks go to it.
 - **Menus go to the window in front:** Save, Save As…, Print… act on that song only. (A page's plain `listen` hears events sent to any window, so the pages listen for their own label.)
 - **Unsaved changes:** only closing a window or quitting asks now; opening other songs doesn't leave this one. Quit asks each song window in turn, and Continue Editing in any of them stops it.
 - **`src-tauri/src/windows.rs`:** the song windows, which file each holds, menu routing, and the Quit round. Capabilities cover `main` and `song-*`.
