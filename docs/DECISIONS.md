@@ -53,6 +53,17 @@ On Windows the menu bar is inside the window and there's no app menu: About move
 
 A folder may hold `.txt` files that aren't songs; they show up with a title from the filename. Good enough.
 
+### Open… for one song (2026-11-06)
+
+The owner wants a plain Open for a single file, besides Open Songbook….
+
+- **File > Open… is Cmd+O**, the Mac convention for opening a file; Open Songbook… moved to Shift+Cmd+O. The song list has an Open Song… button too (for the iPad later).
+- **The app gets that file only, not its folder** (the Open dialog's grant). The editor opens it as `editor.html?file=<path>`.
+- **Save goes through Rust** (`save_song_file`): Save's temp file sits next to the song, and the app has no access to that folder through the fs plugin. Rust writes only files the app was given.
+- **Open Recent keeps single songs as single files:** at startup only the file is allowed again, never its folder.
+- **Save As… to another folder switches to the new file** (as a song on its own) instead of saving a copy, now that the app can edit a song outside a songbook.
+- Later (Phase 5, with the bundle): double-clicking a `.cpm` in Finder opens it, through a file association and the same `?file=` page.
+
 ### Open Recent without the persisted-scope plugin (PR #5)
 
 Tauri's persisted-scope plugin keeps every folder ever picked, forever. The app instead keeps the recent list in `recent.json` and allows just those folders again at startup (`src-tauri/src/recent.rs`), so clearing the list also ends the access. Only folders the app can already read get into the list.
