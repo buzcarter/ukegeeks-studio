@@ -97,20 +97,31 @@ class SongRepository {
     this.dir = cfg.songDirectory.replace(/[\/\\]+$/, '');
     // Tauri hands back "\" paths on Windows; both separators work there
     this.sep = this.dir.includes('\\') && !this.dir.includes('/') ? '\\' : '/';
-    this.ext = cfg.fileExtension;
+    // Song file extensions, the first used for new songs: [".cpm"], or [".cpm", ".cpm.txt"]
+    // to also list the Songbook's ".cpm.txt" files. (The Songbook takes one fileExtension.)
+    this.exts = (cfg.fileExtensions || [cfg.fileExtension]).map((ext) => ext.toLowerCase());
+    this.ext = this.exts[0];
     this.maxFileSize = cfg.maxFileSize;
     this.collator = new Intl.Collator(cfg.sortLocale || undefined, { sensitivity: 'base', numeric: true });
     /** @type {Map<string, {stamp: string, entry: object}>} */
     this.cache = new Map();
   }
 
-  isSongFilename(name) {
-    return name.length > this.ext.length && name.toLowerCase().endsWith(this.ext);
+  /** The song extension a filename ends with (the longest that matches), or null. */
+  extensionOf(name) {
+    const lower = name.toLowerCase();
+    return this.exts
+      .filter((ext) => lower.length > ext.length && lower.endsWith(ext))
+      .sort((a, b) => b.length - a.length)[0] || null;
   }
 
-  /** Filename without the ".cpm.txt" extension, used in song URLs. */
+  isSongFilename(name) {
+    return this.extensionOf(name) !== null;
+  }
+
+  /** Filename without its song extension (".cpm", ".cpm.txt"). */
   baseName(filename) {
-    return filename.slice(0, filename.length - this.ext.length);
+    return filename.slice(0, filename.length - (this.extensionOf(filename) || '').length);
   }
 
   /** @returns {Promise<string[]>} song filenames in the song directory (regular files only) */
@@ -130,24 +141,28 @@ class SongRepository {
 
   /**
    * Converts a song id (from a URL or JSON body) to the filename of an existing song.
-   * Accepts "name", "name.cpm.txt" or legacy "name.html". Returns null when the id
-   * is malformed or no such song exists.
+   * Accepts "name.cpm", "name.cpm.txt", or "name" / legacy "name.html" (tried with each
+   * song extension in order). Returns null when the id is malformed or no such song exists.
    * @param {unknown} id
    * @returns {Promise<string|null>}
    */
   async resolve(id) {
     if (typeof id !== 'string') return null;
-    let name = id.normalize('NFC').trim();
+    const name = id.normalize('NFC').trim();
     if (!name || name.length > 255 || /[\/\\\0]/.test(name) || name.startsWith('.')) {
       return null;
     }
-    if (!this.isSongFilename(name)) {
-      name = name.replace(/\.html?$/i, '') + this.ext;
-    }
+    const candidates = this.isSongFilename(name)
+      ? [name]
+      : this.exts.map((ext) => name.replace(/\.html?$/i, '') + ext);
     const names = await this.listFilenames();
-    if (names.includes(name)) return name;
-    // macOS may hand back decomposed (NFD) filenames
-    return names.find((n) => n.normalize('NFC') === name) || null;
+    for (const candidate of candidates) {
+      if (names.includes(candidate)) return candidate;
+      // macOS may hand back decomposed (NFD) filenames
+      const decomposed = names.find((n) => n.normalize('NFC') === candidate);
+      if (decomposed) return decomposed;
+    }
+    return null;
   }
 
   /** Absolute path for a filename returned by resolve()/listFilenames(). */
@@ -175,9 +190,12 @@ class SongRepository {
     return { filename, song: parseSong(text) };
   }
 
-  /** The app's editor page for a song (one song per page). */
+  /**
+   * The app's editor page for a song (one song per page). The whole filename, since
+   * "x.cpm" and "x.cpm.txt" can sit side by side.
+   */
   songUri(filename) {
-    return 'editor.html?song=' + encodeURIComponent(this.baseName(filename));
+    return 'editor.html?song=' + encodeURIComponent(filename);
   }
 
   async buildEntry(filename) {
@@ -242,7 +260,7 @@ class SongRepository {
   }
 
   /**
-   * Creates a new song stub named "Title - Artist.cpm.txt" (made unique if taken).
+   * Creates a new song stub named "Title - Artist" plus the first song extension (made unique if taken).
    * @returns {Promise<string>} the new filename
    */
   async create(title, artist) {
@@ -278,7 +296,7 @@ class SongRepository {
   async update(filename, text) {
     const target = this.pathFor(filename);
     // No leading dot (the Songbook's was ".<hex>.ugs-tmp"): on macOS the folder access
-    // Tauri grants doesn't cover dotfiles. Not a ".cpm.txt" name, so never listed.
+    // Tauri grants doesn't cover dotfiles. Ends in ".ugs-tmp", so never listed as a song.
     const tmp = this.pathFor(`${filename}.${randomHex(6)}.ugs-tmp`);
     try {
       await this.fs.writeTextFile(tmp, text, { createNew: true });

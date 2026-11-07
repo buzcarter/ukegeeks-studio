@@ -46,6 +46,13 @@ main {
   color: #b3261e;
 }
 
+.setting {
+  display: block;
+  margin: 0 0 12px;
+  color: #666;
+  font-size: 13px;
+}
+
 .songList {
   margin: 0;
   padding: 0;

@@ -13,7 +13,7 @@ UkeGeeks Studio (this repo) · Songbook (self-hosted) · ukegeeks.org
 
 Each layer only knows the one below it. The editor doesn't bundle Song Formatter or Ace: the host (this app) puts them on the page. The host also decides where songs live and what "save" means.
 
-## Phase 2: Mac prototype (next)
+## Phase 2: Mac prototype (done)
 
 A **Tauri 2** app. Tauri wraps web code in a small native app for Mac and Windows, and the same project can later build for iPad; Electron can't do iPad.
 
@@ -21,7 +21,23 @@ A **Tauri 2** app. Tauri wraps web code in a small native app for Mac and Window
 - List the songs; open one in the editor; Save writes the file.
 - **No server.** The Songbook's Node server is replaced by direct file access through Tauri. Reuse its song parsing (`server/lib/songs.js` in the Songbook: title, artist, sorting).
 
-Done means: it runs on the owner's Mac from a dev build, opens `~/Code/UkeGeeks/cpm/`, and edits and saves a song.
+Done means: it runs on the owner's Mac from a dev build, opens `~/Code/UkeGeeks/cpm/`, and edits and saves a song. Done 2026-11-06 (PR #2).
+
+## Phase 2.5: a real app (next)
+
+The owner's list from 2026-11-06, after the prototype worked. Roughly in order; items move to "done" as they land.
+
+- **`.cpm` is the file extension.** Songs are `*.cpm` files. `.cpm.txt` exists only because Apache serves unknown types badly and most people can't change MIME types; a setting also lists `*.cpm.txt` files. This applies to every UkeGeeks module and app, not just Studio (the Songbook still uses `.cpm.txt`).
+- **Unsaved changes.** An `isDirty` flag; warn before leaving a song or closing the window (and quitting) with unsaved changes.
+- **Save As.**
+- **File names follow song titles.** A naming convention, as a setting: "Title - Artist" (as the Songbook's New Song does) or similar. Renaming a song's file when its title changes, with care for collisions.
+- **Songbooks are folders**, and the app can point at more than one. A songbook export is far off (Phase 4): copying files into a folder is easy enough for now.
+- **Recent songbooks and songs (MRU lists)**, which also means remembering folders across launches (Tauri's persisted-scope plugin).
+- **Settings** for the above, kept by the app.
+- **Keep the faux-wood look** of the Song-a-Matic headers and dialogs in the app's own chrome and dialogs. Hokey, but it's UkeGeeks.
+- **Print.** One song, nicely; the editor already has print styles and paper sizes.
+
+Later, maybe release 1.2: **Ace as the default editor** instead of the plain Edit Song box, which means working out how the Chord Builder fits with it.
 
 ## Phase 3: add a song from a songsheet
 

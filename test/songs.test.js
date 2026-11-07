@@ -44,14 +44,14 @@ const tempDirs = [];
 test.after(() => Promise.all(tempDirs.map((dir) => nodeFs.rm(dir, { recursive: true, force: true }))));
 
 /** A temporary songbook folder with the given files ({name: text}; null makes a folder). */
-async function songbook(files) {
+async function songbook(files, fileExtensions = [EXT]) {
   const dir = await nodeFs.mkdtemp(path.join(os.tmpdir(), 'studio-songs-'));
   tempDirs.push(dir);
   for (const [name, text] of Object.entries(files)) {
     if (text === null) await nodeFs.mkdir(path.join(dir, name));
     else await nodeFs.writeFile(path.join(dir, name), text);
   }
-  const repo = new SongRepository({ songDirectory: dir, fileExtension: EXT, maxFileSize: 100000, fs: tauriLikeFs() });
+  const repo = new SongRepository({ songDirectory: dir, fileExtensions, maxFileSize: 100000, fs: tauriLikeFs() });
   return { dir, repo };
 }
 
@@ -90,7 +90,7 @@ test('getSongList: songs only, sorted like the Songbook', async () => {
   assert.equal(rose.filename, 'the-rose.cpm.txt');
   assert.equal(rose.artist, 'Bette');
   assert.equal(rose.hasInfo, true);
-  assert.equal(rose.uri, 'editor.html?song=the-rose');
+  assert.equal(rose.uri, 'editor.html?song=the-rose.cpm.txt');
   assert.equal(list[2].hasInfo, false);
 });
 
@@ -104,6 +104,33 @@ test('resolve: only names of songs in the folder', async () => {
   for (const bad of ['missing', '../the-rose', 'a/the-rose', 'a\\the-rose', '.the-rose', '', 42, null]) {
     assert.equal(await repo.resolve(bad), null, String(bad));
   }
+});
+
+test('several song extensions: .cpm first, .cpm.txt too', async () => {
+  const files = {
+    'a.cpm': '{title: Apple cpm}',
+    'a.cpm.txt': '{title: Apple txt}',
+    'b.cpm.txt': '{title: Banana txt}',
+    'C.CPM': '{title: Cherry upper}',
+    'notes.txt': 'x',
+  };
+  const cpmOnly = (await songbook(files, ['.cpm'])).repo;
+  assert.deepEqual((await cpmOnly.getSongList()).map((s) => s.filename), ['a.cpm', 'C.CPM']);
+  assert.equal(await cpmOnly.resolve('b'), null);
+  assert.equal(await cpmOnly.resolve('b.cpm.txt'), null);
+
+  const both = (await songbook(files, ['.cpm', '.cpm.txt'])).repo;
+  const list = await both.getSongList();
+  assert.deepEqual(list.map((s) => s.filename), ['a.cpm', 'a.cpm.txt', 'b.cpm.txt', 'C.CPM']);
+  assert.deepEqual(list.map((s) => s.uri).slice(0, 2), ['editor.html?song=a.cpm', 'editor.html?song=a.cpm.txt']);
+  assert.equal(both.baseName('a.cpm.txt'), 'a');
+  assert.equal(both.baseName('C.CPM'), 'C');
+  // a bare name tries the extensions in order
+  assert.equal(await both.resolve('a'), 'a.cpm');
+  assert.equal(await both.resolve('b'), 'b.cpm.txt');
+  assert.equal(await both.resolve('a.cpm.txt'), 'a.cpm.txt');
+  // new songs get the first extension
+  assert.equal(await both.create('New', ''), 'New.cpm');
 });
 
 test('pathFor refuses anything but a bare filename', async () => {
