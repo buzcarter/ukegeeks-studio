@@ -14,7 +14,6 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What |
 |---|---|
-| 0012 | The faux-wood look of the Song-a-Matic headers and dialogs in the app's own pages and dialogs (song list, Settings, New Song) |
 | 0013 | More than one songbook at once (the app points at several folders); today it's one at a time plus Open Recent |
 
 ## Later
@@ -29,6 +28,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0012 | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #12 |
 | 0011 | File names follow song titles: a naming setting, and saving a song whose title or artist changed renames its file (never over another) | #11 |
 | 0010 | File > Print… (Cmd+P): one song, with the editor's print styles; half-inch margins on a Mac | #10 |
 | 0009 | File > New Song… (Cmd+N) and a New Song… button on the song list: title and artist, then "Title - Artist.cpm" in the open songbook | #9 |
