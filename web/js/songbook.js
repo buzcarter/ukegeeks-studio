@@ -2,9 +2,10 @@
  * The open songbook: which folder it is, and a SongRepository that reads and
  * writes its songs through Tauri's fs plugin.
  *
- * The folder is remembered for this run of the app only (sessionStorage), the
- * same span as the access Tauri gives to a folder picked in the Open dialog.
- * Remembering it across launches comes later (Phase 5).
+ * The open folder is remembered for this run of the app (sessionStorage). Across
+ * launches, the app keeps a list of recent songbooks and songs (File > Open
+ * Recent, src-tauri/src/recent.rs), whose folders it may read again without the
+ * Open dialog.
  */
 import './songs.js';
 
@@ -54,7 +55,7 @@ export function getFolder() {
   }
 }
 
-function setFolder(folder) {
+export function setFolder(folder) {
   try {
     sessionStorage.setItem(FOLDER_KEY, folder);
   } catch {
@@ -74,6 +75,37 @@ export async function pickFolder() {
   if (typeof folder !== 'string') return null;
   setFolder(folder);
   return folder;
+}
+
+/**
+ * The recent lists: { songbooks: [folder, …], songs: [{ folder, filename, title }, …] },
+ * most recent first. Empty outside the app.
+ */
+export async function recentList() {
+  try {
+    return await tauri().core.invoke('recent_list');
+  } catch (err) {
+    console.warn('[studio] recent_list:', err);
+    return { songbooks: [], songs: [] };
+  }
+}
+
+/** Puts an open songbook at the top of File > Open Recent. */
+export function addRecentSongbook(folder) {
+  return tauri().core.invoke('recent_add_songbook', { folder })
+    .catch((err) => console.warn('[studio] recent_add_songbook:', err));
+}
+
+/** Puts an open song at the top of File > Open Recent. */
+export function addRecentSong(folder, filename, title) {
+  return tauri().core.invoke('recent_add_song', { folder, filename, title })
+    .catch((err) => console.warn('[studio] recent_add_song:', err));
+}
+
+/** Opens an item from File > Open Recent: { folder, song } (song is a filename, or null). */
+export function openRecent({ folder, song }) {
+  setFolder(folder);
+  location.href = song ? `editor.html?song=${encodeURIComponent(song)}` : 'index.html';
 }
 
 /** The folder's last part, for display ("cpm" for ".../UkeGeeks/cpm"). */
