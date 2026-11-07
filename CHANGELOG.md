@@ -4,6 +4,15 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0018: Favorites (#20, 2026-11-07)
+
+- **A ☆ beside every song** in a songbook's list and in search results, and in a song window's corner bar: click it to star the song (★), again to unstar it.
+- **Favorites, at the top of the Library sidebar,** lists the starred songs of every songbook, sorted by title, each with its songbook. It's selected again at launch if it was last time (the "Select the songbook I used last" setting).
+- **Library songs only:** a song opened on its own (File > Open…) has no star. A songbook taken out of the Library hides its favorites; adding it back brings them back.
+- **Renames:** when Save renames a starred song's file (its title changed), it stays starred. Save As makes a new song, which starts unstarred. A favorite whose file was moved or deleted outside the app shows as "not found"; its ★ takes it out.
+- **`favorites.json`,** kept by Rust (`src-tauri/src/favorites.rs`) next to `library.json`. It's kept as lists of songs with one list today, so set lists in an order of the player's own can come later without converting anything. Rust unit tests (`cargo test`).
+- **`npm run preview`:** the fake Tauri knows the favorites commands, tells other tabs when a star changes, and keeps several listeners per event, as Tauri does.
+
 ### Task 0023: a new handoff (#19, 2026-11-07)
 
 - **docs/HANDOFF.md** rewritten for the state after the Library: what the app does now, testing notes (restart the preview after changing the fake, launch the dev build by PID, the `!` shell's PATH), working notes, open threads.

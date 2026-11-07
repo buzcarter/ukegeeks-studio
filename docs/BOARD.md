@@ -14,12 +14,12 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What |
 |---|---|
-| 0018 | Favorites: songs starred from any songbook, in one list |
 | 0019 | A first-run welcome or short tour, so a new player gets the most out of the app |
 
 ## Later
 
 - Duplicate a songbook (owner's "Duplicate(?)", 2026-11-07): copy its songs to a new folder the player picks. Not yet: the app may only write where it's pointed, so it needs its own "where does the copy go" step; confirm what's wanted first.
+- Set lists (after Favorites, task 0018): named lists of songs from any songbook, in an order of the player's own ("Tuesday jam", "Open mic"), in the sidebar under Favorites. `favorites.json` already keeps lists; this adds making, renaming and reordering them.
 - Ace as the default editor instead of the Edit Song box (maybe 1.2); how the Chord Builder fits with it.
 - Phase 3: add a song from a pasted songsheet.
 - Phase 4: make the songbook (one PDF), and a Songbook menu with it.
@@ -30,6 +30,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0018 | Favorites: a ☆ on every song (list, search results, song windows); Favorites at the top of the sidebar lists starred songs from every songbook. Kept in `favorites.json` as lists, ready for set lists | #20 |
 | 0023 | A new handoff after the Library (docs/HANDOFF.md) | #19 |
 | 0017 | Search the Library by title, artist or lyrics: a search box above the song list (Cmd+F), across every songbook | pushed to `main` |
 | 0022 | A songbook's right-click menu: Open, New Song… (in that songbook), Rename…, Remove from Library | pushed to `main` |

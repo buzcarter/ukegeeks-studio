@@ -27,7 +27,7 @@ npm run dev
 
 The first `npm run dev` downloads and compiles Tauri, which takes a few minutes and about 1.5 GB of disk in `src-tauri/target/`. Later runs start in seconds. `cargo clean` in `src-tauri/` gives the space back.
 
-In the window, click **Add Songbook…** (or **+** under the Library) and pick a folder of `*.cpm` files (for the Songbook's `cpm/` folder, turn on `.txt` files in Settings, Cmd+,), then give the songbook a name. Each folder you add is a songbook in the Library sidebar (right-click it for Open, New Song…, Rename… and Remove from Library). The search box above the songs (Cmd+F) searches every songbook by title, artist or lyrics; click one to list its songs. Click a song to open it in its own window; **Save** writes the file. **−** or right-click > Remove from Library takes a songbook out of the Library (the folder stays on disk). **File > Open Recent** lists the last 10 songs, and the app selects the last songbook when it starts (a setting).
+In the window, click **Add Songbook…** (or **+** under the Library) and pick a folder of `*.cpm` files (for the Songbook's `cpm/` folder, turn on `.txt` files in Settings, Cmd+,), then give the songbook a name. Each folder you add is a songbook in the Library sidebar (right-click it for Open, New Song…, Rename… and Remove from Library). The search box above the songs (Cmd+F) searches every songbook by title, artist or lyrics; click one to list its songs. Click the ☆ beside a song (or in its window's corner bar) to star it: **Favorites**, at the top of the sidebar, lists starred songs from every songbook. Click a song to open it in its own window; **Save** writes the file. **−** or right-click > Remove from Library takes a songbook out of the Library (the folder stays on disk). **File > Open Recent** lists the last 10 songs, and the app selects the last songbook when it starts (a setting).
 
 ### Menu shortcuts
 
@@ -57,7 +57,7 @@ Editing files under `web/` reloads the window. `npm test` runs the tests for the
 | `web/js/songs.js` | Reads song titles and artists, sorts the list, saves songs. From the Songbook's `server/lib/songs.js`, changed to use Tauri's file access. |
 | `web/vendor/` | The editor, Song Formatter and Ace, copied from `node_modules/` by `scripts/vendor.js` each time the app starts. Not committed. |
 | `web/fonts/` | The fonts the editor's color themes use, so the app works offline. |
-| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` builds the menu; `src/windows.rs` the song windows; `src/library.rs` keeps the Library in `library.json`, `src/recent.rs` File > Open Recent in `recent.json` and `src/settings.rs` the settings in `settings.json` (all in `~/Library/Application Support/org.ukegeeks.studio/`). |
+| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` builds the menu; `src/windows.rs` the song windows; `src/library.rs` keeps the Library in `library.json`, `src/favorites.rs` the Favorites in `favorites.json`, `src/recent.rs` File > Open Recent in `recent.json` and `src/settings.rs` the settings in `settings.json` (all in `~/Library/Application Support/org.ukegeeks.studio/`). |
 
 ## Part of the UkeGeeks family
 

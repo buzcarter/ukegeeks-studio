@@ -11,6 +11,7 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
   - Right-click a songbook: Open, New Song… (in that songbook), Rename… (or double-click), Remove from Library (or −; the folder stays on disk).
   - The selected songbook's songs, sorted like the Songbook. It's selected again at launch.
   - **Search** (Cmd+F, the box above the songs): every songbook, by title, artist or lyrics (chords ignored). Results show their songbook and a lyric line.
+  - **Favorites** (task 0018): a ☆ beside every song (and in a song window's corner bar) stars it; Favorites, at the top of the sidebar, lists starred songs from every songbook. Kept in `favorites.json`, as lists, ready for set lists.
 - **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name and a Close button. File > Open Recent lists the last 10 songs.
 - **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
 - **Songs:**
@@ -24,7 +25,7 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
 - **Menus:** File, Edit, View, Window and Help, laid out per OS. The editor keeps its own controls.
 - **Look:** the Song-a-Matic's faux-wood look on the app's own pages and dialogs (`web/css/wood.css`).
 
-Phase 2.5 is done, and so is most of the Library from the owner's user stories (DECISIONS.md, "The Library and song windows"). **Next on the board: task 0018, Favorites** ("quickly find my favorite songs that span songbooks so I may practice songs in any order"). Ask the owner first: just a star and one list, or set lists in an order of their own? Then 0019, a first-run welcome/tour.
+Phase 2.5 is done, and so is the Library from the owner's user stories (DECISIONS.md, "The Library and song windows"), Favorites included. **Next on the board: task 0019, a first-run welcome/tour.** Set lists (Favorites' follow-up) are under Later.
 
 ## How the code is laid out
 
@@ -40,6 +41,7 @@ Phase 2.5 is done, and so is most of the Library from the owner's user stories (
 | `web/css/wood.css` | The faux-wood look. |
 | `src-tauri/src/lib.rs` | The menu and where its items go, the `save_song_file` and `print_page` commands, and Dock > Quit. |
 | `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
+| `src-tauri/src/favorites.rs` | Favorites, kept in `favorites.json` as lists of `{ folder, file }` (one list today): star, unstar, follow a rename. Rust unit tests. |
 | `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. Rust unit tests: `cargo test` in `src-tauri/`. |
 | `web/js/songbook-name.js` | The Songbook Name dialog (adding a songbook, Rename…). |
 | `web/js/search.js` | Searching the Library: lyrics without chords, folding case and accents, ranking. Plain functions, tested in `test/search.test.js`; `list.js` reads the songs and shows the results. |
@@ -50,10 +52,11 @@ Phase 2.5 is done, and so is most of the Library from the owner's user stories (
 
 ## How to test
 
-- **`npm test`:** `SongRepository` and the ChordPro parsing, and search (19 tests). `cargo test` in `src-tauri/` has the Library's.
+- **`npm test`:** `SongRepository` and the ChordPro parsing, and search (19 tests). `cargo test` in `src-tauri/` has the Library's and Favorites' (7).
 - **`npm run preview`:** serves `web/` on http://localhost:8765 with a stand-in for `window.__TAURI__` (`scripts/preview/fake-tauri.js`). Files live in localStorage, and dialogs answer from globals (`__nextOpen`, `__nextSave`, `__nextChoice`, …). Drive menu items with `__menu('save')`, and read what the page asked Tauri to do in `__log`. Open it in Claude Code's browser pane. The fake's header comment explains it all.
 - **The preview server reads `fake-tauri.js` once at start:** after changing it, stop and start the preview. Its seeded data lives in the browser's localStorage (`fakefs:…`, `fakelibrary`, …); clear a key to reseed it.
-- **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors, then ask the owner to try it, saying exactly what to click. Launch it as `./target/debug/ukegeeks-studio & pid=$!; sleep 6; kill $pid`. **Never `pkill` by name:** that also kills the owner's own `npm run dev`, which runs the same binary.
+- **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors, then ask the owner to try it, saying exactly what to click. Launch it as `./target/debug/ukegeeks-studio & pid=$!; sleep 6; kill $pid`. **Never `pkill` by name:** that also kills the owner's own `npm run dev`, which runs the same binary. Put the launch on a line of its own, not after `cd … && cargo build &&`: there `&` backgrounds the whole chain and `$!` is a subshell, not the app. The owner's `tauri dev` also rebuilds and restarts on Rust edits, so their running app may already have the branch's code.
+- **Port 8765 taken** (another chat's preview): the server reads `PORT`, so `PORT=8766 npm run preview` works.
 - **Commands for the owner:** the desktop app's `!` shell doesn't load their profile, so cargo isn't on its PATH. Give them `cd ~/Code/ukegeeks-studio && PATH="$HOME/.cargo/bin:$PATH" npm run dev`.
 - **Windows:** the Windows menu code (`cfg(not(target_os = "macos"))`) has never been compiled; only the Mac target is installed.
 
@@ -90,10 +93,10 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 
 ## Open threads
 
-- **Task 0018, Favorites:** ask the owner what it should be (above), then build.
+- **Set lists** (after Favorites): named lists in the player's own order. `favorites.json` already keeps lists; it needs making, renaming and reordering them, and a sidebar section.
 - **Task 0019, first-run welcome/tour:** after Favorites, so it shows the app as it will be.
 - **Duplicate a songbook** (on the board under Later): the owner floated it with a "?"; confirm what's meant first. Copying needs somewhere the app may write.
-- **Not tried in the real app by the owner yet,** as far as this session knows: search, the songbook right-click menu, songbook names, and staying open on a Mac. Ask how they went.
+- **Not tried in the real app by the owner yet,** as far as this session knows: search, the songbook right-click menu, songbook names, staying open on a Mac, and Favorites. Ask how they went.
 - **Phase 3:** add a song from a pasted songsheet, using the editor's `ugsEditorPlus.reformat`.
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.

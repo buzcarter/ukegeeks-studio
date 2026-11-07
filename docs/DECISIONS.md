@@ -33,6 +33,16 @@ Agreed with the owner on 2026-11-07:
 - **Printing a whole songbook** (one PDF) is still Phase 4. Each song prints from its window.
 - **Staying open on a Mac with no windows** is task 0020, its own PR.
 
+### Favorites (task 0018)
+
+Agreed with the owner on 2026-11-07 ("quickly find my favorite songs that span songbooks so I may practice songs in any order"): a star and one Favorites list now, set lists later.
+
+- **A ☆ on every song** (songbook list, search results, a song window's corner bar) stars it. **Favorites,** at the top of the sidebar, lists the starred songs of every songbook, sorted by title, each with its songbook.
+- **Kept as lists** in `favorites.json` (`{ lists: [{ id, name, songs: [{ folder, file }] }] }`), with one list, `favorites`, so set lists in an order of the player's own are more lists later, with nothing to convert. A list keeps its songs in the order added; Favorites shows them by title.
+- **Library songs only.** A song opened on its own is allowed for one run of the app, so a star on it could point at a file the app can't read next time. A songbook removed from the Library keeps its stars in the file but doesn't show them; adding it back brings them back.
+- **A song is its folder and file name,** so a star follows a rename only when the app does the renaming: Save after a title change tells Rust (`favorites_rename`). Save As makes a copy, which starts unstarred; the original keeps its star. A file moved or deleted outside the app shows as "not found" in Favorites rather than vanishing, so the player sees what happened.
+- **Selected again at launch** like a songbook: the Library's `selected` is `"list:favorites"` (a folder is always a full path, so it can't clash).
+
 ### Search (task 0017)
 
 Chosen without a separate talk, to keep moving (2026-11-07); change freely:
