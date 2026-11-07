@@ -29,7 +29,8 @@
     (window.__log = window.__log || []).push(args.map(String).join(' '));
     console.log('[fake tauri]', ...args);
   };
-  const listeners = {};
+  const listeners = {}; // event name -> callbacks, as Tauri allows several
+  const emit = (name, payload) => (listeners[name] || []).forEach((callback) => callback({ payload }));
   const read = (key, fallback) => JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
 
   const fs = {
@@ -136,19 +137,19 @@
   if (!window.name) window.name = location.pathname.endsWith('editor.html') ? 'song:?' : 'main';
   function saveLibrary(library) {
     localStorage.setItem('fakelibrary', JSON.stringify(library));
-    if (listeners['studio://library']) listeners['studio://library']({ payload: library });
+    emit('studio://library', library);
     return library;
   }
 
   function saveFavorites(favorites) {
     localStorage.setItem('fakefavorites', JSON.stringify(favorites));
-    if (listeners['studio://favorites']) listeners['studio://favorites']({ payload: favorites });
+    emit('studio://favorites', favorites);
     return favorites;
   }
   // other tabs (song windows) hear about it too
   window.addEventListener('storage', (event) => {
-    if (event.key === 'fakefavorites' && listeners['studio://favorites']) {
-      listeners['studio://favorites']({ payload: JSON.parse(event.newValue) });
+    if (event.key === 'fakefavorites') {
+      emit('studio://favorites', JSON.parse(event.newValue));
     }
   });
 
@@ -170,7 +171,7 @@
     },
     event: {
       async listen(name, callback) {
-        listeners[name] = callback;
+        (listeners[name] = listeners[name] || []).push(callback);
         return () => {};
       },
     },
@@ -189,8 +190,8 @@
     window: { getCurrentWindow: () => appWindow },
   };
 
-  window.__menu = (id) => listeners['studio://menu']({ payload: id });
-  window.__settings = (payload) => listeners['studio://settings']({ payload });
+  window.__menu = (id) => emit('studio://menu', id);
+  window.__settings = (payload) => emit('studio://settings', payload);
 
   if (!localStorage.getItem(`${LS}/songs/a.cpm`)) {
     localStorage.setItem(`${LS}/songs/a.cpm`, '{title: Alpha}\n[C]Hello [G]world');

@@ -14,11 +14,15 @@
  * File > Save As… writes the song under a new name and switches this window to it: in the
  * songbook folder, as a song of the songbook; anywhere else, as a song on its own
  * (the Save dialog gives access to that one file).
+ *
+ * The ☆ in the corner bar stars the song (Favorites, src-tauri/src/favorites.rs):
+ * only a song of a songbook in the Library. When Save renames its file, the
+ * favorite follows; Save As makes a new song, which starts unstarred.
  */
 import {
-  addRecentSong, escapeHtml, fileUri, folderName, getFolder, getLibrary, getSettings, loadSettings, onLibraryChanged,
-  openSongbook, openSongFile, pickSongFile, saveSongFile, setFolder, SONG_EXTENSION, songbookName, songFileBase,
-  splitPath, tauri,
+  addRecentSong, escapeHtml, fileUri, findSongbook, folderName, getFavorites, getFolder, getLibrary, getSettings,
+  isStarred, loadSettings, onFavoritesChanged, onLibraryChanged, openSongbook, openSongFile, pickSongFile,
+  renameFavorite, saveSongFile, setFolder, SONG_EXTENSION, songbookName, songFileBase, splitPath, starSong, tauri,
 } from './songbook.js';
 import { cancelQuit, onMenu, quitApp } from './menu.js';
 import { newSong } from './new-song.js';
@@ -50,6 +54,51 @@ async function showPlace(folder, inSongbook) {
   const place = document.getElementById('songPlace');
   place.textContent = `${inSongbook ? 'Songbook' : 'Folder'}: ${placeName}`;
   place.title = folder;
+}
+
+/**
+ * The ☆/★ in the corner bar, for a song of a songbook in the Library. getFilename():
+ * the song's file now (Save can rename it).
+ */
+function setUpStar(folder, getFilename) {
+  const star = document.getElementById('songStar');
+  let favorites = { lists: [] };
+  let inLibrary = false;
+  const show = () => {
+    const starred = isStarred(favorites, folder, getFilename());
+    const label = starred ? 'Remove from Favorites' : 'Add to Favorites';
+    star.hidden = !inLibrary;
+    star.textContent = starred ? '★' : '☆';
+    star.setAttribute('aria-pressed', String(starred));
+    star.title = label;
+    star.setAttribute('aria-label', label);
+  };
+  star.addEventListener('click', async () => {
+    const starred = star.getAttribute('aria-pressed') !== 'true';
+    try {
+      favorites = await starSong(folder, getFilename(), starred);
+      show();
+    } catch (err) {
+      await tauri().dialog.message(`There was a problem changing Favorites. (${err && err.message ? err.message : err})`, {
+        title: 'Favorites', kind: 'error',
+      });
+    }
+  });
+  onFavoritesChanged((next) => {
+    favorites = next;
+    show();
+  });
+  // the songbook can leave the Library (or come back) while the song is open
+  const checkLibrary = (library) => {
+    inLibrary = !!findSongbook(library, folder);
+    show();
+  };
+  onLibraryChanged(checkLibrary);
+  Promise.all([getFavorites(), getLibrary()]).then(([f, library]) => {
+    favorites = f;
+    checkLibrary(library);
+  });
+  return show;
 }
 
 function showProblem(message) {
@@ -116,6 +165,7 @@ async function main() {
   showPlace(folder, !!songbook);
   // renamed in the Library meanwhile
   if (songbook) onLibraryChanged(() => showPlace(folder, true));
+  const showStar = songbook ? setUpStar(folder, () => filename) : () => {};
 
   /**
    * Writes the song. In a songbook, when its title or artist changed since it was
@@ -131,10 +181,12 @@ async function main() {
     } else if (retitled && getSettings().renameWithTitle) {
       const newName = await songbook.updateAs(filename, songFileBase(parsed.title, parsed.artist), text);
       if (newName !== filename) {
+        renameFavorite(folder, filename, newName); // a starred song stays starred
         filename = newName;
         path = songbook.pathFor(newName);
         history.replaceState(null, '', songbook.songUri(newName));
         tellPath(path);
+        showStar();
       }
     } else {
       await songbook.update(filename, text);
