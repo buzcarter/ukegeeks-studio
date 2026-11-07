@@ -23,7 +23,7 @@ A **Tauri 2** app. Tauri wraps web code in a small native app for Mac and Window
 
 Done means: it runs on the owner's Mac from a dev build, opens `~/Code/UkeGeeks/cpm/`, and edits and saves a song. Done 2026-11-06 (PR #2).
 
-## Phase 2.5: a real app (next)
+## Phase 2.5: a real app (done but task 0013)
 
 The owner's list from 2026-11-06, after the prototype worked. Roughly in order; items move to "done" as they land. The reasons behind these choices are in [DECISIONS.md](DECISIONS.md).
 
@@ -52,7 +52,7 @@ The feature uke clubs want: pick songs, order them, and export **one PDF** with 
 
 ## Phase 5: ship for Mac and Windows
 
-App icon (the Maestro Saurus favicon set is in `~/Sites/ukegeeks.org/resources/favicon/package/claude/`), installers, code signing, remembering the last songbook, and an About page linking to ukegeeks.org.
+App icon (the Maestro Saurus favicon set is in `~/Sites/ukegeeks.org/resources/favicon/package/claude/`), installers, code signing, and opening a song by double-clicking it in Finder (a file association; the editor's `?file=` page already exists). Remembering the last songbook and the About item are done (tasks 0005, 0004).
 
 ## Phase 6: iPad
 

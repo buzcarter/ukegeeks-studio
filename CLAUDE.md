@@ -1,6 +1,6 @@
 # UkeGeeks Studio: notes for Claude
 
-A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele songbooks. It hosts the Song-a-Matic editor from `@ukegeeks/song-editor`. Plan: [docs/ROADMAP.md](docs/ROADMAP.md); task board: [docs/BOARD.md](docs/BOARD.md); why things are the way they are: [docs/DECISIONS.md](docs/DECISIONS.md). Current state and how to start: [docs/HANDOFF.md](docs/HANDOFF.md).
+A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele songbooks. It hosts the Song-a-Matic editor from `@ukegeeks/song-editor`. Plan: [docs/ROADMAP.md](docs/ROADMAP.md); task board: [docs/BOARD.md](docs/BOARD.md); why things are the way they are: [docs/DECISIONS.md](docs/DECISIONS.md). Current state, code map, testing and Tauri lessons: [docs/HANDOFF.md](docs/HANDOFF.md). What changed, PR by PR: [CHANGELOG.md](CHANGELOG.md).
 
 ## Working with the owner (Buz)
 
@@ -13,7 +13,7 @@ A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele s
 - **Markdown:** a blank line between paragraphs.
 - **"Move, don't rewrite":** when bringing in existing UkeGeeks code (song parsing, the editor), keep it the same and change it in a separate step.
 - **No PHP** on this machine (only relevant to the Songbook repo).
-- **Disk space is tight:** about 15 GB free on 2026-11-07. Tauri's `src-tauri/target/` folder grows by several GB; say so before anything that builds a lot (release builds, extra Rust targets), and `cargo clean` when it's no longer needed.
+- **Disk space is tight:** about 10 GB free on 2026-11-07 (`src-tauri/target/` was 2.3 GB). Tauri's `src-tauri/target/` folder grows by several GB; say so before anything that builds a lot (release builds, extra Rust targets), and `cargo clean` when it's no longer needed.
 
 ## Machine
 

@@ -1,0 +1,104 @@
+# Changelog
+
+What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothing is released yet: the app runs from source (`npm run dev`), version 0.1.0. Task numbers refer to [docs/BOARD.md](docs/BOARD.md).
+
+## Unreleased
+
+### Task 0012: the Song-a-Matic's faux-wood look for the app's own pages (#13, 2026-11-07)
+
+- **`web/css/wood.css`:** the editor's wooden strip (`.ugsAppMenuBar`), wood grain (`.overlay`), buttons (`.baseBtn`, `.orange`) and text boxes. Same colors, and the editor's own images from `vendor/song-editor/img/editor/`.
+- **Song list:** wooden header with the Peralta logo, wooden buttons (Open Songbook… orange), wood-brown song titles, and the editor page's background color.
+- **New Song dialog:** shaped like the editor's dialogs, with a dark frame, a wooden header strip and a wood-grain body.
+- **Settings:** wood grain with wooden section labels.
+- **Editor:** the "← Songs" bar is a wooden tab.
+- **Board:** added task 0014.
+
+### Task 0011: file names follow song titles (#12, 2026-11-07)
+
+- **Settings > File names:** "Name song files" is "Title - Artist" (the default), "Title" or "Artist - Title", and New Song uses it. "Rename a song's file when its title or artist changes" is on by default.
+- **Rename on save:** only when the title or artist changed since the song was opened or last saved, so untouched files keep their names. The editor follows the new name: its address, window title and Open Recent. The message says "Saved as …".
+- **`SongRepository`:**
+  - `availableFilename()` is `create()`'s unused-name search, moved out unchanged in its own commit.
+  - `create()` takes an optional base name.
+  - `updateAs()` writes under the new name with `createNew`, then removes the old file. It never overwrites, keeps the song's extension, and makes a plain update when the name wouldn't change (case-only changes included).
+- **Not renamed:** songs opened on their own (File > Open…), since the app may write only that file.
+- **Tests:** 4 new tests for naming and renaming.
+
+### Task 0010: File > Print… (Cmd+P) (#11, 2026-11-07)
+
+- **Print:** File > Print… (Cmd+P) prints the open song as shown, with the editor's print styles (`ugsEditorPlus.print.css`), which hide the toolbar and the app's "← Songs" bar.
+- **Mac:** the new `print_page` command opens WKWebView's print sheet with half-inch margins and fit-to-width pages. Tauri's built-in `window.print()` sets the margins to zero, which printers clip. The Print dialog's paper choice carries over to the next print.
+- **Windows:** falls back to `window.print()`, which WebView2 handles natively.
+- **Song list:** Print does nothing there.
+
+### Task 0014: unsaved changes asks Save & …, Discard Edits, or Continue Editing (#10, 2026-11-07)
+
+- **Three choices:** leaving a song with unsaved changes (the song list, another song or songbook, New Song, Close Window, Quit) asks with three native buttons instead of two.
+- **First button:** names what comes next (Save & Close, Save & Quit, Save & Go Back, Save & Open, …) and saves first, renaming the file if the title changed.
+- **Discard Edits** leaves without saving.
+- **Continue Editing** is the dialog's cancel button, so Esc keeps the edits.
+- **Save failure:** if saving fails, the app says so and stays on the song.
+
+### Task 0009: File > New Song… (Cmd+N); task board (#9, 2026-11-07)
+
+- **New Song:** File > New Song… (Cmd+N) and a New Song… button on the song list. A small dialog asks for the title and artist; `SongRepository.create()` makes "Title - Artist.cpm" in the open songbook (unique name, never overwrites), and the editor opens it.
+  - With no songbook open, the Open Songbook dialog comes first.
+  - In the editor, unsaved changes are asked about after the song is named.
+  - Return creates and Esc cancels. The dialog answers directly from those, not from its `close` event, which a page in the background can get late.
+- **Task board:** `docs/BOARD.md` lists numbered tasks (Doing, Next, Later, Done). Branches are named `feature/task-NNNN_short-name`; CLAUDE.md says so. Tasks 0001–0008 are numbered by their PRs.
+
+### Task 0008: File > Open… for a single song; Save As switches to the new file (#8, 2026-11-07)
+
+- **Open… (Cmd+O):** opens one song of any ChordPro type on its own, as `editor.html?file=<path>`; the song list also gets an Open Song… button. The app gets access to that file only. Open Songbook… moves to Shift+Cmd+O.
+- **Saving a song on its own:** a new Rust command, `save_song_file`, writes a temp file next to the song and renames it over the song. It runs in Rust because the app has no access to the song's folder, and it only writes files the app was given.
+- **Open Recent:** single songs are kept as single files. At the next launch only the file is allowed again, never its folder.
+- **Save As… to another folder** now switches the editor to the new file instead of saving a copy.
+
+### Task 0007: Settings window (Cmd+,): song file types, reopening the last songbook (#7, 2026-11-07)
+
+- **Settings window:** Settings… (Cmd+,) is in the app menu on a Mac and in File on Windows. It opens a small window (`settings.html`) whose changes save at once. It closes along with the main window.
+- **Kept by Rust:** `settings.json` sits next to `recent.json`. `settings_get` and `settings_set` read and write it, and every window gets a `studio://settings` event, so the song list updates right away.
+- **Song file types:** `.cpm` (on by default), `.txt` (which also lists the Songbook's `.cpm.txt`), and the other ChordPro extensions (`.cho`, `.crd`, `.chopro`, `.chord`, `.chordpro`, `.pro`). At least one must stay on.
+- **Reopen the last songbook at launch:** on by default.
+- **Old setting carries over:** the song list's "Also list `.cpm.txt`" checkbox is gone, and its value moves into the new `.txt` setting.
+- **Empty songbooks explain themselves:** when a songbook shows no songs, the list says which other song types the folder has and points to Settings.
+
+### Task 0006: Menus for 1.0: View, Help, Windows layout; DECISIONS.md (#6, 2026-11-07)
+
+- **View:** Show Song List (Cmd+L) works like the editor's "← Songs" link and asks about unsaved changes. Enter Full Screen on a Mac.
+- **Help:** UkeGeeks Studio Help (ukegeeks.org) and ChordPro Reference (chordpro.org). Rust opens these fixed addresses in the browser, so no opener plugin is needed. On a Mac, Window and Help are registered with macOS, which adds the window list and the Help search box.
+- **Windows layout:** no app menu; About goes in Help and Quit is File > Exit. Not compiled or tried yet, since only the Mac target is installed.
+- **Docs:** `docs/DECISIONS.md` records the thinking: the editor keeps its own controls, the per-OS menu layout, no Songbook menu until Phase 4, New Song yes and New Songbook not yet, Settings in Rust, song file types.
+
+### Task 0005: File > Open Recent: recent songbooks and songs, kept across launches (#5, 2026-11-07)
+
+- **Menu:** File > Open Recent lists the last 10 songbooks and 10 songs, most recent first; Clear Menu empties it.
+- **The list:** `src-tauri/src/recent.rs` keeps it in `recent.json` in the app's config folder (`~/Library/Application Support/org.ukegeeks.studio/`). The Rust side updates the submenu whenever the list changes.
+- **Folder access across launches:** at startup the list's folders are allowed again, as the Open dialog does (the folder and the files directly in it). This is used instead of the persisted-scope plugin, which keeps every folder ever picked; clearing the list also takes away the access at the next launch. `recent_add_songbook` and `recent_add_song` only accept folders the app may already read. Folders and songs that no longer exist are dropped at startup.
+- **Pages:** the list page records each songbook it shows and reopens the last one at launch; the editor records each song it opens; Open Recent from the editor asks about unsaved changes first. After the editor's File > Open Songbook…, cancelling the picker keeps the open songbook listed.
+- **No new crates:** `serde` and `serde_json` are already part of Tauri's build.
+
+### Task 0004: App menu: File, Edit and Window menus; Save As; Quit asks about unsaved changes (#4, 2026-11-07)
+
+- **The menu, built once in Rust (`src-tauri/src/lib.rs`):**
+  - UkeGeeks Studio: About, Services, Hide, Hide Others, Show All, Quit (Cmd+Q).
+  - File: Open Songbook… (Cmd+O), Save (Cmd+S), Save As… (Shift+Cmd+S), Close Window (Cmd+W).
+  - Edit: Undo, Redo, Cut, Copy, Paste, Select All. Without these, Cmd+Z/X/C/V/A stop working in the text boxes.
+  - Window: Minimize, Zoom.
+- **Menu events:** Open Songbook…, Save, Save As… and Quit send a `studio://menu` event to the page; `web/js/menu.js` passes it to the page's handler. Save clicks the editor's own Save button, so its message and its "problem saving" alert still show.
+- **Save As…:** uses the native save dialog (`dialog:allow-save`). In the songbook folder it writes the file (temp file + rename) and switches to it. The native dialog asks before replacing a file; nothing else overwrites.
+- **Quitting:** in Tauri 2.12.5 the built-in Quit item and Dock > Quit end the app without sending an event. So Quit is a custom item: the page asks about unsaved changes, then calls the new `quit` command. Dock > Quit is caught by adding `applicationShouldTerminate:` to Tauri's app delegate (`objc2`, macOS only; already part of Tauri's build).
+
+### Task 0003: `.cpm` songs; unsaved changes (#3, 2026-11-07)
+
+- **`.cpm` is the song extension;** a setting also lists the Songbook's `.cpm.txt` files.
+- **Unsaved changes:** the window title says "Edited", and going back to the song list or closing the window asks first.
+- Cleaned up the project's folders.
+
+### Task 0002: Phase 2: Mac prototype: open a songbook folder, list, edit and save songs (#2, 2026-11-07)
+
+A Tauri 2 Mac app, run with `npm run dev`. Open Songbook… picks a folder of ChordPro songs, and the songs are listed sorted like the Songbook. One opens in the Song-a-Matic editor (`@ukegeeks/song-editor`), and Save writes the file. Theme fonts are bundled so it works offline. The Songbook's `songs.js` comes in unchanged first (e7a6206), then is switched to Tauri's file access (3bbdbb4). Tested with `npm test`, in a browser against a stand-in for Tauri, and in the app on the Songbook's `cpm/` folder.
+
+### Task 0001: Project notes (#1, 2026-11-07)
+
+README, CLAUDE.md, the roadmap and handoff notes, and the logo.

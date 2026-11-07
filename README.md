@@ -47,7 +47,7 @@ In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (fo
 
 View > Enter Full Screen and Help (UkeGeeks Studio Help, ChordPro Reference) have no shortcuts. On Windows the shortcuts use Ctrl instead of Cmd, Quit is File > Exit, Settings… is in File, and About is in Help. The editor's own controls (themes, transpose, the Chord Builder) stay in the editor.
 
-Editing files under `web/` reloads the window. `npm test` runs the tests for the song list code.
+Editing files under `web/` reloads the window. `npm test` runs the tests for the song list code. `npm run preview` serves the pages to a browser on http://localhost:8765 with a fake Tauri (no real files), for trying the pages without the app; see `scripts/preview/fake-tauri.js`. What changed, PR by PR: [CHANGELOG.md](CHANGELOG.md).
 
 ### How the project is laid out
 

@@ -28,10 +28,11 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
-| 0014 | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #13 |
-| 0012 | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #12 |
-| 0011 | File names follow song titles: a naming setting, and saving a song whose title or artist changed renames its file (never over another) | #11 |
-| 0010 | File > Print… (Cmd+P): one song, with the editor's print styles; half-inch margins on a Mac | #10 |
+| 0015 | CHANGELOG.md, a new handoff (docs/HANDOFF.md), `npm run preview` (the pages in a browser with a fake Tauri) | #14 |
+| 0014 | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #10 |
+| 0012 | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #13 |
+| 0011 | File names follow song titles: a naming setting, and saving a song whose title or artist changed renames its file (never over another) | #12 |
+| 0010 | File > Print… (Cmd+P): one song, with the editor's print styles; half-inch margins on a Mac | #11 |
 | 0009 | File > New Song… (Cmd+N) and a New Song… button on the song list: title and artist, then "Title - Artist.cpm" in the open songbook | #9 |
 | 0008 | File > Open… for one song on its own; Save As switches to the new file | #8 |
 | 0007 | Settings window (Cmd+,): song file types, reopening the last songbook | #7 |
