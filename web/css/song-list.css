@@ -137,6 +137,12 @@ body {
   cursor: pointer;
 }
 
+.libraryMenuSeparator {
+  height: 1px;
+  margin: 4px 6px;
+  background: #e0d8c8;
+}
+
 .libraryMenu button:hover {
   background: #7a2e0e;
   color: #fff;

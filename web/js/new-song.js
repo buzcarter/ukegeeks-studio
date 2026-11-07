@@ -54,9 +54,13 @@ function askTitleAndArtist(songbookName) {
   });
 }
 
-/** Asks for a title and artist, creates the song and opens it in its own window. */
-export async function newSong() {
-  let folder = getFolder();
+/**
+ * Asks for a title and artist, creates the song and opens it in its own window. In
+ * the songbook open in this window, or the one given (the sidebar's right-click > New
+ * Song…).
+ */
+export async function newSong({ folder: inFolder } = {}) {
+  let folder = inFolder || getFolder();
   if (!folder) {
     folder = await addSongbook();
     if (!folder) return;

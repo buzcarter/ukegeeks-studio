@@ -5,8 +5,9 @@
  * (or comes forward, if it's open).
  *
  * + (or File > Add Songbook to Library…) adds a folder and asks for the songbook's
- * name; right-click > Rename… (or double-click) renames it. − or right-click >
- * Remove from Library takes one out. Its folder and songs stay on disk.
+ * name. Right-click a songbook for Open, New Song…, Rename… (or double-click it)
+ * and Remove from Library (or −), which takes it out; its folder and songs stay on
+ * disk.
  */
 import {
   addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, getFolder, getLibrary, getSettings, loadSettings,
@@ -168,7 +169,7 @@ songbooksEl.addEventListener('dblclick', (event) => {
   if (button) renameFolder(button.dataset.folder);
 });
 
-// Right-click a songbook: a small menu with Rename… and Remove from Library
+// Right-click a songbook: Open, New Song…, Rename…, Remove from Library
 let contextMenu = null;
 function closeContextMenu() {
   if (contextMenu) contextMenu.remove();
@@ -182,18 +183,29 @@ songbooksEl.addEventListener('contextmenu', (event) => {
   const { folder } = button.dataset;
   contextMenu = document.createElement('ul');
   contextMenu.className = 'libraryMenu';
-  contextMenu.innerHTML = '<li><button type="button" data-do="rename">Rename…</button></li>'
-    + '<li><button type="button" data-do="remove">Remove from Library</button></li>';
-  contextMenu.style.left = `${event.clientX}px`;
-  contextMenu.style.top = `${event.clientY}px`;
+  contextMenu.setAttribute('role', 'menu');
+  contextMenu.innerHTML = '<li><button type="button" role="menuitem" data-do="open">Open</button></li>'
+    + '<li><button type="button" role="menuitem" data-do="new-song">New Song…</button></li>'
+    + '<li><button type="button" role="menuitem" data-do="rename">Rename…</button></li>'
+    + '<li class="libraryMenuSeparator" role="separator"></li>'
+    + '<li><button type="button" role="menuitem" data-do="remove">Remove from Library</button></li>';
   contextMenu.addEventListener('click', (e) => {
     const item = e.target.closest('button[data-do]');
     if (!item) return;
     closeContextMenu();
-    if (item.dataset.do === 'rename') renameFolder(folder);
-    else removeFolder(folder);
+    const actions = {
+      open: () => folder !== getFolder() && selectFolder(folder),
+      'new-song': () => newSong({ folder }),
+      rename: () => renameFolder(folder),
+      remove: () => removeFolder(folder),
+    };
+    actions[item.dataset.do]();
   });
   document.body.append(contextMenu);
+  // where the click was, kept inside the window
+  const { width, height } = contextMenu.getBoundingClientRect();
+  contextMenu.style.left = `${Math.min(event.clientX, innerWidth - width - 4)}px`;
+  contextMenu.style.top = `${Math.min(event.clientY, innerHeight - height - 4)}px`;
 });
 document.addEventListener('click', (event) => {
   if (contextMenu && !contextMenu.contains(event.target)) closeContextMenu();
