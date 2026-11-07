@@ -14,14 +14,25 @@
     <span class="listButtons">
       <button type="button" id="newSong" class="woodBtn">New Song…</button>
       <button type="button" id="openSong" class="woodBtn">Open Song…</button>
-      <button type="button" id="openSongbook" class="woodBtn orange">Open Songbook…</button>
+      <button type="button" id="openSongbook" class="woodBtn orange">Add Songbook…</button>
     </span>
   </header>
 
-  <main>
-    <p id="songbookStatus" class="status" role="status">Open a songbook: a folder of ChordPro songs (<code>*.cpm</code>). Settings (Cmd+,) can list other song file types too.</p>
-    <ol id="songList" class="songList"></ol>
-  </main>
+  <div class="libraryLayout">
+    <nav class="library" aria-label="Library">
+      <h2 class="libraryHeading">Library</h2>
+      <ul id="songbookList" class="songbookList"></ul>
+      <div class="libraryButtons">
+        <button type="button" id="addSongbook" class="libraryBtn" title="Add Songbook to Library…" aria-label="Add Songbook to Library…">+</button>
+        <button type="button" id="removeSongbook" class="libraryBtn" title="Remove from Library (the folder stays on disk)" aria-label="Remove from Library" disabled>&minus;</button>
+      </div>
+    </nav>
+
+    <main>
+      <p id="songbookStatus" class="status" role="status">Add a songbook to your Library: a folder of ChordPro songs (<code>*.cpm</code>). Settings (Cmd+,) can list other song file types too.</p>
+      <ol id="songList" class="songList"></ol>
+    </main>
+  </div>
 
   <script type="module" src="js/list.js"></script>
 </body>

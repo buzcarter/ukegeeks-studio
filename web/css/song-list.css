@@ -26,7 +26,124 @@ body {
   gap: 8px;
 }
 
+/* the Library: songbooks in a sidebar, the selected one's songs beside it */
+.libraryLayout {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 64px);
+}
+
+.library {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 220px;
+  border-right: 1px solid #d9d2c4;
+  background: #e4dfd5;
+}
+
+.libraryHeading {
+  margin: 0;
+  padding: 14px 16px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a7b66;
+}
+
+.songbookList {
+  flex: 1;
+  margin: 0;
+  padding: 0 8px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.songbookList button {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.songbookList button:hover {
+  background: #d9d2c4;
+}
+
+.songbookList button[aria-current="true"] {
+  background: #7a2e0e; /* wood brown */
+  color: #fff;
+}
+
+.songbookParent {
+  opacity: 0.65;
+  font-size: 12px;
+}
+
+.libraryButtons {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-top: 1px solid #d9d2c4;
+}
+
+.libraryBtn {
+  width: 28px;
+  height: 24px;
+  border: 1px solid #bfb5a3;
+  border-radius: 5px;
+  background: #f4f0e8;
+  color: #4a3b2a;
+  font: 600 16px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  cursor: pointer;
+}
+
+.libraryBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* right-click a songbook */
+.libraryMenu {
+  position: fixed;
+  z-index: 100;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid #bfb5a3;
+  border-radius: 6px;
+  background: #fbf8f2;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.libraryMenu button {
+  display: block;
+  width: 100%;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.libraryMenu button:hover {
+  background: #7a2e0e;
+  color: #fff;
+}
+
 main {
+  flex: 1;
   max-width: 760px;
   padding: 10px 28px 40px;
 }
