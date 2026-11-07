@@ -8,8 +8,9 @@
 //! with the item's id to the window in front, which knows whether its song has
 //! unsaved changes (web/js/menu.js). Add Songbook to Library… and Show Song List go
 //! to the song list, whose sidebar is the Library (library.rs). Quit asks each song window in turn (windows.rs). File > Open Recent is in
-//! recent.rs.
+//! recent.rs; Favorites (starred songs) in favorites.rs.
 
+mod favorites;
 mod library;
 mod recent;
 mod settings;
@@ -317,6 +318,9 @@ pub fn run() {
       library::library_rename,
       library::library_remove,
       library::library_select,
+      favorites::favorites_get,
+      favorites::favorites_star,
+      favorites::favorites_rename,
       recent::recent_add_song,
       settings::settings_get,
       settings::settings_set,
@@ -331,6 +335,7 @@ pub fn run() {
       let recent = recent::load(handle);
       let old_songbooks = recent::take_songbooks(handle, &recent);
       app.manage(library::load(handle, &old_songbooks));
+      app.manage(favorites::load(handle));
       let open_recent = recent::build_submenu(handle, &recent)?;
       app.manage(recent);
       app.manage(settings::load(handle));

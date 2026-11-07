@@ -74,12 +74,23 @@ pub struct Library {
   /// songbooks, in the order added
   #[serde(default)]
   pub songbooks: Vec<Songbook>,
-  /// the songbook selected last, shown at launch
+  /// the songbook selected last, shown at launch (or FAVORITES_SELECTED)
   #[serde(default)]
   pub selected: Option<String>,
 }
 
 pub struct LibraryState(Mutex<Library>);
+
+impl LibraryState {
+  /// Is this folder a songbook of the Library?
+  pub fn has_songbook(&self, folder: &str) -> bool {
+    self.0.lock().unwrap().songbooks.iter().any(|s| same_folder(&s.folder, folder))
+  }
+}
+
+/// What `selected` holds when the sidebar's Favorites (favorites.rs) was chosen
+/// last, instead of a songbook's folder (always a full path, so never this).
+pub const FAVORITES_SELECTED: &str = "list:favorites";
 
 /// Sent to every window when the Library changes (a songbook added from a song
 /// window's New Song…, say); the payload is the Library.
@@ -91,7 +102,7 @@ fn file_path(app: &AppHandle) -> Option<PathBuf> {
 
 /// The same folder? Trailing slashes aside, and ignoring case, as Mac and Windows
 /// folder names do.
-fn same_folder(a: &str, b: &str) -> bool {
+pub fn same_folder(a: &str, b: &str) -> bool {
   let clean = |p: &str| p.trim_end_matches(['/', '\\']).to_lowercase();
   clean(a) == clean(b)
 }
@@ -204,11 +215,11 @@ pub fn library_remove(app: AppHandle, state: State<LibraryState>, folder: String
   })
 }
 
-/// Remembers the songbook selected in the sidebar, for the next launch.
+/// Remembers the songbook (or Favorites, FAVORITES_SELECTED) selected in the
+/// sidebar, for the next launch.
 #[tauri::command]
 pub fn library_select(app: AppHandle, state: State<LibraryState>, folder: String) -> Result<Library, String> {
-  let known = state.0.lock().unwrap().songbooks.iter().any(|s| same_folder(&s.folder, &folder));
-  if !known {
+  if folder != FAVORITES_SELECTED && !state.has_songbook(&folder) {
     return Err(format!("not in the Library: {folder}"));
   }
   Ok(change(&app, &state, |library| library.selected = Some(folder)))
