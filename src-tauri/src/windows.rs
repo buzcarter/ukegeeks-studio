@@ -122,9 +122,11 @@ pub fn send_menu(app: &AppHandle, id: &str) {
         eprintln!("[studio] can't send menu item {id} to {}: {err}", window.label());
       }
     }
-    // no windows but Settings: the item needs a page, so open the song list
+    // no windows (on a Mac the app keeps running without any) or only Settings:
+    // open the song list, which then does New Song… or Open… itself (?menu=)
     None => {
-      show_main(app, "");
+      let query = if ["new-song", "open-file"].contains(&id) { format!("menu={id}") } else { String::new() };
+      show_main(app, &query);
     }
   }
 }
@@ -271,7 +273,8 @@ pub fn quit_cancel(state: State<WindowsState>) {
 }
 
 /// A window closed: forget its song, and if it was the one asked about quitting, go
-/// on to the next. Once only Settings is left, close it too, so the app can end.
+/// on to the next. Once only Settings is left, close it too, so the app can end
+/// (not on a Mac, where the app keeps running with no windows).
 pub fn on_destroyed(app: &AppHandle, label: &str) {
   let state = app.state::<WindowsState>();
   state.songs.lock().unwrap().remove(label);
@@ -280,7 +283,7 @@ pub fn on_destroyed(app: &AppHandle, label: &str) {
     ask_next(app);
   }
   let pages_left = app.webview_windows().keys().any(|l| l != label && is_page_window(l));
-  if !pages_left {
+  if !pages_left && !cfg!(target_os = "macos") {
     if let Some(settings) = app.get_webview_window(crate::settings::SETTINGS_WINDOW) {
       let _ = settings.close();
     }
