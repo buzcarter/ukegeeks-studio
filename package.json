@@ -10,6 +10,7 @@
     "url": "git+https://github.com/buzcarter/ukegeeks-studio.git"
   },
   "scripts": {
+    "vendor": "node scripts/vendor.js",
     "tauri": "tauri",
     "dev": "tauri dev"
   },

@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "identifier": "org.ukegeeks.studio",
   "build": {
-    "frontendDist": "../web"
+    "frontendDist": "../web",
+    "beforeDevCommand": "npm run vendor",
+    "beforeBuildCommand": "npm run vendor"
   },
   "app": {
     "withGlobalTauri": true,
