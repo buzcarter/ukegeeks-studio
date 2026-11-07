@@ -1,6 +1,6 @@
 /**
  * File > New Song… (Cmd+N), and the song list's New Song… button: asks for a title
- * and artist, then creates "Title - Artist.cpm" in the open songbook
+ * and artist, then creates "Title - Artist.cpm" (or as Settings names files) in the open songbook
  * (SongRepository.create: a unique name, never overwrites) and opens it.
  *
  * With no songbook open, the Open Songbook dialog comes first. The dialog here is the
@@ -8,7 +8,7 @@
  */
 import {
   escapeHtml, fileUri, folderName, getFolder, getSettings, joinPath, loadSettings, openSongbook,
-  pickFolder, SONG_EXTENSION, tauri,
+  pickFolder, SONG_EXTENSION, songFileBase, tauri,
 } from './songbook.js';
 
 /** Shows the New Song dialog. Resolves to { title, artist }, or null if cancelled. */
@@ -67,10 +67,12 @@ export async function newSong({ confirm } = {}) {
   if (!answer) return;
   if (confirm && !(await confirm())) return;
 
+  await loadSettings();
   let filename;
   try {
-    // always ".cpm", whatever song types Settings lists
-    filename = await openSongbook(folder, [SONG_EXTENSION]).create(answer.title, answer.artist);
+    // always ".cpm", whatever song types Settings lists; named as Settings says
+    const base = songFileBase(answer.title, answer.artist);
+    filename = await openSongbook(folder, [SONG_EXTENSION]).create(answer.title, answer.artist, base);
   } catch (err) {
     console.error('[studio] new song:', err);
     await tauri().dialog.message(`There was a problem creating "${answer.title}". (${err && err.message ? err.message : err})`, {
@@ -78,7 +80,6 @@ export async function newSong({ confirm } = {}) {
     });
     return;
   }
-  await loadSettings();
   // If Settings doesn't list .cpm songs, open it on its own rather than "not found"
   location.href = getSettings().songExtensions.includes(SONG_EXTENSION)
     ? openSongbook(folder).songUri(filename)

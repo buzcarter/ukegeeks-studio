@@ -17,6 +17,17 @@
     </fieldset>
 
     <fieldset>
+      <legend>File names</legend>
+      <label>Name song files <select id="fileNaming">
+        <option value="title-artist">Title - Artist</option>
+        <option value="title">Title</option>
+        <option value="artist-title">Artist - Title</option>
+      </select></label>
+      <label><input type="checkbox" id="renameWithTitle" /> Rename a song's file when its title or artist changes</label>
+      <p class="hint">For new songs, and when you save a song whose title or artist you changed. An existing file with that name is never replaced: the new name gets "(2)".</p>
+    </fieldset>
+
+    <fieldset>
       <legend>When the app starts</legend>
       <label><input type="checkbox" id="reopenLastSongbook" /> Open the last songbook</label>
     </fieldset>
