@@ -2,6 +2,22 @@
 
 Why the app is the way it is, so later work doesn't undo it by accident. Newest first. The plan itself is in [ROADMAP.md](ROADMAP.md).
 
+## The Library and song windows (2026-11-07)
+
+The owner's user stories, which turned task 0013 ("more than one songbook at once") into a new shape for the app:
+
+- As a player I want to be able to add multiple directories to my "Library" so I may view or print each directory, "Songbook", individually. (Task 0013.)
+- As a player I want to be able to have more than one song open at a time so I may compare and copy & paste between songs. (Task 0016.)
+- As a player I sometimes want to open a single song that lives outside my Library folders. (Already there, task 0008; task 0016 opens it in its own window.)
+- As a player I want to quickly find my favorite songs that span songbooks so I may practice songs in any order. (Task 0018.)
+- As a player I want to be able to search by song title, artist, or song content so I may quickly play any song. (Task 0017.)
+
+### Song windows come first
+
+Every later piece (the Library's sidebar, search results, Favorites) ends in "open this song". So songs open in their own windows first, and the rest is built on that, rather than on the main window switching between the list and the editor.
+
+Windows, not tabs or a split view: the editor finds its parts by id, so it's one song per page. A window per song keeps that true and needs no change to `@ukegeeks/song-editor` (whose TypeScript conversion is someone else's work now). Copy and paste between windows just works.
+
 ## Menus, settings and new songs (2026-11-06)
 
 From a talk with the owner after the app menu (PR #4) and Open Recent (PR #5) landed.

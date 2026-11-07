@@ -8,13 +8,15 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | Branch |
 |---|---|---|
-| | (nothing: the next task starts here) | |
+| 0016 | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | `feature/task-0016_song-windows` |
 
 ## Next (in order; rearrange freely)
 
 | Task | What |
 |---|---|
-| 0013 | More than one songbook at once (the app points at several folders); today it's one at a time plus Open Recent |
+| 0013 | The Library: several folders, each its own songbook, in a sidebar beside the song list; view or print each one on its own (one-PDF printing stays in Phase 4) |
+| 0017 | Search the Library by title, artist or song text |
+| 0018 | Favorites: songs starred from any songbook, in one list |
 
 ## Later
 
