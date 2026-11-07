@@ -7,8 +7,9 @@
  * Save writes the file (temp file + rename: SongRepository.update in a songbook,
  * the save_song_file command for a song on its own). The song is
  * "dirty" while the Edit Song text differs from what was last opened or saved: the
- * window title says "Edited", and going back to the list, closing the window,
- * File > Open Songbook… and Quit ask first.
+ * window title says "Edited", and leaving the song (the song list, another song or
+ * songbook, closing the window, Quit) asks first: Save & …, Discard Edits, or
+ * Continue Editing.
  *
  * File > Save As… writes the song under a new name and switches to it: in the
  * songbook folder, as a song of the songbook; anywhere else, as a song on its own
@@ -40,16 +41,6 @@ onMenu('show-song-list', () => { location.href = 'index.html'; });
 
 function showProblem(message) {
   container.innerHTML = `<p class="studioProblem">${escapeHtml(message)} <a href="index.html">Back to the songs</a></p>`;
-}
-
-/** Asks whether to throw away unsaved changes. Resolves true to discard. */
-function confirmDiscard(action) {
-  return tauri().dialog.ask(`This song has changes that aren't saved. ${action} anyway?`, {
-    title: 'Unsaved changes',
-    kind: 'warning',
-    okLabel: 'Discard changes',
-    cancelLabel: 'Keep editing',
-  });
 }
 
 /**
@@ -179,6 +170,38 @@ async function main() {
   window.studioEditor = editor; // studioEditor.getSong() in the Web Inspector console
   window.studioIsDirty = isDirty;
 
+  /**
+   * Before leaving the song (another song or songbook, the song list, closing, Quit):
+   * with unsaved changes, asks "Save & …" / Discard Edits / Continue Editing. Resolves
+   * true to go on (saved or discarded), false to stay. Esc is Continue Editing. If
+   * saving fails, says so and stays.
+   * @param {string} saveLabel the first button, for what comes next ("Save & Quit")
+   */
+  async function readyToLeave(saveLabel) {
+    if (!isDirty()) return true;
+    const DISCARD = 'Discard Edits';
+    const STAY = 'Continue Editing';
+    const choice = await tauri().dialog.message(`Do you want to save the changes you made to "${songName}"?`, {
+      title: 'Unsaved changes',
+      kind: 'warning',
+      buttons: { yes: saveLabel, no: DISCARD, cancel: STAY },
+    });
+    if (choice === DISCARD) return true;
+    if (choice !== saveLabel) return false;
+    const text = currentText();
+    try {
+      await write(text);
+      savedText = text;
+      return true;
+    } catch (err) {
+      console.error(`[studio] saving ${filename}:`, err);
+      await tauri().dialog.message(`There was a problem saving "${filename}", so it's still open. (${err && err.message ? err.message : err})`, {
+        title: 'Unsaved changes', kind: 'error',
+      });
+      return false;
+    }
+  }
+
   // File > Save (Cmd+S): the editor's own Save button, so its "Saved …" message and
   // "problem saving" alert show as usual. The button saves the Edit Song box, which
   // gets Fullscreen's text only when Fullscreen closes: copy it in first.
@@ -232,7 +255,7 @@ async function main() {
   });
 
   // File > New Song… (Cmd+N): asks about unsaved changes once the new song is named
-  onMenu('new-song', () => newSong({ confirm: () => !isDirty() || confirmDiscard('Start a new song') }));
+  onMenu('new-song', () => newSong({ confirm: () => readyToLeave('Save & Start New Song') }));
 
   // File > Print… (Cmd+P): the song as shown, with the editor's print styles
   // (ugsEditorPlus.print.css). On a Mac the print_page command opens the system Print
@@ -243,37 +266,37 @@ async function main() {
   onMenu('open-file', async () => {
     const newPath = await pickSongFile();
     if (!newPath) return;
-    if (isDirty() && !(await confirmDiscard('Open another song'))) return;
+    if (!(await readyToLeave('Save & Open'))) return;
     location.href = fileUri(newPath);
   });
 
   // File > Open Songbook… (Shift+Cmd+O): back to the list, which shows the picker.
   onMenu('open-songbook', async () => {
-    if (isDirty() && !(await confirmDiscard('Open another songbook'))) return;
+    if (!(await readyToLeave('Save & Open Songbook'))) return;
     location.href = 'index.html?open=1';
   });
 
   // File > Open Recent
   onMenu('open-recent', async (item) => {
-    if (isDirty() && !(await confirmDiscard(item.song ? 'Open another song' : 'Open another songbook'))) return;
+    if (!(await readyToLeave('Save & Open'))) return;
     openRecent(item);
   });
 
   // Quit (Cmd+Q, or Quit in the Dock)
   onMenu('quit', async () => {
-    if (isDirty() && !(await confirmDiscard('Quit'))) return;
+    if (!(await readyToLeave('Save & Quit'))) return;
     await quitApp();
   });
 
   document.getElementById('backToSongs').addEventListener('click', async (event) => {
     if (!isDirty()) return;
     event.preventDefault();
-    if (await confirmDiscard('Go back to the songs')) location.href = 'index.html';
+    if (await readyToLeave('Save & Go Back')) location.href = 'index.html';
   });
 
   // View > Show Song List (Cmd+L): the same as "← Songs"
   onMenu('show-song-list', async () => {
-    if (isDirty() && !(await confirmDiscard('Go back to the songs'))) return;
+    if (!(await readyToLeave('Save & Go Back'))) return;
     location.href = 'index.html';
   });
 
@@ -283,7 +306,7 @@ async function main() {
   await appWindow.onCloseRequested(async (event) => {
     if (!isDirty()) return;
     event.preventDefault();
-    if (await confirmDiscard('Close the window')) await appWindow.destroy();
+    if (await readyToLeave('Save & Close')) await appWindow.destroy();
   });
 }
 

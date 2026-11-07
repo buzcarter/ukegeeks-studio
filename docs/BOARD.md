@@ -15,7 +15,6 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 | Task | What |
 |---|---|
 | 0013 | More than one songbook at once (the app points at several folders); today it's one at a time plus Open Recent |
-| 0014 | Unsaved changes asks with three buttons: **Save & Close** (or Save & Quit, Save & Open…, as fits), **Continue Editing**, **Discard Edits**. The dialog plugin's `message()` takes three custom buttons (`buttons: { yes, no, cancel }`), so it stays a native dialog. If saving fails, stay on the song. |
 
 ## Later
 
@@ -29,6 +28,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0014 | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #13 |
 | 0012 | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #12 |
 | 0011 | File names follow song titles: a naming setting, and saving a song whose title or artist changed renames its file (never over another) | #11 |
 | 0010 | File > Print… (Cmd+P): one song, with the editor's print styles; half-inch margins on a Mac | #10 |
