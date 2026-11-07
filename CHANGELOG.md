@@ -4,6 +4,17 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0016: each song in its own window (#15, 2026-11-07)
+
+- **Song windows:** a song opens in a window of its own, from the song list, File > Open…, New Song… or Open Recent, so several songs can be open at once to compare and copy between. Opening a song that's already open brings its window forward. New windows sit a little below and right of the one in front.
+- **The song list stays put:** it's the main window; "← Songs" and View > Show Song List (Cmd+L) bring it forward, reopening it if it was closed. File > Open Songbook… and recent songbooks go to it.
+- **Menus go to the window in front:** Save, Save As…, Print… act on that song only. (A page's plain `listen` hears events sent to any window, so the pages listen for their own label.)
+- **Unsaved changes:** only closing a window or quitting asks now; opening other songs doesn't leave this one. Quit asks each song window in turn, and Continue Editing in any of them stops it.
+- **`src-tauri/src/windows.rs`:** the song windows, which file each holds, menu routing, and the Quit round. Capabilities cover `main` and `song-*`.
+- **Song addresses** carry the folder: `editor.html?folder=…&song=…`, since a new window doesn't know the open songbook.
+- **`npm run preview`:** a song opens in a browser tab, one per song.
+- **Board:** the owner's Library user stories; task 0013 is now the Library; new tasks 0017 (search), 0018 (Favorites) and 0019 (a first-run welcome/tour).
+
 ### Task 0012: the Song-a-Matic's faux-wood look for the app's own pages (#13, 2026-11-07)
 
 - **`web/css/wood.css`:** the editor's wooden strip (`.ugsAppMenuBar`), wood grain (`.overlay`), buttons (`.baseBtn`, `.orange`) and text boxes. Same colors, and the editor's own images from `vendor/song-editor/img/editor/`.

@@ -8,7 +8,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | Branch |
 |---|---|---|
-| 0016 | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | `feature/task-0016_song-windows` |
+| | (nothing: the next task starts here) | |
 
 ## Next (in order; rearrange freely)
 
@@ -17,6 +17,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 | 0013 | The Library: several folders, each its own songbook, in a sidebar beside the song list; view or print each one on its own (one-PDF printing stays in Phase 4) |
 | 0017 | Search the Library by title, artist or song text |
 | 0018 | Favorites: songs starred from any songbook, in one list |
+| 0019 | A first-run welcome or short tour, so a new player gets the most out of the app |
 
 ## Later
 
@@ -30,6 +31,7 @@ The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases
 
 | Task | What | PR |
 |---|---|---|
+| 0016 | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | #15 |
 | 0015 | CHANGELOG.md, a new handoff (docs/HANDOFF.md), `npm run preview` (the pages in a browser with a fake Tauri) | #14 |
 | 0014 | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #10 |
 | 0012 | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #13 |

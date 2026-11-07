@@ -11,12 +11,21 @@ The owner's user stories, which turned task 0013 ("more than one songbook at onc
 - As a player I sometimes want to open a single song that lives outside my Library folders. (Already there, task 0008; task 0016 opens it in its own window.)
 - As a player I want to quickly find my favorite songs that span songbooks so I may practice songs in any order. (Task 0018.)
 - As a player I want to be able to search by song title, artist, or song content so I may quickly play any song. (Task 0017.)
+- As a first time user I want a first time/start-up window/tour so that I can confidently maximize my usage of UGStudio. (Task 0019, after the Library, search and Favorites, so the tour shows the app as it will be.)
 
 ### Song windows come first
 
 Every later piece (the Library's sidebar, search results, Favorites) ends in "open this song". So songs open in their own windows first, and the rest is built on that, rather than on the main window switching between the list and the editor.
 
 Windows, not tabs or a split view: the editor finds its parts by id, so it's one song per page. A window per song keeps that true and needs no change to `@ukegeeks/song-editor` (whose TypeScript conversion is someone else's work now). Copy and paste between windows just works.
+
+### How song windows work (task 0016)
+
+- **One window per song,** labeled `song-1`, `song-2`, …; the song list is `main`. Opening a song that's open brings its window forward (Rust keeps which file each window holds; the page tells it again after a rename or Save As).
+- **The address carries the folder** (`editor.html?folder=…&song=…`): each window has its own session storage, so a new window doesn't know the open songbook.
+- **Menu items go to the window in front.** Open Songbook… and recent songbooks go to the song list; a recent song opens its window. Show Song List reopens the list if it was closed.
+- **Unsaved changes are asked only on close and Quit,** since opening another song no longer leaves this one. Quit asks each song window in turn, bringing it forward; Continue Editing anywhere stops quitting.
+- **For now the app still ends when its last window closes,** as before. Whether it should stay running on a Mac with no windows (the Mac norm) is for the Library task (0013), which decides what the main window is.
 
 ## Menus, settings and new songs (2026-11-06)
 

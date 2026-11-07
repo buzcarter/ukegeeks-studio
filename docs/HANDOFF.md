@@ -27,14 +27,15 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 | Where | What |
 |---|---|
 | `web/index.html`, `web/js/list.js` | The song list. |
-| `web/editor.html`, `web/js/editor.js` | The editor page: `?song=<file>` from the open songbook, `?file=<path>` for a song on its own. One song per page (the editor finds its parts by id), so changing songs reloads the page. |
+| `web/editor.html`, `web/js/editor.js` | The editor page, one per song window: `?folder=<folder>&song=<file>` for a songbook's song, `?file=<path>` for a song on its own. One song per page (the editor finds its parts by id). |
 | `web/settings.html`, `web/js/settings.js` | The Settings window. It doesn't load `menu.js`, on purpose. |
 | `web/js/songbook.js` | The open folder, settings, recent lists, paths, and the Tauri helpers the pages share. |
 | `web/js/songs.js` | `SongRepository` and the ChordPro parsing, from the Songbook's `server/lib/songs.js`. Tested in `test/songs.test.js`. |
 | `web/js/menu.js` | Menu events from Rust → `onMenu(id, handler)`. |
 | `web/js/new-song.js`, `web/css/dialog.css` | The New Song dialog (the page's own `<dialog>`). |
 | `web/css/wood.css` | The faux-wood look. |
-| `src-tauri/src/lib.rs` | The menu, the `quit`, `save_song_file` and `print_page` commands, and Dock > Quit. |
+| `src-tauri/src/lib.rs` | The menu and where its items go, the `save_song_file` and `print_page` commands, and Dock > Quit. |
+| `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List, and Quit asking each song window in turn (`quit`, `quit_cancel`). |
 | `src-tauri/src/recent.rs`, `settings.rs` | Open Recent and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
 | `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
@@ -63,6 +64,8 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 - **Unsaved changes:** the dirty check compares with the editor's own text right after mount, not the file's, because the Edit Song box decodes HTML entities.
 - **Fullscreen:** while it's open, Ace's editor sits outside the editor's container, and `getSong()` doesn't see its text; `editor.js` reads Ace directly.
 - **Menu:** it's built in `setup()` (so Open Recent can be rebuilt), and menu calls are safe from any thread.
+- **Events to one window:** `emit_to(label, …)` still reaches every page that listens with a plain `listen()`, which hears events sent to any target. Listen with `{ target: { kind: 'AnyLabel', label } }` to get only your window's events (and still the global ones from `emit`).
+- **Window URLs:** `WebviewUrl::App("editor.html?x=1")` keeps the query string (it's joined onto the app URL).
 - **Rust dependencies:** `objc2`, `serde` and `serde_json` are direct dependencies, but Tauri already builds them, so they cost nothing extra.
 
 ## Disk
