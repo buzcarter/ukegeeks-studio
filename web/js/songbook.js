@@ -11,7 +11,33 @@ import './songs.js';
 const { SongRepository } = globalThis.studioSongs;
 
 const FOLDER_KEY = 'studio.songbookFolder';
-export const SONG_EXTENSION = '.cpm.txt';
+const INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
+
+// Songs are "*.cpm" files. "*.cpm.txt" is how the Songbook names them (Apache serves
+// unknown file types badly); a setting lists those too.
+export const SONG_EXTENSION = '.cpm';
+export const TXT_SONG_EXTENSION = '.cpm.txt';
+
+/** Setting: also list "*.cpm.txt" songs. Kept by the app across launches (localStorage). */
+export function includeCpmTxt() {
+  try {
+    return localStorage.getItem(INCLUDE_TXT_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function setIncludeCpmTxt(on) {
+  try {
+    localStorage.setItem(INCLUDE_TXT_KEY, on ? '1' : '0');
+  } catch {
+    /* the setting lasts for this page only */
+  }
+}
+
+export function songExtensions() {
+  return includeCpmTxt() ? [SONG_EXTENSION, TXT_SONG_EXTENSION] : [SONG_EXTENSION];
+}
 
 export function tauri() {
   if (!window.__TAURI__) {
@@ -55,10 +81,10 @@ export function folderName(folder) {
   return folder.replace(/[\/\\]+$/, '').split(/[\/\\]/).pop() || folder;
 }
 
-export function openSongbook(folder) {
+export function openSongbook(folder, fileExtensions = songExtensions()) {
   return new SongRepository({
     songDirectory: folder,
-    fileExtension: SONG_EXTENSION,
+    fileExtensions,
     maxFileSize: 512 * 1024,
     fs: tauri().fs,
   });
