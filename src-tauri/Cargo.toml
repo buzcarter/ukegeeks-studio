@@ -1,0 +1,28 @@
+[package]
+name = "ukegeeks-studio"
+version = "0.1.0"
+description = "UkeGeeks Studio: a desktop app for making ukulele songbooks"
+authors = ["Buz Carter <buz@ukegeeks.org>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/buzcarter/ukegeeks-studio"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "ukegeeks_studio_lib"
+# Desktop only needs "rlib". The iPad build (Phase 6) adds "staticlib";
+# leaving it out for now keeps target/ smaller.
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+
+# Disk space is tight: no debug info for dependencies in dev builds
+# (it's most of target/'s size). The app's own crate keeps it.
+[profile.dev.package."*"]
+debug = false

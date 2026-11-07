@@ -1,0 +1,33 @@
+/* UkeGeeks Studio's own bits around the editor. */
+.studioBar {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 10000;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(30, 30, 30, 0.88);
+  font: 13px/1.4 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.studioBar a {
+  color: #eee;
+  text-decoration: none;
+}
+
+.studioBar a:hover {
+  text-decoration: underline;
+}
+
+.studioProblem {
+  margin: 3em;
+  font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: #b3261e;
+}
+
+@media print {
+  .studioBar {
+    display: none;
+  }
+}

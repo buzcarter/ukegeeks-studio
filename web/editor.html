@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>UkeGeeks Studio</title>
+  <!-- the host page's own styles (copied unchanged from the Song Editor demo, which took them from the Songbook) -->
+  <link rel="stylesheet" href="css/yuiReset.css" />
+  <link rel="stylesheet" href="css/basic-page-layout.css" />
+  <!-- the color themes' fonts, bundled (no Google Fonts: the app works offline) -->
+  <link rel="stylesheet" href="css/fonts.css" />
+  <!-- Song Formatter, then the editor; title="ugsEditorCss" is required -->
+  <link rel="stylesheet" href="vendor/song-formatter/css/ukeGeeks.music.css" />
+  <link rel="stylesheet" href="vendor/song-editor/css/ugsEditorPlus.min.css" title="ugsEditorCss" />
+  <link rel="stylesheet" href="vendor/song-editor/css/ugsEditorPlus.print.css" media="print" />
+  <link rel="stylesheet" href="css/studio.css" />
+</head>
+<body>
+  <div id="songEditor"></div>
+
+  <nav class="studioBar" aria-label="Songbook">
+    <a href="index.html" id="backToSongs">&larr; Songs</a>
+  </nav>
+
+  <script src="vendor/song-formatter/song-formatter.bundle.js"></script>
+  <script src="vendor/song-editor/js/ugsEditorPlus.min.js"></script>
+  <script type="module" src="js/editor.js"></script>
+</body>
+</html>

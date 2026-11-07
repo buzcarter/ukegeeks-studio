@@ -1,0 +1,78 @@
+/* The song list page. */
+body {
+  margin: 0;
+  font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: #333;
+  background: #fbfaf7;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 28px;
+  background: #5b3a1e;
+  color: #fff;
+}
+
+.listHeader h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.listHeader button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 5px;
+  background: #f39c3c;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.listHeader button:hover {
+  background: #e58a26;
+}
+
+main {
+  max-width: 760px;
+  padding: 10px 28px 40px;
+}
+
+.status.isError {
+  color: #b3261e;
+}
+
+.songList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.songList li {
+  border-bottom: 1px solid #e6e1d8;
+}
+
+.songList a {
+  display: block;
+  padding: 8px 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.songList a:hover {
+  background: #f1ece3;
+}
+
+.songTitle {
+  color: #2a5db0;
+  font-weight: 600;
+}
+
+.songDetails {
+  color: #777;
+  font-size: 13px;
+}
