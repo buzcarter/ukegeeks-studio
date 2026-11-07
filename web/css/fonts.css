@@ -1,0 +1,58 @@
+/*
+ * The fonts the editor's color themes use, bundled so the app works offline
+ * (web pages load them from Google Fonts). Files: web/fonts/, from the
+ * google/fonts repo; licenses in web/fonts/licenses/ (see web/fonts/README.md).
+ */
+@font-face {
+  font-family: 'Architects Daughter';
+  src: url('../fonts/ArchitectsDaughter-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bree Serif';
+  src: url('../fonts/BreeSerif-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cherry Cream Soda';
+  src: url('../fonts/CherryCreamSoda-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Creepster';
+  src: url('../fonts/Creepster-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lobster';
+  src: url('../fonts/Lobster-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Peralta';
+  src: url('../fonts/Peralta-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Permanent Marker';
+  src: url('../fonts/PermanentMarker-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ranchers';
+  src: url('../fonts/Ranchers-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Smokum';
+  src: url('../fonts/Smokum-Regular.ttf') format('truetype');
+  font-display: swap;
+}
