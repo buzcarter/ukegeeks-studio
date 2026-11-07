@@ -16,7 +16,10 @@ Someone running a ukulele club. They have songsheets (paper, PDFs, text pasted f
 
 Built with [Tauri 2](https://tauri.app/) for macOS and Windows; the same project can later build for iPad.
 
-## The UkeGeeks family
+## Part of the UkeGeeks family
+
+<img src="docs/images/ukegeeks-mascot-192.png" alt="The UkeGeeks mascot, a dinosaur playing the ukulele" width="96" height="96" align="right">
+
 
 | Piece | What it does |
 |---|---|
