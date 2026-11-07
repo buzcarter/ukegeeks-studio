@@ -314,6 +314,7 @@ pub fn run() {
       recent::recent_list,
       library::library_get,
       library::library_add,
+      library::library_rename,
       library::library_remove,
       library::library_select,
       recent::recent_add_song,

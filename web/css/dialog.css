@@ -38,6 +38,7 @@
 
 .studioDialogNote {
   margin: 0 0 10px;
+  overflow-wrap: anywhere; /* long folder paths */
   color: #5b3a1e;
   font-size: 13px;
 }

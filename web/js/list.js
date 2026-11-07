@@ -4,13 +4,14 @@
  * the Songbook ("The Rose" sorts as "Rose, The"). Each song opens in its own window
  * (or comes forward, if it's open).
  *
- * + (or File > Add Songbook to Library…) adds a folder; − or right-click > Remove
- * from Library takes the selected one out. Its folder and songs stay on disk.
+ * + (or File > Add Songbook to Library…) adds a folder and asks for the songbook's
+ * name; right-click > Rename… (or double-click) renames it. − or right-click >
+ * Remove from Library takes one out. Its folder and songs stay on disk.
  */
 import {
-  addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, folderName, getFolder, getLibrary, getSettings,
-  loadSettings, onLibraryChanged, onSettingsChanged, openSongbook, openSongbookSong, openSongFile, pickSongFile,
-  removeSongbook, selectSongbook, setFolder, songExtensions,
+  addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, getFolder, getLibrary, getSettings, loadSettings,
+  onLibraryChanged, onSettingsChanged, openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook,
+  renameSongbook, selectSongbook, setFolder, songbookName, songExtensions,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 import { newSong } from './new-song.js';
@@ -34,12 +35,14 @@ function parentName(folder) {
   return parts.length > 1 ? parts[parts.length - 2] : '';
 }
 
+const inLibrary = (folder) => library.songbooks.some((s) => s.folder === folder);
+
 /** The sidebar: the Library's songbooks by name, the open one highlighted. */
 function showLibrary() {
   const open = getFolder();
-  const names = library.songbooks.map(folderName);
+  const names = library.songbooks.map((s) => s.name.toLowerCase());
   const items = library.songbooks
-    .map((folder, i) => ({ folder, name: names[i], twin: names.filter((n) => n === names[i]).length > 1 }))
+    .map(({ folder, name }, i) => ({ folder, name, twin: names.filter((n) => n === names[i]).length > 1 }))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
   songbooksEl.innerHTML = items
     .map(({ folder, name, twin }) => `<li><button type="button" data-folder="${escapeHtml(folder)}" title="${escapeHtml(folder)}"`
@@ -47,12 +50,12 @@ function showLibrary() {
       + (twin ? ` <span class="songbookParent">— ${escapeHtml(parentName(folder))}</span>` : '')
       + '</button></li>')
     .join('');
-  removeBtn.disabled = !library.songbooks.includes(open);
+  removeBtn.disabled = !inLibrary(open);
 }
 
 async function showSongbook(folder) {
   listEl.innerHTML = '';
-  showStatus(`Reading <strong>${escapeHtml(folderName(folder))}</strong>…`);
+  showStatus(`Reading <strong>${escapeHtml(songbookName(library, folder))}</strong>…`);
   try {
     await checkAccess(folder);
   } catch (err) {
@@ -60,7 +63,7 @@ async function showSongbook(folder) {
     return;
   }
   const songs = await openSongbook(folder).getSongList();
-  const name = `<strong title="${escapeHtml(folder)}">${escapeHtml(folderName(folder))}</strong>`;
+  const name = `<strong title="${escapeHtml(folder)}">${escapeHtml(songbookName(library, folder))}</strong>`;
   const count = songs.length === 1 ? '1 song' : `${songs.length} songs`;
   showStatus(`${name}: ${count}`);
   if (!songs.length) {
@@ -146,7 +149,26 @@ async function chooseSong() {
   }
 }
 
-// Right-click a songbook: a small menu with Remove from Library
+/** Right-click > Rename… or double-click: a new name for the songbook (not the folder). */
+async function renameFolder(folder) {
+  try {
+    const next = await renameSongbook(library, folder);
+    if (!next) return;
+    library = next;
+  } catch (err) {
+    showStatus(escapeHtml(err.message || String(err)), true);
+    return;
+  }
+  showLibrary();
+  if (getFolder() === folder) showSongbook(folder);
+}
+
+songbooksEl.addEventListener('dblclick', (event) => {
+  const button = event.target.closest('button[data-folder]');
+  if (button) renameFolder(button.dataset.folder);
+});
+
+// Right-click a songbook: a small menu with Rename… and Remove from Library
 let contextMenu = null;
 function closeContextMenu() {
   if (contextMenu) contextMenu.remove();
@@ -160,12 +182,16 @@ songbooksEl.addEventListener('contextmenu', (event) => {
   const { folder } = button.dataset;
   contextMenu = document.createElement('ul');
   contextMenu.className = 'libraryMenu';
-  contextMenu.innerHTML = '<li><button type="button">Remove from Library</button></li>';
+  contextMenu.innerHTML = '<li><button type="button" data-do="rename">Rename…</button></li>'
+    + '<li><button type="button" data-do="remove">Remove from Library</button></li>';
   contextMenu.style.left = `${event.clientX}px`;
   contextMenu.style.top = `${event.clientY}px`;
-  contextMenu.querySelector('button').addEventListener('click', () => {
+  contextMenu.addEventListener('click', (e) => {
+    const item = e.target.closest('button[data-do]');
+    if (!item) return;
     closeContextMenu();
-    removeFolder(folder);
+    if (item.dataset.do === 'rename') renameFolder(folder);
+    else removeFolder(folder);
   });
   document.body.append(contextMenu);
 });
@@ -222,8 +248,8 @@ async function showFirstSongbook() {
   await loadSettings();
   library = await getLibrary();
   let folder = getFolder();
-  if (!library.songbooks.includes(folder)) folder = null;
-  if (!folder && getSettings().reopenLastSongbook && library.songbooks.includes(library.selected)) {
+  if (!inLibrary(folder)) folder = null;
+  if (!folder && getSettings().reopenLastSongbook && inLibrary(library.selected)) {
     folder = library.selected;
   }
   if (folder) await selectFolder(folder);

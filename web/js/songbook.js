@@ -8,6 +8,7 @@
  * (sessionStorage). File > Open Recent lists recent songs (src-tauri/src/recent.rs).
  */
 import './songs.js';
+import { askSongbookName } from './songbook-name.js';
 
 const { SongRepository } = globalThis.studioSongs;
 
@@ -123,7 +124,7 @@ export function setFolder(folder) {
 
 /**
  * Shows the Open dialog for a songbook folder. Returns the chosen folder, or null if
- * cancelled. Use addSongbook() to put it in the Library too.
+ * cancelled. addSongbook() uses it.
  */
 export async function pickFolder() {
   const folder = await tauri().dialog.open({
@@ -133,14 +134,12 @@ export async function pickFolder() {
     // the songs sit directly in the folder; no access to its subfolders is needed
     recursive: false,
   });
-  if (typeof folder !== 'string') return null;
-  setFolder(folder);
-  return folder;
+  return typeof folder === 'string' ? folder : null;
 }
 
 /**
- * The Library: { songbooks: [folder, …] (in the order added), selected: folder or
- * null }. Empty outside the app.
+ * The Library: { songbooks: [{ folder, name }, …] (in the order added), selected:
+ * folder or null }. Empty outside the app.
  */
 export async function getLibrary() {
   try {
@@ -151,15 +150,63 @@ export async function getLibrary() {
   }
 }
 
+/** The songbook for this folder in the Library ({ folder, name }), or undefined. */
+export function findSongbook(library, folder) {
+  return library.songbooks.find((s) => s.folder === folder);
+}
+
+/** A songbook's name: the one the player gave it, else its folder's name. */
+export function songbookName(library, folder) {
+  const songbook = findSongbook(library, folder);
+  return songbook ? songbook.name : folderName(folder);
+}
+
+// Folder names that say nothing about the songs: suggest the parent folder's instead
+const PLAIN_NAMES = ['songs', 'song', 'cpm', 'chordpro', 'chords', 'music', 'ukulele', 'uke', 'tabs', 'songbook', 'songbooks'];
+
 /**
- * Picks a folder and adds it to the Library (selected, and open in this window).
- * Resolves to the folder, or null if cancelled.
+ * A name to suggest for a new songbook: the folder's, or, when that's a plain one
+ * ("songs", "cpm") or another songbook has it, the parent folder's.
+ */
+export function suggestSongbookName(library, folder) {
+  const name = folderName(folder);
+  const parts = folder.replace(/[\/\\]+$/, '').split(/[\/\\]/).filter(Boolean);
+  const parent = parts.length > 1 ? parts[parts.length - 2] : '';
+  const taken = library.songbooks.some((s) => s.folder !== folder && s.name.toLowerCase() === name.toLowerCase());
+  return parent && (taken || PLAIN_NAMES.includes(name.toLowerCase())) ? parent : name;
+}
+
+/**
+ * Picks a folder, asks for the songbook's name, and adds it to the Library (selected,
+ * and open in this window). Resolves to the folder, or null if cancelled.
  */
 export async function addSongbook() {
   const folder = await pickFolder();
   if (!folder) return null;
-  await tauri().core.invoke('library_add', { folder });
+  const library = await getLibrary();
+  const existing = findSongbook(library, folder);
+  const name = await askSongbookName({
+    heading: existing ? 'Already in the Library' : 'Add Songbook',
+    button: existing ? 'Rename' : 'Add',
+    folder,
+    name: existing ? existing.name : suggestSongbookName(library, folder),
+  });
+  if (!name) return null;
+  await tauri().core.invoke('library_add', { folder, name });
+  setFolder(folder);
   return folder;
+}
+
+/**
+ * Right-click > Rename…: asks for a new name. Resolves to the Library, or null if
+ * cancelled. The folder keeps its name on disk.
+ */
+export async function renameSongbook(library, folder) {
+  const name = await askSongbookName({
+    heading: 'Rename Songbook', button: 'Rename', folder, name: songbookName(library, folder),
+  });
+  if (!name) return null;
+  return tauri().core.invoke('library_rename', { folder, name });
 }
 
 /** Takes a songbook out of the Library; its folder stays on disk. Resolves to the Library. */

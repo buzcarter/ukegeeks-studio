@@ -68,15 +68,22 @@
   const commands = {
     recent_list: () => read('fakerecent', { songbooks: [], songs: [] }),
     library_get: () => read('fakelibrary', { songbooks: [], selected: null }),
-    library_add: ({ folder }) => {
+    library_add: ({ folder, name }) => {
       const library = commands.library_get();
-      if (!library.songbooks.includes(folder)) library.songbooks.push(folder);
+      const songbook = library.songbooks.find((s) => s.folder === folder);
+      if (songbook) songbook.name = name;
+      else library.songbooks.push({ folder, name });
       library.selected = folder;
+      return saveLibrary(library);
+    },
+    library_rename: ({ folder, name }) => {
+      const library = commands.library_get();
+      library.songbooks.find((s) => s.folder === folder).name = name;
       return saveLibrary(library);
     },
     library_remove: ({ folder }) => {
       const library = commands.library_get();
-      library.songbooks = library.songbooks.filter((f) => f !== folder);
+      library.songbooks = library.songbooks.filter((s) => s.folder !== folder);
       if (library.selected === folder) library.selected = null;
       return saveLibrary(library);
     },
@@ -158,6 +165,8 @@
     localStorage.setItem('fakerecent', JSON.stringify({ songbooks: [], songs: [] }));
   }
   if (!localStorage.getItem('fakelibrary')) {
-    localStorage.setItem('fakelibrary', JSON.stringify({ songbooks: ['/songs', '/other'], selected: '/other' }));
+    localStorage.setItem('fakelibrary', JSON.stringify({
+      songbooks: [{ folder: '/songs', name: 'songs' }, { folder: '/other', name: 'other' }], selected: '/other',
+    }));
   }
 })();
