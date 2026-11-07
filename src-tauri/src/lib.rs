@@ -3,7 +3,7 @@
 //! limited to the songbook folder the user picks with the dialog plugin (see
 //! capabilities/).
 //!
-//! The menu's own items (Open Songbook…, Save, Save As…, Quit) don't act here: they
+//! The menu's own items (Open Songbook…, Save, Save As…, Show Song List, Quit) don't act here: they
 //! send a `studio://menu` event with the item's id to the page, which knows whether
 //! the song has unsaved changes (web/js/menu.js). Quitting goes through the page
 //! too, which then calls the `quit` command. File > Open Recent is in recent.rs.
@@ -20,8 +20,12 @@ const OPEN_SONGBOOK: &str = "open-songbook";
 const SAVE: &str = "save";
 const SAVE_AS: &str = "save-as";
 const QUIT: &str = "quit";
+const SHOW_SONG_LIST: &str = "show-song-list";
+// handled here: they open a web page
+const HELP: &str = "help";
+const CHORDPRO_HELP: &str = "help-chordpro";
 
-fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Result<Menu<tauri::Wry>> {
+fn about_item(app: &AppHandle) -> tauri::Result<PredefinedMenuItem<tauri::Wry>> {
   let about = AboutMetadata {
     name: Some("UkeGeeks Studio".into()),
     copyright: Some("Copyright 2026 Buz Carter. GPL-3.0.".into()),
@@ -29,25 +33,18 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
     website_label: Some("ukegeeks.org".into()),
     ..Default::default()
   };
+  PredefinedMenuItem::about(app, Some("About UkeGeeks Studio"), Some(about))
+}
 
-  let app_menu = Submenu::with_items(
-    app,
-    "UkeGeeks Studio",
-    true,
-    &[
-      &PredefinedMenuItem::about(app, Some("About UkeGeeks Studio"), Some(about))?,
-      &PredefinedMenuItem::separator(app)?,
-      &PredefinedMenuItem::services(app, None)?,
-      &PredefinedMenuItem::separator(app)?,
-      &PredefinedMenuItem::hide(app, None)?,
-      &PredefinedMenuItem::hide_others(app, None)?,
-      &PredefinedMenuItem::show_all(app, None)?,
-      &PredefinedMenuItem::separator(app)?,
-      // Not the predefined Quit: that one ends the app at once (NSApp terminate:),
-      // without asking about unsaved changes.
-      &MenuItem::with_id(app, QUIT, "Quit UkeGeeks Studio", true, Some("CmdOrCtrl+Q"))?,
-    ],
-  )?;
+/// The menus, laid out as each OS expects (see docs/DECISIONS.md). On Windows there's
+/// no app menu: About goes in Help and Quit is File > Exit. The editor keeps its own
+/// controls; these are the app's.
+fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Result<Menu<tauri::Wry>> {
+  let sep = || PredefinedMenuItem::separator(app);
+  // Not the predefined Quit: on a Mac that one ends the app at once (NSApp
+  // terminate:), without asking about unsaved changes.
+  let quit_label = if cfg!(target_os = "macos") { "Quit UkeGeeks Studio" } else { "Exit" };
+  let quit = MenuItem::with_id(app, QUIT, quit_label, true, Some("CmdOrCtrl+Q"))?;
 
   let file_menu = Submenu::with_items(
     app,
@@ -56,14 +53,19 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
     &[
       &MenuItem::with_id(app, OPEN_SONGBOOK, "Open Songbook…", true, Some("CmdOrCtrl+O"))?,
       open_recent,
-      &PredefinedMenuItem::separator(app)?,
+      &sep()?,
       &MenuItem::with_id(app, SAVE, "Save", true, Some("CmdOrCtrl+S"))?,
       &MenuItem::with_id(app, SAVE_AS, "Save As…", true, Some("CmdOrCtrl+Shift+S"))?,
-      &PredefinedMenuItem::separator(app)?,
+      &sep()?,
       // goes through the window's close request, so the editor asks about unsaved changes
       &PredefinedMenuItem::close_window(app, None)?,
     ],
   )?;
+  #[cfg(not(target_os = "macos"))]
+  {
+    file_menu.append(&sep()?)?;
+    file_menu.append(&quit)?;
+  }
 
   // Without these, Cmd+Z/X/C/V/A stop working in the text boxes: on macOS the
   // shortcuts come from the Edit menu.
@@ -74,13 +76,25 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
     &[
       &PredefinedMenuItem::undo(app, None)?,
       &PredefinedMenuItem::redo(app, None)?,
-      &PredefinedMenuItem::separator(app)?,
+      &sep()?,
       &PredefinedMenuItem::cut(app, None)?,
       &PredefinedMenuItem::copy(app, None)?,
       &PredefinedMenuItem::paste(app, None)?,
       &PredefinedMenuItem::select_all(app, None)?,
     ],
   )?;
+
+  let view_menu = Submenu::with_items(
+    app,
+    "View",
+    true,
+    &[&MenuItem::with_id(app, SHOW_SONG_LIST, "Show Song List", true, Some("CmdOrCtrl+L"))?],
+  )?;
+  #[cfg(target_os = "macos")]
+  {
+    view_menu.append(&sep()?)?;
+    view_menu.append(&PredefinedMenuItem::fullscreen(app, None)?)?;
+  }
 
   let window_menu = Submenu::with_items(
     app,
@@ -92,7 +106,64 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
     ],
   )?;
 
-  Menu::with_items(app, &[&app_menu, &file_menu, &edit_menu, &window_menu])
+  let help_menu = Submenu::with_items(
+    app,
+    "Help",
+    true,
+    &[
+      &MenuItem::with_id(app, HELP, "UkeGeeks Studio Help", true, None::<&str>)?,
+      &MenuItem::with_id(app, CHORDPRO_HELP, "ChordPro Reference", true, None::<&str>)?,
+    ],
+  )?;
+
+  #[cfg(target_os = "macos")]
+  {
+    let app_menu = Submenu::with_items(
+      app,
+      "UkeGeeks Studio",
+      true,
+      &[
+        &about_item(app)?,
+        &sep()?,
+        &PredefinedMenuItem::services(app, None)?,
+        &sep()?,
+        &PredefinedMenuItem::hide(app, None)?,
+        &PredefinedMenuItem::hide_others(app, None)?,
+        &PredefinedMenuItem::show_all(app, None)?,
+        &sep()?,
+        &quit,
+      ],
+    )?;
+    // macOS names the Window and Help menus itself; it adds a search box to Help
+    window_menu.set_as_windows_menu_for_nsapp()?;
+    help_menu.set_as_help_menu_for_nsapp()?;
+    Menu::with_items(app, &[&app_menu, &file_menu, &edit_menu, &view_menu, &window_menu, &help_menu])
+  }
+  #[cfg(not(target_os = "macos"))]
+  {
+    help_menu.append(&sep()?)?;
+    help_menu.append(&about_item(app)?)?;
+    Menu::with_items(app, &[&file_menu, &edit_menu, &view_menu, &window_menu, &help_menu])
+  }
+}
+
+/// Opens one of the Help pages in the default browser. The addresses are fixed
+/// here, never taken from the page.
+fn open_help(id: &str) {
+  let url = match id {
+    HELP => "https://ukegeeks.org",
+    CHORDPRO_HELP => "https://www.chordpro.org/chordpro/chordpro-directives/",
+    _ => return,
+  };
+  #[cfg(target_os = "macos")]
+  let result = std::process::Command::new("open").arg(url).spawn();
+  #[cfg(target_os = "windows")]
+  let result = std::process::Command::new("explorer").arg(url).spawn();
+  #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+  let result = std::process::Command::new("xdg-open").arg(url).spawn();
+  if let Err(err) = result {
+    eprintln!("[studio] can't open {url}: {err}");
+  }
 }
 
 /// Asks the page to quit: it checks for unsaved changes, then calls `quit`.
@@ -121,7 +192,9 @@ pub fn run() {
       if recent::on_menu_event(app, id) {
         return;
       }
-      if [OPEN_SONGBOOK, SAVE, SAVE_AS, QUIT].contains(&id) {
+      if [HELP, CHORDPRO_HELP].contains(&id) {
+        open_help(id);
+      } else if [OPEN_SONGBOOK, SAVE, SAVE_AS, SHOW_SONG_LIST, QUIT].contains(&id) {
         if let Err(err) = app.emit(MENU_EVENT, id) {
           eprintln!("[studio] can't send menu item {id} to the page: {err}");
         }
