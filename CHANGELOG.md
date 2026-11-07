@@ -4,6 +4,14 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0021: songbook names (#18, 2026-11-07)
+
+- **Adding a songbook asks for its name.** Folders are often just "songs" or "cpm", so the suggestion is the parent folder's name when the folder's is a plain one or another songbook has it. Picking a folder that's already in the Library offers to rename it.
+- **Rename…:** right-click a songbook, or double-click it. The folder on disk keeps its name.
+- **The name is used everywhere:** the sidebar, the song list's heading, a song window's corner bar ("Songbook: Hawaiian Classics"), Save's message and the New Song dialog. Song windows follow a rename.
+- **`library.json`** keeps `{ folder, name }`; plain folder entries from before still read, named after their folder. Rust unit tests for that (`cargo test`).
+- **`web/js/songbook-name.js`:** the Songbook Name dialog.
+
 ### Task 0020: on a Mac, stay running with no windows (#17, 2026-11-07)
 
 - **Closing the last window no longer quits on a Mac;** Quit (Cmd+Q, or from the Dock) does. Clicking the Dock icon with no windows showing brings back the Library.

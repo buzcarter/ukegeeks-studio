@@ -36,7 +36,8 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
 | `web/css/wood.css` | The faux-wood look. |
 | `src-tauri/src/lib.rs` | The menu and where its items go, the `save_song_file` and `print_page` commands, and Dock > Quit. |
 | `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
-| `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbook folders, the one selected last; folders allowed again at launch. |
+| `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. Rust unit tests: `cargo test` in `src-tauri/`. |
+| `web/js/songbook-name.js` | The Songbook Name dialog (adding a songbook, Rename…). |
 | `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
 | `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
