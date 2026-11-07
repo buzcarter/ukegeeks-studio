@@ -13,7 +13,7 @@
  * to that folder beyond the one file).
  */
 import {
-  addRecentSong, escapeHtml, getFolder, openRecent, openSongbook, SONG_EXTENSION, tauri,
+  addRecentSong, escapeHtml, getFolder, loadSettings, openRecent, openSongbook, SONG_EXTENSION, tauri,
 } from './songbook.js';
 import { onMenu, quitApp } from './menu.js';
 
@@ -61,6 +61,7 @@ async function main() {
     showProblem('No songbook is open.');
     return;
   }
+  await loadSettings(); // which song file types the songbook has
   const songbook = openSongbook(folder);
   const id = new URLSearchParams(location.search).get('song');
   const { filename, song } = await songbook.load(id);

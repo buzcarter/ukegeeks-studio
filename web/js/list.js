@@ -4,14 +4,14 @@
  * the editor page.
  */
 import {
-  addRecentSongbook, checkAccess, escapeHtml, folderName, getFolder, includeCpmTxt, openRecent,
-  openSongbook, pickFolder, recentList, setFolder, setIncludeCpmTxt, TXT_SONG_EXTENSION,
+  addRecentSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, folderName, getFolder, getSettings,
+  loadSettings, onSettingsChanged, openRecent, openSongbook, pickFolder, recentList, setFolder,
+  songExtensions,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 
 const statusEl = document.getElementById('songbookStatus');
 const listEl = document.getElementById('songList');
-const includeTxtBox = document.getElementById('includeCpmTxt');
 
 function showStatus(html, isError = false) {
   statusEl.innerHTML = html;
@@ -33,11 +33,13 @@ async function showSongbook(folder) {
   const count = songs.length === 1 ? '1 song' : `${songs.length} songs`;
   showStatus(`${name}: ${count}`);
   if (!songs.length) {
-    // a Songbook folder: all ".cpm.txt", which aren't listed unless the setting is on
-    const txtCount = includeCpmTxt() ? 0 : (await openSongbook(folder, [TXT_SONG_EXTENSION]).listFilenames()).length;
-    showStatus(txtCount
-      ? `${name} has no <code>.cpm</code> songs, but ${txtCount} <code>.cpm.txt</code> ${txtCount === 1 ? 'song' : 'songs'}: tick "Also list <code>.cpm.txt</code> songs" to see them.`
-      : `${name} has no songs (<code>*.cpm</code> files).`);
+    // for example a Songbook folder: all ".cpm.txt", listed only with ".txt" on in Settings
+    const listed = getSettings().songExtensions;
+    const types = listed.map((ext) => `<code>${ext}</code>`).join(', ');
+    const others = await otherSongTypes(folder, listed);
+    showStatus(others.count
+      ? `${name} has no ${types} songs, but ${others.count} ${others.count === 1 ? 'file' : 'files'} of other song types (${others.types.map((ext) => `<code>${ext}</code>`).join(', ')}): turn them on in Settings (Cmd+,) to see them.`
+      : `${name} has no songs (${types} files).`);
     return;
   }
   listEl.innerHTML = songs
@@ -49,6 +51,16 @@ async function showSongbook(folder) {
         + '</a></li>';
     })
     .join('');
+}
+
+/** Song files in the folder of the types Settings doesn't list: { count, types }. */
+async function otherSongTypes(folder, listed) {
+  const off = ALL_EXTENSIONS.filter((ext) => !listed.includes(ext));
+  if (!off.length) return { count: 0, types: [] };
+  const repo = openSongbook(folder, songExtensions(off));
+  const names = await repo.listFilenames();
+  const types = [...new Set(names.map((n) => repo.extensionOf(n)))].sort();
+  return { count: names.length, types };
 }
 
 async function chooseSongbook() {
@@ -65,17 +77,18 @@ document.getElementById('openSongbook').addEventListener('click', chooseSongbook
 onMenu('open-songbook', chooseSongbook);
 onMenu('open-recent', openRecent);
 
-includeTxtBox.checked = includeCpmTxt();
-includeTxtBox.addEventListener('change', () => {
-  setIncludeCpmTxt(includeTxtBox.checked);
+// Settings changed which song types to list
+onSettingsChanged(() => {
   const open = getFolder();
   if (open) showSongbook(open);
 });
 
-// The songbook open in this run of the app, else the last one opened (File > Open Recent).
+// The songbook open in this run of the app, else (if Settings says so) the last one
+// opened (File > Open Recent).
 async function showFirstSongbook() {
+  await loadSettings();
   let folder = getFolder();
-  if (!folder) {
+  if (!folder && getSettings().reopenLastSongbook) {
     folder = (await recentList()).songbooks[0];
     if (folder) setFolder(folder);
   }

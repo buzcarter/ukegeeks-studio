@@ -1,0 +1,49 @@
+/* The Settings window. */
+body {
+  margin: 0;
+  font: 14px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: #333;
+  background: #fbfaf7;
+}
+
+main {
+  padding: 16px 24px;
+}
+
+fieldset {
+  margin: 0 0 16px;
+  padding: 10px 14px 12px;
+  border: 1px solid #e0d9cc;
+  border-radius: 6px;
+}
+
+legend {
+  padding: 0 4px;
+  color: #5b3a1e;
+  font-weight: 600;
+}
+
+label {
+  display: block;
+  margin: 6px 0;
+}
+
+.hint,
+.note {
+  color: #777;
+  font-size: 13px;
+}
+
+.hint {
+  margin: 0 0 8px;
+}
+
+.problem {
+  margin: 8px 0 0;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.problem[hidden] {
+  display: none;
+}

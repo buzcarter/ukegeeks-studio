@@ -9,9 +9,10 @@
 //! too, which then calls the `quit` command. File > Open Recent is in recent.rs.
 
 mod recent;
+mod settings;
 
 use tauri::menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{AppHandle, Emitter, Manager, RunEvent};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 
 /// The event the pages listen for; the payload is the menu item's id.
 const MENU_EVENT: &str = "studio://menu";
@@ -21,7 +22,8 @@ const SAVE: &str = "save";
 const SAVE_AS: &str = "save-as";
 const QUIT: &str = "quit";
 const SHOW_SONG_LIST: &str = "show-song-list";
-// handled here: they open a web page
+// handled here: Settings opens its window, Help's items open a web page
+const SETTINGS: &str = "settings";
 const HELP: &str = "help";
 const CHORDPRO_HELP: &str = "help-chordpro";
 
@@ -45,6 +47,7 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
   // terminate:), without asking about unsaved changes.
   let quit_label = if cfg!(target_os = "macos") { "Quit UkeGeeks Studio" } else { "Exit" };
   let quit = MenuItem::with_id(app, QUIT, quit_label, true, Some("CmdOrCtrl+Q"))?;
+  let settings = MenuItem::with_id(app, SETTINGS, "Settings…", true, Some("CmdOrCtrl+,"))?;
 
   let file_menu = Submenu::with_items(
     app,
@@ -63,6 +66,8 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
   )?;
   #[cfg(not(target_os = "macos"))]
   {
+    file_menu.append(&sep()?)?;
+    file_menu.append(&settings)?;
     file_menu.append(&sep()?)?;
     file_menu.append(&quit)?;
   }
@@ -124,6 +129,8 @@ fn build_menu(app: &AppHandle, open_recent: &Submenu<tauri::Wry>) -> tauri::Resu
       true,
       &[
         &about_item(app)?,
+        &sep()?,
+        &settings,
         &sep()?,
         &PredefinedMenuItem::services(app, None)?,
         &sep()?,
@@ -192,7 +199,9 @@ pub fn run() {
       if recent::on_menu_event(app, id) {
         return;
       }
-      if [HELP, CHORDPRO_HELP].contains(&id) {
+      if id == SETTINGS {
+        settings::show_window(app);
+      } else if [HELP, CHORDPRO_HELP].contains(&id) {
         open_help(id);
       } else if [OPEN_SONGBOOK, SAVE, SAVE_AS, SHOW_SONG_LIST, QUIT].contains(&id) {
         if let Err(err) = app.emit(MENU_EVENT, id) {
@@ -205,12 +214,23 @@ pub fn run() {
       recent::recent_list,
       recent::recent_add_songbook,
       recent::recent_add_song,
+      settings::settings_get,
+      settings::settings_set,
     ])
+    // Settings belongs to the main window: close it too, so the app can end
+    .on_window_event(|window, event| {
+      if window.label() == "main" && matches!(event, WindowEvent::Destroyed) {
+        if let Some(settings) = window.app_handle().get_webview_window(settings::SETTINGS_WINDOW) {
+          let _ = settings.close();
+        }
+      }
+    })
     .setup(|app| {
       let handle = app.handle();
       let recent = recent::load(handle);
       let open_recent = recent::build_submenu(handle, &recent)?;
       app.manage(recent);
+      app.manage(settings::load(handle));
       app.set_menu(build_menu(handle, &open_recent)?)?;
       #[cfg(target_os = "macos")]
       dock_quit::install(app.handle().clone());

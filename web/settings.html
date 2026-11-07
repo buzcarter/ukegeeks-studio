@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="css/settings.css" />
+</head>
+<body>
+  <main>
+    <fieldset>
+      <legend>Song files</legend>
+      <p class="hint">Which files the song list shows. New songs are <code>.cpm</code> files.</p>
+      <label><input type="checkbox" name="songType" value=".cpm" /> <code>.cpm</code> <span class="note">UkeGeeks songs</span></label>
+      <label><input type="checkbox" name="songType" value=".txt" /> <code>.txt</code> <span class="note">text files, including the UkeGeeks Songbook's <code>.cpm.txt</code></span></label>
+      <label><input type="checkbox" name="songType" value=".cho .crd .chopro .chord .chordpro .pro" /> Other ChordPro files <span class="note"><code>.cho</code>, <code>.crd</code>, <code>.chopro</code>, <code>.chord</code>, <code>.chordpro</code>, <code>.pro</code></span></label>
+      <p id="songTypeProblem" class="problem" role="alert" hidden>The song list needs at least one type.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>When the app starts</legend>
+      <label><input type="checkbox" id="reopenLastSongbook" /> Open the last songbook</label>
+    </fieldset>
+
+    <p id="saveProblem" class="problem" role="alert" hidden></p>
+  </main>
+
+  <script type="module" src="js/settings.js"></script>
+</body>
+</html>
