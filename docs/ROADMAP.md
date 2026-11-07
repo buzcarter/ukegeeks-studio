@@ -36,7 +36,7 @@ The owner's list from 2026-11-06, after the prototype worked. Roughly in order; 
 - **Recent songbooks and songs (MRU lists)**, which also means remembering folders across launches. (Done: File > Open Recent. Instead of Tauri's persisted-scope plugin, which would keep every folder ever picked, the app allows the recent list's folders again at startup; see `src-tauri/src/recent.rs`.)
 - **Settings** for the above, kept by the app. (Done: file types and reopening the last songbook; file naming comes with that item.) A Settings window (Cmd+,) and `settings.json`, read and written through Rust. First settings: song file types to list (`.cpm` on; `.txt`, which covers `.cpm.txt`, off; the other ChordPro extensions `.cho`, `.crd`, `.chopro`, `.chord`, `.chordpro`, `.pro` off), and reopening the last songbook at launch.
 - **File > Open…** (Cmd+O) for one song on its own. (Done; Open Songbook… is now Shift+Cmd+O.) Double-clicking a song in Finder comes with the bundle (Phase 5).
-- **File > New Song** (Cmd+N): title and artist, then "Title - Artist.cpm" in the open songbook (`SongRepository.create()`). No New Songbook item for 1.0: the folder picker's New Folder button does it.
+- **File > New Song** (Cmd+N). (Done.) title and artist, then "Title - Artist.cpm" in the open songbook (`SongRepository.create()`). No New Songbook item for 1.0: the folder picker's New Folder button does it.
 - **Keep the faux-wood look** of the Song-a-Matic headers and dialogs in the app's own chrome and dialogs. Hokey, but it's UkeGeeks.
 - **Print.** One song, nicely; the editor already has print styles and paper sizes.
 
