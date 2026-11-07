@@ -38,7 +38,7 @@ Agreed with the owner on 2026-11-07:
 - **The address carries the folder** (`editor.html?folder=…&song=…`): each window has its own session storage, so a new window doesn't know the open songbook.
 - **Menu items go to the window in front.** Open Songbook… and recent songbooks go to the song list; a recent song opens its window. Show Song List reopens the list if it was closed.
 - **Unsaved changes are asked only on close and Quit,** since opening another song no longer leaves this one. Quit asks each song window in turn, bringing it forward; Continue Editing anywhere stops quitting.
-- **For now the app still ends when its last window closes,** as before. On a Mac it will stay running (task 0020).
+- **On a Mac the app stays running when its last window closes** (task 0020), as Mac apps do: Quit ends it, and clicking the Dock icon brings back the Library. New Song… and Open… with no windows open the Library first, which then does them. On Windows, closing the last window still quits.
 
 ## Menus, settings and new songs (2026-11-06)
 

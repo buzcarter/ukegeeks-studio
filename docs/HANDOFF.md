@@ -57,6 +57,7 @@ Phase 2.5 (the owner's "real app" list) is done except **task 0013, more than on
   - The Save dialog grants just the chosen file. Writing next to such a file goes through Rust (`save_song_file`).
   - Recent folders are granted again at startup by `recent.rs`.
 - **App commands:** commands the app defines itself (`#[tauri::command]`) need no capability for local pages. Plugin and core commands do. Check permission names in `~/.cargo/registry/src/*/tauri-plugin-*-2.*/permissions/` and the tauri crate's `permissions/`, rather than guessing.
+- **No windows on a Mac:** `RunEvent::ExitRequested { code: None }` comes when the last window closes; `prevent_exit()` keeps the app running. `RunEvent::Reopen { has_visible_windows }` (Mac only) is the Dock icon click.
 - **Quitting:** the built-in Quit item and Dock > Quit (NSApp `terminate:`) end the app with no event. Quit is therefore a custom item that asks the page first, and Dock > Quit is caught by adding `applicationShouldTerminate:` to tao's app delegate. `RunEvent::ExitRequested { code: None }` only comes when the last window closes.
 - **Closing:** once a page listens with `onCloseRequested`, the window closes only through `destroy()`.
 - **Dialogs:** `dialog.message()` with `buttons: { yes, no, cancel }` returns the clicked label, and Esc returns the cancel label. `dialog.ask` uses the `dialog:allow-message` permission.
