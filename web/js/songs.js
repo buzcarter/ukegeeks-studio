@@ -4,13 +4,19 @@
  * the (in-memory) song list cache, creating and updating songs.
  * Ports ugsphp/classes/{FileHelper,SongHelper,SongListCacheManager,FileWriter}.php
  *
+ * From the UkeGeeks Songbook's server/lib/songs.js (f63b6fe). In UkeGeeks Studio the
+ * file access goes through Tauri's fs plugin instead of Node's fs: SongRepository is
+ * given an `fs` object with the plugin's function names (window.__TAURI__.fs in the
+ * app, a small Node stand-in in the tests). The ChordPro and filename functions are
+ * unchanged.
+ *
+ * Loads in the app as <script type="module"> (sets globalThis.studioSongs) and in
+ * Node with require() (module.exports).
+ *
  * Security model: a song id from a URL or request body is NEVER joined onto a path
  * directly. It's normalized to a bare filename, then must match a file that actually
  * exists in the song directory listing. That makes path traversal impossible.
  */
-const fs = require('node:fs/promises');
-const path = require('node:path');
-const crypto = require('node:crypto');
 
 const NOT_FOUND_SONG = Object.freeze({
   isOK: false,
@@ -83,10 +89,14 @@ function scrubForTag(value) {
 
 class SongRepository {
   /**
-   * @param {{songDirectory: string, fileExtension: string, maxFileSize: number, sortLocale?: string}} cfg
+   * @param {{songDirectory: string, fileExtension: string, maxFileSize: number, sortLocale?: string, fs: object}} cfg
+   *   fs: readDir, stat, readTextFile, writeTextFile, rename, remove, as in Tauri's fs plugin
    */
   constructor(cfg) {
-    this.dir = cfg.songDirectory;
+    this.fs = cfg.fs;
+    this.dir = cfg.songDirectory.replace(/[\/\\]+$/, '');
+    // Tauri hands back "\" paths on Windows; both separators work there
+    this.sep = this.dir.includes('\\') && !this.dir.includes('/') ? '\\' : '/';
     this.ext = cfg.fileExtension;
     this.maxFileSize = cfg.maxFileSize;
     this.collator = new Intl.Collator(cfg.sortLocale || undefined, { sensitivity: 'base', numeric: true });
@@ -107,13 +117,13 @@ class SongRepository {
   async listFilenames() {
     let entries;
     try {
-      entries = await fs.readdir(this.dir, { withFileTypes: true });
+      entries = await this.fs.readDir(this.dir);
     } catch (err) {
-      console.error(`[songs] can't read song directory ${this.dir}: ${err.message}`);
+      console.error(`[songs] can't read song directory ${this.dir}: ${errorMessage(err)}`);
       return [];
     }
     return entries
-      .filter((e) => e.isFile() && this.isSongFilename(e.name))
+      .filter((e) => e.isFile && this.isSongFilename(e.name))
       .map((e) => e.name)
       .sort();
   }
@@ -142,19 +152,18 @@ class SongRepository {
 
   /** Absolute path for a filename returned by resolve()/listFilenames(). */
   pathFor(filename) {
-    const full = path.join(this.dir, filename);
-    if (path.dirname(full) !== this.dir) {
+    if (typeof filename !== 'string' || !filename || filename === '.' || filename === '..' || /[\/\\\0]/.test(filename)) {
       throw new Error('refusing path outside song directory');
     }
-    return full;
+    return this.dir + this.sep + filename;
   }
 
   /** @returns {Promise<string|null>} song text, or null if missing/unreadable */
   async read(filename) {
     try {
-      return await fs.readFile(this.pathFor(filename), 'utf8');
+      return await this.fs.readTextFile(this.pathFor(filename));
     } catch (err) {
-      if (err.code !== 'ENOENT') console.error(`[songs] read ${filename}: ${err.message}`);
+      console.error(`[songs] read ${filename}: ${errorMessage(err)}`);
       return null;
     }
   }
@@ -166,8 +175,9 @@ class SongRepository {
     return { filename, song: parseSong(text) };
   }
 
+  /** The app's editor page for a song (one song per page). */
   songUri(filename) {
-    return '/songbook/' + encodeURIComponent(this.baseName(filename));
+    return 'editor.html?song=' + encodeURIComponent(this.baseName(filename));
   }
 
   async buildEntry(filename) {
@@ -198,8 +208,8 @@ class SongRepository {
       names.map(async (filename) => {
         let stamp = '';
         try {
-          const st = await fs.stat(this.pathFor(filename));
-          stamp = `${st.size}:${st.mtimeMs}`;
+          const st = await this.fs.stat(this.pathFor(filename));
+          stamp = `${st.size}:${st.mtime ? st.mtime.getTime() : ''}`;
         } catch {
           /* vanished between readdir and stat; parse will yield a stub */
         }
@@ -245,19 +255,18 @@ class SongRepository {
       `{artist: ${cleanArtist || 'traditional'}}\n` +
       '\nTYPE_YOUR_SONG_HERE\n';
 
-    for (let n = 1; n <= 50; n++) {
-      const filename = (n === 1 ? base : `${base} (${n})`) + this.ext;
-      try {
-        // "wx" fails if the file exists: never overwrites, no race between check and write
-        await fs.writeFile(this.pathFor(filename), content, { flag: 'wx' });
-        return filename;
-      } catch (err) {
-        if (err.code !== 'EEXIST') throw err;
-      }
+    // Tauri's errors are plain strings with no "EEXIST" code, so pick a name that isn't
+    // in the listing (macOS and Windows filenames ignore case) instead of retrying.
+    const taken = new Set((await this.listFilenames()).map((n) => n.normalize('NFC').toLowerCase()));
+    let filename = null;
+    for (let n = 1; n <= 50 && !filename; n++) {
+      const candidate = (n === 1 ? base : `${base} (${n})`) + this.ext;
+      if (!taken.has(candidate.normalize('NFC').toLowerCase())) filename = candidate;
     }
     // pathological: 50 songs with the same name, fall back to a random suffix
-    const filename = `${base}.${crypto.randomBytes(4).toString('hex')}${this.ext}`;
-    await fs.writeFile(this.pathFor(filename), content, { flag: 'wx' });
+    filename = filename || `${base}.${randomHex(4)}${this.ext}`;
+    // createNew fails if the file exists: never overwrites, even if one appeared since the listing
+    await this.fs.writeTextFile(this.pathFor(filename), content, { createNew: true });
     return filename;
   }
 
@@ -268,40 +277,31 @@ class SongRepository {
    */
   async update(filename, text) {
     const target = this.pathFor(filename);
-    const tmp = path.join(this.dir, `.${crypto.randomBytes(6).toString('hex')}.ugs-tmp`);
+    const tmp = this.pathFor(`.${randomHex(6)}.ugs-tmp`);
     try {
-      await fs.writeFile(tmp, text, { flag: 'wx' });
-      await fs.rename(tmp, target);
+      await this.fs.writeTextFile(tmp, text, { createNew: true });
+      await this.fs.rename(tmp, target);
     } catch (err) {
-      await fs.rm(tmp, { force: true });
+      await this.fs.remove(tmp).catch(() => {});
       throw err;
     }
     this.cache.delete(filename);
   }
 }
 
-/**
- * Reads the optional editor settings file. It's "JSON with comments" (see
- * ugsphp/settings.json_example); comments are stripped before parsing.
- * @returns {Promise<object>}
- */
-async function readEditorSettings(file) {
-  if (!file) return {};
-  let text;
-  try {
-    text = await fs.readFile(file, 'utf8');
-  } catch {
-    return {};
-  }
-  const json = text
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[ \t])\/\/.*$/gm, '$1');
-  try {
-    const parsed = JSON.parse(json);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-  } catch {
-    return { invalidJson: 'There is a problem with your settings: invalid JSON. Please check for typos.' };
-  }
+/** Tauri rejects with plain strings; Node with Error objects. */
+function errorMessage(err) {
+  return err && err.message ? err.message : String(err);
 }
 
-module.exports = { SongRepository, parseSong, fixLeadingArticle, scrubForFilename, readEditorSettings };
+function randomHex(bytes) {
+  return Array.from(globalThis.crypto.getRandomValues(new Uint8Array(bytes)), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// readEditorSettings() (the Songbook's settings file) isn't carried over: the app has no settings file yet.
+const api = { SongRepository, parseSong, fixLeadingArticle, filenameToTitle, scrubForFilename, scrubForTag };
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = api;
+} else {
+  globalThis.studioSongs = api;
+}
