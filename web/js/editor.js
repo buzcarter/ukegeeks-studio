@@ -16,8 +16,9 @@
  * (the Save dialog gives access to that one file).
  */
 import {
-  addRecentSong, escapeHtml, fileUri, folderName, getFolder, getSettings, loadSettings, openSongbook, openSongFile,
-  pickSongFile, saveSongFile, setFolder, SONG_EXTENSION, songFileBase, splitPath, tauri,
+  addRecentSong, escapeHtml, fileUri, folderName, getFolder, getLibrary, getSettings, loadSettings, onLibraryChanged,
+  openSongbook, openSongFile, pickSongFile, saveSongFile, setFolder, SONG_EXTENSION, songbookName, songFileBase,
+  splitPath, tauri,
 } from './songbook.js';
 import { cancelQuit, onMenu, quitApp } from './menu.js';
 import { newSong } from './new-song.js';
@@ -39,10 +40,15 @@ document.getElementById('closeSong').addEventListener('click', () => {
   tauri().window.getCurrentWindow().close().catch((err) => console.error('[studio] close:', err));
 });
 
-/** Shows where the song lives: its songbook's (or folder's) name, the full path on hover. */
-function showPlace(folder, inSongbook) {
+/**
+ * Where the song lives, for the corner bar and Save's message: its songbook's name
+ * from the Library (else the folder's name), or for a song on its own its folder's.
+ */
+let placeName = '';
+async function showPlace(folder, inSongbook) {
+  placeName = inSongbook ? songbookName(await getLibrary(), folder) : folderName(folder);
   const place = document.getElementById('songPlace');
-  place.textContent = `${inSongbook ? 'Songbook' : 'Folder'}: ${folderName(folder)}`;
+  place.textContent = `${inSongbook ? 'Songbook' : 'Folder'}: ${placeName}`;
   place.title = folder;
 }
 
@@ -108,6 +114,8 @@ async function main() {
   addRecentSong(folder, filename, songName, !songbook);
   tellPath(path);
   showPlace(folder, !!songbook);
+  // renamed in the Library meanwhile
+  if (songbook) onLibraryChanged(() => showPlace(folder, true));
 
   /**
    * Writes the song. In a songbook, when its title or artist changed since it was
@@ -152,7 +160,7 @@ async function main() {
       shownDirty = null; // the title may have changed too
       showDirty();
       // say where, not just the name: "Saved Beta.cpm in My Songs"
-      return `${filename === before ? 'Saved' : 'Saved as'} ${filename} in ${folderName(folder)}`;
+      return `${filename === before ? 'Saved' : 'Saved as'} ${filename} in ${placeName || folderName(folder)}`;
     },
   });
 

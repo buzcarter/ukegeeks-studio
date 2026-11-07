@@ -1,5 +1,6 @@
-//! The Library: the songbook folders the player added, kept in `library.json` in
-//! the app's config folder (next to recent.json and settings.json), with the one
+//! The Library: the songbook folders the player added, each with the name the
+//! player gave it (folders are often just "songs" or "cpm"), kept in `library.json`
+//! in the app's config folder (next to recent.json and settings.json), with the one
 //! last selected. The song list shows them in a sidebar.
 //!
 //! As with Open Recent, folder access normally lasts one run of the app, so at
@@ -18,11 +19,61 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_fs::FsExt;
 
+/// Longest songbook name kept, in characters
+const MAX_NAME: usize = 80;
+
+/// A songbook: its folder and the name the player gave it.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(from = "SongbookEntry")]
+pub struct Songbook {
+  pub folder: String,
+  pub name: String,
+}
+
+/// How a songbook is kept: { folder, name }, or (before names, task 0021) just the
+/// folder, which then gets its folder's name.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum SongbookEntry {
+  Folder(String),
+  Named {
+    folder: String,
+    #[serde(default)]
+    name: String,
+  },
+}
+
+impl From<SongbookEntry> for Songbook {
+  fn from(entry: SongbookEntry) -> Self {
+    let (folder, name) = match entry {
+      SongbookEntry::Folder(folder) => (folder, String::new()),
+      SongbookEntry::Named { folder, name } => (folder, name),
+    };
+    let name = clean_name(&name, &folder);
+    Songbook { folder, name }
+  }
+}
+
+/// The folder's last part ("cpm" for ".../UkeGeeks/cpm").
+fn folder_name(folder: &str) -> String {
+  Path::new(folder)
+    .file_name()
+    .map(|name| name.to_string_lossy().into_owned())
+    .unwrap_or_else(|| folder.to_string())
+}
+
+/// A name as kept: spaces tidied, at most MAX_NAME characters; empty gives the
+/// folder's name.
+fn clean_name(name: &str, folder: &str) -> String {
+  let name: String = name.split_whitespace().collect::<Vec<_>>().join(" ").chars().take(MAX_NAME).collect();
+  if name.is_empty() { folder_name(folder) } else { name }
+}
+
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Library {
-  /// songbook folders, in the order added
+  /// songbooks, in the order added
   #[serde(default)]
-  pub songbooks: Vec<String>,
+  pub songbooks: Vec<Songbook>,
   /// the songbook selected last, shown at launch
   #[serde(default)]
   pub selected: Option<String>,
@@ -56,7 +107,11 @@ pub fn load(app: &AppHandle, recent_songbooks: &[String]) -> LibraryState {
     Some(library) => library,
     None => {
       let library = Library {
-        songbooks: recent_songbooks.iter().rev().cloned().collect(),
+        songbooks: recent_songbooks
+          .iter()
+          .rev()
+          .map(|folder| Songbook { folder: folder.clone(), name: folder_name(folder) })
+          .collect(),
         selected: recent_songbooks.first().cloned(),
       };
       save(app, &library);
@@ -65,7 +120,7 @@ pub fn load(app: &AppHandle, recent_songbooks: &[String]) -> LibraryState {
   };
 
   let scope = app.fs_scope();
-  for folder in library.songbooks.iter().filter(|f| Path::new(f).is_dir()) {
+  for folder in library.songbooks.iter().map(|s| &s.folder).filter(|f| Path::new(f).is_dir()) {
     if let Err(err) = scope.allow_directory(folder, false) {
       eprintln!("[studio] can't allow songbook {folder}: {err}");
     }
@@ -100,20 +155,41 @@ pub fn library_get(state: State<LibraryState>) -> Library {
   state.0.lock().unwrap().clone()
 }
 
-/// Adds a songbook (a folder just picked in the Open dialog) and selects it. Adding
-/// one that's there already just selects it.
+/// Adds a songbook (a folder just picked in the Open dialog) with the name the
+/// player gave it, and selects it. Adding one that's there already renames and
+/// selects it.
 #[tauri::command]
-pub fn library_add(app: AppHandle, state: State<LibraryState>, folder: String) -> Result<Library, String> {
+pub fn library_add(app: AppHandle, state: State<LibraryState>, folder: String, name: String) -> Result<Library, String> {
   if !app.fs_scope().is_allowed(&folder) {
     return Err(format!("not a folder the app may read: {folder}"));
   }
   Ok(change(&app, &state, |library| {
-    let existing = library.songbooks.iter().find(|f| same_folder(f, &folder)).cloned();
-    let folder = existing.unwrap_or_else(|| {
-      library.songbooks.push(folder.clone());
-      folder
-    });
+    let name = clean_name(&name, &folder);
+    let folder = match library.songbooks.iter_mut().find(|s| same_folder(&s.folder, &folder)) {
+      Some(songbook) => {
+        songbook.name = name;
+        songbook.folder.clone()
+      }
+      None => {
+        library.songbooks.push(Songbook { folder: folder.clone(), name });
+        folder
+      }
+    };
     library.selected = Some(folder);
+  }))
+}
+
+/// Gives a songbook a new name (empty: its folder's name). The folder isn't renamed.
+#[tauri::command]
+pub fn library_rename(app: AppHandle, state: State<LibraryState>, folder: String, name: String) -> Result<Library, String> {
+  let known = state.0.lock().unwrap().songbooks.iter().any(|s| same_folder(&s.folder, &folder));
+  if !known {
+    return Err(format!("not in the Library: {folder}"));
+  }
+  Ok(change(&app, &state, |library| {
+    if let Some(songbook) = library.songbooks.iter_mut().find(|s| same_folder(&s.folder, &folder)) {
+      songbook.name = clean_name(&name, &songbook.folder);
+    }
   }))
 }
 
@@ -121,7 +197,7 @@ pub fn library_add(app: AppHandle, state: State<LibraryState>, folder: String) -
 #[tauri::command]
 pub fn library_remove(app: AppHandle, state: State<LibraryState>, folder: String) -> Library {
   change(&app, &state, |library| {
-    library.songbooks.retain(|f| !same_folder(f, &folder));
+    library.songbooks.retain(|s| !same_folder(&s.folder, &folder));
     if library.selected.as_deref().is_some_and(|s| same_folder(s, &folder)) {
       library.selected = None;
     }
@@ -131,9 +207,32 @@ pub fn library_remove(app: AppHandle, state: State<LibraryState>, folder: String
 /// Remembers the songbook selected in the sidebar, for the next launch.
 #[tauri::command]
 pub fn library_select(app: AppHandle, state: State<LibraryState>, folder: String) -> Result<Library, String> {
-  let known = state.0.lock().unwrap().songbooks.iter().any(|f| same_folder(f, &folder));
+  let known = state.0.lock().unwrap().songbooks.iter().any(|s| same_folder(&s.folder, &folder));
   if !known {
     return Err(format!("not in the Library: {folder}"));
   }
   Ok(change(&app, &state, |library| library.selected = Some(folder)))
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn reads_old_and_new_entries() {
+    let library: Library = serde_json::from_str(
+      r#"{"songbooks": ["/a/cpm", {"folder": "/b/songs", "name": "  Beach   songs "}, {"folder": "/c/x"}], "selected": null}"#,
+    )
+    .unwrap();
+    let names: Vec<&str> = library.songbooks.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, ["cpm", "Beach songs", "x"]);
+    let saved = serde_json::to_string(&library.songbooks[1]).unwrap();
+    assert_eq!(saved, r#"{"folder":"/b/songs","name":"Beach songs"}"#);
+  }
+
+  #[test]
+  fn names_are_tidied() {
+    assert_eq!(clean_name("", "/x/songs"), "songs");
+    assert_eq!(clean_name(&"a".repeat(200), "/x").chars().count(), MAX_NAME);
+  }
 }

@@ -7,8 +7,8 @@
  * page's own (<dialog>): the dialog plugin has no text input.
  */
 import {
-  addSongbook, escapeHtml, folderName, getFolder, getSettings, joinPath, loadSettings, openSongbook,
-  openSongbookSong, openSongFile, SONG_EXTENSION, songFileBase, tauri,
+  addSongbook, escapeHtml, getFolder, getLibrary, getSettings, joinPath, loadSettings, openSongbook,
+  openSongbookSong, openSongFile, SONG_EXTENSION, songbookName, songFileBase, tauri,
 } from './songbook.js';
 
 /** Shows the New Song dialog. Resolves to { title, artist }, or null if cancelled. */
@@ -61,7 +61,7 @@ export async function newSong() {
     folder = await addSongbook();
     if (!folder) return;
   }
-  const answer = await askTitleAndArtist(folderName(folder));
+  const answer = await askTitleAndArtist(songbookName(await getLibrary(), folder));
   if (!answer) return;
 
   await loadSettings();

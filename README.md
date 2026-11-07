@@ -27,7 +27,7 @@ npm run dev
 
 The first `npm run dev` downloads and compiles Tauri, which takes a few minutes and about 1.5 GB of disk in `src-tauri/target/`. Later runs start in seconds. `cargo clean` in `src-tauri/` gives the space back.
 
-In the window, click **Add Songbook…** (or **+** under the Library) and pick a folder of `*.cpm` files (for the Songbook's `cpm/` folder, turn on `.txt` files in Settings, Cmd+,). Each folder you add is a songbook in the Library sidebar; click one to list its songs. Click a song to open it in its own window; **Save** writes the file. **−** or right-click > Remove from Library takes a songbook out of the Library (the folder stays on disk). **File > Open Recent** lists the last 10 songs, and the app selects the last songbook when it starts (a setting).
+In the window, click **Add Songbook…** (or **+** under the Library) and pick a folder of `*.cpm` files (for the Songbook's `cpm/` folder, turn on `.txt` files in Settings, Cmd+,), then give the songbook a name. Each folder you add is a songbook in the Library sidebar (right-click > Rename… to rename it); click one to list its songs. Click a song to open it in its own window; **Save** writes the file. **−** or right-click > Remove from Library takes a songbook out of the Library (the folder stays on disk). **File > Open Recent** lists the last 10 songs, and the app selects the last songbook when it starts (a setting).
 
 ### Menu shortcuts
 

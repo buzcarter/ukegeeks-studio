@@ -28,7 +28,8 @@ Agreed with the owner on 2026-11-07:
 - **One folder is one songbook.** Subfolders aren't scanned; add one to make it a songbook of its own.
 - **Open Recent lists songs only.** The first time, the Library starts from Open Recent's songbooks. The setting "Open the last songbook" became "Select the songbook I used last".
 - **Kept in `library.json`,** like recent.json: the folders are allowed again at launch, only folders the Open dialog already allowed can be added, and removing one ends its access at the next launch. A songbook whose folder is gone stays listed (a drive may just be unplugged); choosing it says the folder can't be read.
-- **The sidebar sorts by name;** two songbooks with the same name ("cpm") show their parent folder's name too.
+- **The sidebar sorts by name;** two songbooks with the same name show their parent folder's name too.
+- **Songbooks have names** (task 0021, the owner's ask): folders are often just "songs" or "cpm". Adding a folder asks for a name, suggesting the folder's, or the parent folder's when the folder's is a plain one ("songs", "cpm", "music", …) or another songbook has it. Right-click > Rename… or a double-click renames the songbook, never the folder. `library.json` keeps `{ folder, name }`; plain folder entries from before still read.
 - **Printing a whole songbook** (one PDF) is still Phase 4. Each song prints from its window.
 - **Staying open on a Mac with no windows** is task 0020, its own PR.
 
