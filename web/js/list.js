@@ -202,7 +202,7 @@ songbooksEl.addEventListener('contextmenu', (event) => {
     if (!item) return;
     closeContextMenu();
     const actions = {
-      open: () => folder !== getFolder() && selectFolder(folder),
+      open: () => openFromSidebar(folder),
       'new-song': () => newSong({ folder }),
       rename: () => renameFolder(folder),
       remove: () => removeFolder(folder),
@@ -222,16 +222,19 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeContextMenu();
 });
 
-songbooksEl.addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-folder]');
-  if (!button) return;
-  // choosing a songbook ends a search
+/** Clicking a songbook, or right-click > Open: shows its songs, ending a search. */
+function openFromSidebar(folder) {
   if (searching()) {
     searchEl.value = '';
-    selectFolder(button.dataset.folder);
-  } else if (button.dataset.folder !== getFolder()) {
-    selectFolder(button.dataset.folder);
+    selectFolder(folder);
+  } else if (folder !== getFolder()) {
+    selectFolder(folder);
   }
+}
+
+songbooksEl.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-folder]');
+  if (button) openFromSidebar(button.dataset.folder);
 });
 
 // A song opens in its own window rather than in this one; a search result says
