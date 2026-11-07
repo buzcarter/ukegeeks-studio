@@ -53,6 +53,14 @@ On Windows the menu bar is inside the window and there's no app menu: About move
 
 A folder may hold `.txt` files that aren't songs; they show up with a title from the filename. Good enough.
 
+### File names follow song titles (2026-11-06, task 0011)
+
+- **Setting "Name song files":** "Title - Artist" (the Songbook's New Song, and the default), "Title", or "Artist - Title". Used by New Song and by renames.
+- **Rename only when the title or artist changed** while editing (compared with the song as opened or last saved), not on every save. Old files with other names, like the Songbook's `the_rose.cpm.txt`, keep them until their title changes. A setting turns renaming off.
+- **Never over another file:** the song is written under the new name with "create new", then the old file is removed; a taken name gets " (2)". The song keeps its extension (`.cpm.txt` stays `.cpm.txt`). A change only in upper/lower case doesn't rename (macOS and Windows names ignore case).
+- **Songs opened on their own aren't renamed:** the app may write only that one file.
+- Renaming a Songbook song changes its URL in the self-hosted Songbook; that's accepted.
+
 ### Open… for one song (2026-11-06)
 
 The owner wants a plain Open for a single file, besides Open Songbook….

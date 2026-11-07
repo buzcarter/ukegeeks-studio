@@ -38,7 +38,7 @@ In the window, click **Open Songbook…** and pick a folder of `*.cpm` files (fo
 | Shift+Cmd+O | File > Open Songbook… | Picks a songbook folder. In the editor, asks about unsaved changes first, then goes back to the song list. |
 | Cmd+S | File > Save | Saves the song (the editor's Save button). |
 | Shift+Cmd+S | File > Save As… | Saves under a new name, and the editor switches to the new file: in the songbook folder as one of its songs, anywhere else as a song on its own. |
-| Cmd+, | UkeGeeks Studio > Settings… | Which song file types the list shows (`.cpm`, `.txt`, other ChordPro extensions) and whether to reopen the last songbook. Kept in `settings.json`. |
+| Cmd+, | UkeGeeks Studio > Settings… | Which song file types the list shows (`.cpm`, `.txt`, other ChordPro extensions), how song files are named (and renamed when a song's title or artist changes), and whether to reopen the last songbook. Kept in `settings.json`. |
 | Cmd+L | View > Show Song List | Goes back to the song list, asking about unsaved changes first. |
 | Cmd+P | File > Print… | Prints the open song as shown, with the editor's print styles (the system Print dialog picks the paper). |
 | Cmd+W | File > Close Window | Closes the window, asking about unsaved changes first. |
