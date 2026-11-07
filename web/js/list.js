@@ -233,8 +233,15 @@ async function showFirstSongbook() {
   }
 }
 
-// The song list was closed and opened again by File > Add Songbook to Library…
-// (src-tauri/src/windows.rs): index.html?open=1 shows the picker.
-const showPicker = new URLSearchParams(location.search).has('open');
+// The song list was closed and a menu item opened it again (src-tauri/src/windows.rs):
+// index.html?open=1 for File > Add Songbook to Library… (shows the picker);
+// index.html?menu=new-song or menu=open-file for New Song… and Open….
+const params = new URLSearchParams(location.search);
+const showPicker = params.has('open');
+const menuItem = params.get('menu');
 if (location.search) history.replaceState(null, '', 'index.html');
-showFirstSongbook().then(() => showPicker && chooseSongbook());
+showFirstSongbook().then(() => {
+  if (showPicker) chooseSongbook();
+  else if (menuItem === 'new-song') newSong();
+  else if (menuItem === 'open-file') chooseSong();
+});

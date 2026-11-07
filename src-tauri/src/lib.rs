@@ -344,16 +344,25 @@ pub fn run() {
     .build(tauri::generate_context!())
     .expect("error while building UkeGeeks Studio");
 
-  app.run(|app, event| {
+  app.run(|app, event| match event {
     // In Tauri 2.12 a request with no exit code comes only from the last window
-    // closing, and then the app should end. Should another path ever send one while
-    // a window is open, ask the page first, as for Quit.
-    if let RunEvent::ExitRequested { code: None, api, .. } = event {
+    // closing. On a Mac the app stays running then, as Mac apps do (Quit ends it);
+    // elsewhere it ends. Should another path ever send one while a window is open,
+    // ask the song windows first, as for Quit.
+    RunEvent::ExitRequested { code: None, api, .. } => {
       if !app.webview_windows().is_empty() {
         api.prevent_exit();
         request_quit(app);
+      } else if cfg!(target_os = "macos") {
+        api.prevent_exit();
       }
     }
+    // Clicking the Dock icon with no windows showing brings back the Library
+    #[cfg(target_os = "macos")]
+    RunEvent::Reopen { has_visible_windows: false, .. } => {
+      windows::show_main(app, "");
+    }
+    _ => {}
   });
 }
 

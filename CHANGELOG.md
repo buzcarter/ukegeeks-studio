@@ -4,6 +4,13 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0020: on a Mac, stay running with no windows (#17, 2026-11-07)
+
+- **Closing the last window no longer quits on a Mac;** Quit (Cmd+Q, or from the Dock) does. Clicking the Dock icon with no windows showing brings back the Library.
+- **New Song… and Open… with no windows** open the Library first, which then shows the New Song dialog or the Open dialog (`index.html?menu=…`).
+- **Settings** stays open on a Mac when the last other window closes.
+- **Elsewhere** (Windows), closing the last window still quits, as before.
+
 ### Task 0013: the Library (#16, 2026-11-07)
 
 - **The Library sidebar:** the main window lists the songbooks you added, by name (two with the same name show their parent folder). Click one to list its songs; it's selected again at the next launch (Settings: "Select the songbook I used last").
