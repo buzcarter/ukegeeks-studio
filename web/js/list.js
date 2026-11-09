@@ -37,6 +37,8 @@ const songbooksEl = document.getElementById('songbookList');
 const searchEl = document.getElementById('librarySearch');
 const favoritesBtn = document.getElementById('showFavorites');
 const allBtn = document.getElementById('showAll');
+const topActionBtn = document.getElementById('topActionButton');
+const topActionMenu = document.getElementById('topActionMenu');
 const firstStatus = statusEl.innerHTML;
 
 let library = { songbooks: [], selected: null };
@@ -454,6 +456,11 @@ function closeContextMenu() {
   if (contextMenu) contextMenu.remove();
   contextMenu = null;
 }
+function closeTopActionMenu() {
+  if (!topActionMenu || !topActionBtn) return;
+  topActionMenu.hidden = true;
+  topActionBtn.setAttribute('aria-expanded', 'false');
+}
 songbooksEl.addEventListener('contextmenu', (event) => {
   const button = event.target.closest('button[data-folder]');
   if (!button) return;
@@ -494,9 +501,13 @@ songbooksEl.addEventListener('contextmenu', (event) => {
 });
 document.addEventListener('click', (event) => {
   if (contextMenu && !contextMenu.contains(event.target)) closeContextMenu();
+  if (topActionMenu && !topActionMenu.hidden && !event.target.closest('.topAction')) closeTopActionMenu();
 });
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeContextMenu();
+  if (event.key === 'Escape') {
+    closeContextMenu();
+    closeTopActionMenu();
+  }
 });
 
 /** Clicking a songbook, or right-click > Open: shows its songs, ending a search. */
@@ -540,9 +551,25 @@ listEl.addEventListener('click', (event) => {
   openSongbookSong(folder, link.dataset.filename);
 });
 
-document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
-document.getElementById('openSong').addEventListener('click', chooseSong);
-document.getElementById('newSong').addEventListener('click', () => newSong());
+if (topActionBtn && topActionMenu) {
+  topActionBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const show = topActionMenu.hidden;
+    topActionMenu.hidden = !show;
+    topActionBtn.setAttribute('aria-expanded', String(show));
+  });
+  topActionMenu.addEventListener('click', (event) => {
+    const item = event.target.closest('button[data-action]');
+    if (!item) return;
+    closeTopActionMenu();
+    const actions = {
+      'new-song': () => newSong(),
+      'open-song': chooseSong,
+      'add-songbook': chooseSongbook,
+    };
+    actions[item.dataset.action]();
+  });
+}
 onMenu('new-song', () => newSong());
 // File > Add Songbook to Library… (Shift+Cmd+O; its id is from Open Songbook…) and
 // Open… (Cmd+O). Save and Save As do nothing here; Quit quits.

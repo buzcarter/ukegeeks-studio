@@ -4,6 +4,12 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### Task 0024: top bar + menu (in progress, 2026-11-09)
+
+- **Top title bar:** New Song…, Open Song… and Add Songbook… are now one **+** button in the wooden header.
+- **Click +** to open a dropdown with **New Song…**, **Open Song…**, and **Add Songbook…**.
+- **Existing behavior stays the same:** each menu item runs the same action as before.
+
 ### UGS-0031: Library sidebar feedback (2026-11-09)
 
 From the 2026-11-09 user test, "Library Sidebar":
