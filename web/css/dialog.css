@@ -43,6 +43,27 @@
   font-size: 13px;
 }
 
+.studioDialogFilename {
+  margin: -4px 0 8px;
+  color: #5b3a1e;
+  font-size: 13px;
+}
+
+.studioDialogFileValue {
+  overflow-wrap: anywhere;
+}
+
+.studioDialogHint {
+  min-height: 1.35em;
+  margin: -2px 0 2px;
+  color: #5b3a1e;
+  font-size: 12px;
+}
+
+.studioDialogHint.isWarning {
+  color: #7a2e0e;
+}
+
 .studioDialog label {
   display: block;
   margin: 0 0 10px;

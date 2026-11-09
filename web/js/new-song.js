@@ -11,8 +11,14 @@ import {
   openSongbookSong, openSongFile, SONG_EXTENSION, songbookName, songFileBase, tauri,
 } from './songbook.js';
 
-/** Shows the New Song dialog. Resolves to { title, artist }, or null if cancelled. */
-function askTitleAndArtist(songbookName) {
+const { scrubForFilename } = globalThis.studioSongs;
+
+function foldName(name) {
+  return name.normalize('NFC').toLowerCase();
+}
+
+/** Shows the New Song dialog. Resolves to { title, artist, baseName }, or null if cancelled. */
+function askTitleAndArtist(songbookName, songbook) {
   const dialog = document.createElement('dialog');
   dialog.className = 'studioDialog';
   dialog.innerHTML = `
@@ -22,6 +28,9 @@ function askTitleAndArtist(songbookName) {
       <p class="studioDialogNote">In the songbook <strong>${escapeHtml(songbookName)}</strong></p>
       <label>Title <input name="title" class="woodInput" required autocomplete="off" spellcheck="false" /></label>
       <label>Artist <input name="artist" class="woodInput" autocomplete="off" spellcheck="false" placeholder="optional" /></label>
+      <label>File name <input name="baseName" class="woodInput" required autocomplete="off" spellcheck="false" /></label>
+      <p class="studioDialogFilename">Will be saved as <strong class="studioDialogFileValue"></strong></p>
+      <p class="studioDialogHint" role="status" aria-live="polite"></p>
       <div class="studioDialogButtons">
         <button type="button" class="studioDialogCancel woodBtn">Cancel</button>
         <button class="studioDialogDefault woodBtn orange">Create</button>
@@ -30,20 +39,77 @@ function askTitleAndArtist(songbookName) {
     </form>`;
   document.body.append(dialog);
   const form = dialog.querySelector('form');
+  const titleEl = form.elements.title;
+  const artistEl = form.elements.artist;
+  const baseNameEl = form.elements.baseName;
+  const fileValueEl = form.querySelector('.studioDialogFileValue');
+  const hintEl = form.querySelector('.studioDialogHint');
+  let manualBaseName = false;
+  let refreshTimer = null;
+  let refreshRun = 0;
+
+  const setHint = (text, warning = false) => {
+    hintEl.textContent = text;
+    hintEl.classList.toggle('isWarning', warning);
+  };
+  const scheduleRefresh = (fromSongFields = false) => {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => refreshFilename(fromSongFields), 120);
+  };
+  const refreshFilename = async (fromSongFields = false) => {
+    const run = ++refreshRun;
+    const title = titleEl.value.trim();
+    const artist = artistEl.value.trim();
+    const autoBase = songFileBase(title, artist) || 'untitled';
+    if (fromSongFields && (!manualBaseName || !baseNameEl.value.trim())) {
+      baseNameEl.value = autoBase;
+    }
+
+    const typedBase = baseNameEl.value.trim();
+    const requestedBase = scrubForFilename(typedBase || autoBase) || 'untitled';
+    const requestedFilename = `${requestedBase}${SONG_EXTENSION}`;
+    let suggestedFilename = requestedFilename;
+    try {
+      suggestedFilename = await songbook.availableFilename(requestedBase, SONG_EXTENSION);
+    } catch (err) {
+      if (run !== refreshRun) return;
+      fileValueEl.textContent = requestedFilename;
+      setHint(`Couldn’t check filename availability. (${err && err.message ? err.message : err})`, true);
+      return;
+    }
+    if (run !== refreshRun) return;
+
+    fileValueEl.textContent = suggestedFilename;
+    const hasCollision = foldName(suggestedFilename) !== foldName(requestedFilename);
+    if (hasCollision) {
+      setHint(`That file already exists. Suggested: ${suggestedFilename}`, true);
+    } else {
+      setHint('');
+    }
+  };
+
   return new Promise((resolve) => {
     // Answers straight from submit / Esc / Cancel, not from the dialog's "close"
     // event, which a page in the background may get late.
     const finish = (create) => {
-      const title = form.elements.title.value.trim();
-      const artist = form.elements.artist.value.trim();
+      clearTimeout(refreshTimer);
+      const title = titleEl.value.trim();
+      const artist = artistEl.value.trim();
+      const baseName = scrubForFilename(baseNameEl.value.trim()) || songFileBase(title, artist) || 'untitled';
       dialog.close();
       dialog.remove();
-      resolve(create && title ? { title, artist } : null);
+      resolve(create && title ? { title, artist, baseName } : null);
     };
     // Return submits (Cancel is a plain button, so Create is the form's default)
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       finish(true);
+    });
+    titleEl.addEventListener('input', () => scheduleRefresh(true));
+    artistEl.addEventListener('input', () => scheduleRefresh(true));
+    baseNameEl.addEventListener('input', () => {
+      manualBaseName = true;
+      scheduleRefresh(false);
     });
     dialog.addEventListener('cancel', (event) => { // Esc
       event.preventDefault();
@@ -51,6 +117,7 @@ function askTitleAndArtist(songbookName) {
     });
     dialog.querySelector('.studioDialogCancel').addEventListener('click', () => finish(false));
     dialog.showModal();
+    scheduleRefresh(true);
   });
 }
 
@@ -65,15 +132,15 @@ export async function newSong({ folder: inFolder } = {}) {
     folder = await addSongbook();
     if (!folder) return;
   }
-  const answer = await askTitleAndArtist(songbookName(await getLibrary(), folder));
+  await loadSettings();
+  const songbook = openSongbook(folder, [SONG_EXTENSION]);
+  const answer = await askTitleAndArtist(songbookName(await getLibrary(), folder), songbook);
   if (!answer) return;
 
-  await loadSettings();
   let filename;
   try {
     // always ".cpm", whatever song types Settings lists; named as Settings says
-    const base = songFileBase(answer.title, answer.artist);
-    filename = await openSongbook(folder, [SONG_EXTENSION]).create(answer.title, answer.artist, base);
+    filename = await songbook.create(answer.title, answer.artist, answer.baseName);
   } catch (err) {
     console.error('[studio] new song:', err);
     await tauri().dialog.message(`There was a problem creating "${answer.title}". (${err && err.message ? err.message : err})`, {
