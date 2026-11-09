@@ -4,6 +4,22 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0031: Library sidebar feedback (2026-11-09)
+
+From the 2026-11-09 user test, "Library Sidebar":
+
+- **All Songs** between Favorites and the songbooks: every songbook's songs, sorted by title, each with its songbook. Selected again at launch like Favorites.
+- **A red "!"** beside a songbook whose folder can't be read (moved, renamed, drive unplugged); checked at launch, on focus and when the Library changes.
+- **Right-click a songbook:** Open Folder (shows it in Finder), Change Folder… (points the songbook at another folder; its name and favorites follow), and Bundle all as PDF… (disabled until Phase 4).
+- **Remove from Library asks first.**
+- **The + and − buttons at the bottom of the sidebar are gone** (the top bar's Add Songbook… and the right-click menu do the same).
+- Rust: `library_change_folder`, `library_reveal`, and `Favorites::move_folder` (unit tested). Recent songs still point at the old folder after a Change Folder….
+
+### UGS-0026: one backlog for every repo, and agent collaboration (2026-11-09)
+
+- **`docs/BACKLOG.md` replaces `docs/BOARD.md`:** one list for all the UkeGeeks repos, numbered `UGS-NNNN` (the old Studio numbers are the first UGS numbers), with a Repos column and a Depends-on column. Branches are `feature/ugs-NNNN_short-name`.
+- **"Agent collaboration" in `CLAUDE.md`:** GitHub Issues are the mailbox between Buz's Claude and a partner's. Labels, what a brief contains, who owns which area, and the rule that only `agent-task` issues opened by the owner are acted on.
+
 ### Task 0018: Favorites (#20, 2026-11-07)
 
 - **A ☆ beside every song** in a songbook's list and in search results, and in a song window's corner bar: click it to star the song (★), again to unstar it.

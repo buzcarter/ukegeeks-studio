@@ -4,10 +4,13 @@
  * the Songbook ("The Rose" sorts as "Rose, The"). Each song opens in its own window
  * (or comes forward, if it's open).
  *
- * + (or File > Add Songbook to Library…) adds a folder and asks for the songbook's
- * name. Right-click a songbook for Open, New Song…, Rename… (or double-click it)
- * and Remove from Library (or −), which takes it out; its folder and songs stay on
- * disk.
+ * File > Add Songbook to Library… (or Add Songbook…) adds a folder and asks for the
+ * songbook's name. Right-click a songbook for Open, New Song…, Rename… (or
+ * double-click it), Open Folder (in Finder), Change Folder…, Bundle all as PDF
+ * (not yet) and Remove from Library (after asking), which takes it out; its folder
+ * and songs stay on disk. A songbook whose folder can't be read shows a "!".
+ *
+ * All Songs, under Favorites, lists the songs of every songbook, sorted by title.
  *
  * The search box (Cmd+F) searches every songbook in the Library by title, artist or
  * lyrics (web/js/search.js); clearing it (or Esc) shows the songbook again.
@@ -17,10 +20,10 @@
  * sidebar, lists the starred songs of every songbook, sorted by title.
  */
 import {
-  addSongbook, ALL_EXTENSIONS, checkAccess, escapeHtml, FAVORITES_SELECTED, favoriteSongs, getFavorites, getFolder,
+  addSongbook, ALL_EXTENSIONS, ALL_SELECTED, changeSongbookFolder, checkAccess, escapeHtml, FAVORITES_SELECTED, favoriteSongs, getFavorites, getFolder,
   getLibrary, getSettings, isStarred, loadSettings, onFavoritesChanged, onLibraryChanged, onSettingsChanged,
-  openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook, renameSongbook, selectSongbook,
-  setFolder, songbookName, songExtensions, starSong,
+  openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook, renameSongbook, revealSongbook, selectSongbook,
+  setFolder, songbookName, songExtensions, starSong, tauri,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 import { newSong } from './new-song.js';
@@ -31,15 +34,19 @@ const { parseSong, fixLeadingArticle, filenameToTitle } = globalThis.studioSongs
 const statusEl = document.getElementById('songbookStatus');
 const listEl = document.getElementById('songList');
 const songbooksEl = document.getElementById('songbookList');
-const removeBtn = document.getElementById('removeSongbook');
 const searchEl = document.getElementById('librarySearch');
 const favoritesBtn = document.getElementById('showFavorites');
+const allBtn = document.getElementById('showAll');
 const firstStatus = statusEl.innerHTML;
 
 let library = { songbooks: [], selected: null };
 let favorites = { lists: [] };
 /** Favorites is selected in the sidebar (instead of a songbook) */
 let showingFavorites = false;
+/** All Songs is selected in the sidebar */
+let showingAll = false;
+/** Folders of the Library that can't be read now (moved, renamed, drive unplugged) */
+let brokenFolders = new Set();
 // remembered for this window, like the open songbook (getFolder)
 const FAVORITES_KEY = 'studio.showingFavorites';
 function rememberFavorites(on) {
@@ -51,6 +58,18 @@ function rememberFavorites(on) {
 function wasShowingFavorites() {
   try { return sessionStorage.getItem(FAVORITES_KEY) === '1'; } catch { return false; }
 }
+const ALL_KEY = 'studio.showingAll';
+function rememberAll(on) {
+  try {
+    if (on) sessionStorage.setItem(ALL_KEY, '1');
+    else sessionStorage.removeItem(ALL_KEY);
+  } catch { /* the Library's `selected` still has it */ }
+}
+function wasShowingAll() {
+  try { return sessionStorage.getItem(ALL_KEY) === '1'; } catch { return false; }
+}
+/** A list of every songbook's songs (Favorites, All Songs) is selected, not one songbook */
+const showingList = () => showingFavorites || showingAll;
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 
 function showStatus(html, isError = false) {
@@ -74,13 +93,32 @@ function showLibrary() {
     .map(({ folder, name }, i) => ({ folder, name, twin: names.filter((n) => n === names[i]).length > 1 }))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
   songbooksEl.innerHTML = items
-    .map(({ folder, name, twin }) => `<li><button type="button" data-folder="${escapeHtml(folder)}" title="${escapeHtml(folder)}"`
-      + ` aria-current="${!showingFavorites && folder === open}">${escapeHtml(name)}`
+    .map(({ folder, name, twin }) => `<li><button type="button" data-folder="${escapeHtml(folder)}"`
+      + ` title="${escapeHtml(brokenFolders.has(folder) ? `Can't read this folder: ${folder}` : folder)}"`
+      + ` aria-current="${!showingList() && folder === open}">`
+      + (brokenFolders.has(folder) ? '<span class="songbookBroken" aria-label="Folder can\'t be read">!</span> ' : '')
+      + escapeHtml(name)
       + (twin ? ` <span class="songbookParent">— ${escapeHtml(parentName(folder))}</span>` : '')
       + '</button></li>')
     .join('');
   favoritesBtn.setAttribute('aria-current', String(showingFavorites));
-  removeBtn.disabled = showingFavorites || !inLibrary(open);
+  allBtn.setAttribute('aria-current', String(showingAll));
+}
+
+/** Which songbooks' folders can't be read; the sidebar marks them with a "!". */
+async function checkFolders() {
+  const checked = await Promise.all(library.songbooks.map(async ({ folder }) => {
+    try {
+      await tauri().fs.readDir(folder);
+      return null;
+    } catch {
+      return folder;
+    }
+  }));
+  const next = new Set(checked.filter(Boolean));
+  if (next.size === brokenFolders.size && [...next].every((f) => brokenFolders.has(f))) return;
+  brokenFolders = next;
+  showLibrary();
 }
 
 /**
@@ -129,6 +167,7 @@ async function toggleStar(star) {
 function showSelected() {
   const open = getFolder();
   if (showingFavorites) showFavorites();
+  else if (showingAll) showAllSongs();
   else if (open) showSongbook(open);
   else showNothingOpen();
 }
@@ -177,11 +216,69 @@ async function showFavorites() {
     .join('');
 }
 
+let allRun = 0;
+
+/**
+ * All Songs: the songs of every songbook in the Library, sorted by title, each with
+ * its songbook. Songbooks whose folders can't be read are left out, and said so.
+ */
+async function showAllSongs() {
+  if (searching()) return;
+  const run = ++allRun;
+  listEl.innerHTML = '';
+  showStatus('Reading the Library…');
+  const perSongbook = await Promise.all(library.songbooks.map(async ({ folder, name }) => {
+    try {
+      await checkAccess(folder);
+      const songs = await openSongbook(folder).getSongList();
+      return songs.map((song) => ({ ...song, folder, songbook: name }));
+    } catch {
+      return null;
+    }
+  }));
+  if (run !== allRun || !showingAll || searching()) return; // something else meanwhile
+  const songs = perSongbook.filter(Boolean).flat();
+  const unreadable = perSongbook.filter((s) => !s).length;
+  songs.sort((a, b) => collator.compare(a.title, b.title) || collator.compare(a.songbook, b.songbook));
+  const skipped = unreadable ? ` (${unreadable === 1 ? '1 songbook' : `${unreadable} songbooks`} can't be read)` : '';
+  if (!songs.length) {
+    showStatus(`<strong>All Songs</strong>: none yet. Add a songbook to the Library.${skipped}`);
+    return;
+  }
+  showStatus(`<strong>All Songs</strong>: ${songs.length === 1 ? '1 song' : `${songs.length} songs`}${skipped}`);
+  listEl.innerHTML = songs
+    .map((song) => {
+      const details = [song.artist, song.subtitle].filter(Boolean).map(escapeHtml).join(' · ');
+      return songRow({
+        folder: song.folder,
+        filename: song.filename,
+        inner: `<span class="songTitle">${escapeHtml(song.title)}</span>`
+          + (details ? ` <span class="songDetails">${details}</span>` : '')
+          + `<span class="songSongbook" title="${escapeHtml(song.folder)}">${escapeHtml(song.songbook)}</span>`,
+      });
+    })
+    .join('');
+}
+
+/** Clicking All Songs in the sidebar: shows them, ending a search. */
+async function selectAll() {
+  searchEl.value = '';
+  showingAll = true;
+  showingFavorites = false;
+  rememberAll(true);
+  rememberFavorites(false);
+  showLibrary();
+  selectSongbook(ALL_SELECTED);
+  await showAllSongs();
+}
+
 /** Clicking Favorites in the sidebar: shows them, ending a search. */
 async function selectFavorites() {
   searchEl.value = '';
   showingFavorites = true;
+  showingAll = false;
   rememberFavorites(true);
+  rememberAll(false);
   showLibrary();
   selectSongbook(FAVORITES_SELECTED);
   await showFavorites();
@@ -198,7 +295,7 @@ async function showSongbook(folder) {
     return;
   }
   const songs = await openSongbook(folder).getSongList();
-  if (showingFavorites || searching()) return; // chosen something else meanwhile
+  if (showingList() || searching()) return; // chosen something else meanwhile
   const name = `<strong title="${escapeHtml(folder)}">${escapeHtml(songbookName(library, folder))}</strong>`;
   const count = songs.length === 1 ? '1 song' : `${songs.length} songs`;
   showStatus(`${name}: ${count}`);
@@ -238,7 +335,9 @@ async function otherSongTypes(folder, listed) {
 /** Opens a songbook of the Library in this window and remembers it for next time. */
 async function selectFolder(folder) {
   showingFavorites = false;
+  showingAll = false;
   rememberFavorites(false);
+  rememberAll(false);
   setFolder(folder);
   showLibrary();
   selectSongbook(folder);
@@ -264,8 +363,14 @@ async function chooseSongbook() {
   }
 }
 
-/** − and right-click > Remove from Library. The folder stays on disk. */
+/** Right-click > Remove from Library, after asking. The folder stays on disk. */
 async function removeFolder(folder) {
+  const name = songbookName(library, folder);
+  const sure = await tauri().dialog.ask(
+    `Remove “${name}” from the Library? Its folder and songs stay on your disk, and you can add the folder again later.`,
+    { title: 'Remove Songbook', kind: 'warning', okLabel: 'Remove', cancelLabel: 'Cancel' },
+  );
+  if (!sure) return;
   try {
     library = await removeSongbook(folder);
   } catch (err) {
@@ -274,11 +379,13 @@ async function removeFolder(folder) {
   }
   if (getFolder() === folder) {
     try { sessionStorage.removeItem('studio.songbookFolder'); } catch { /* nothing open anyway */ }
-    if (!showingFavorites) showNothingOpen();
+    if (!showingList()) showNothingOpen();
   }
   showLibrary();
+  checkFolders();
   // its favorites aren't shown while it's out of the Library
   if (showingFavorites && !searching()) showFavorites();
+  else if (showingAll && !searching()) showAllSongs();
 }
 
 /** File > Open… (Cmd+O): one song on its own, in its own window. */
@@ -303,7 +410,36 @@ async function renameFolder(folder) {
   }
   showLibrary();
   if (searching()) runSearch();
-  else if (showingFavorites || getFolder() === folder) showSelected();
+  else if (showingList() || getFolder() === folder) showSelected();
+}
+
+/** Right-click > Open Folder: in Finder. */
+async function openFolder(folder) {
+  try {
+    await revealSongbook(folder);
+  } catch (err) {
+    showStatus(escapeHtml(err.message || String(err)), true);
+  }
+}
+
+/** Right-click > Change Folder…: the songbook is somewhere else now. */
+async function changeFolder(folder) {
+  try {
+    const changed = await changeSongbookFolder(folder);
+    if (!changed) return;
+    library = changed.library;
+    // this window follows the songbook, if it had it open
+    if (getFolder() === folder) setFolder(changed.folder);
+  } catch (err) {
+    showStatus(escapeHtml(err.message || String(err)), true);
+    return;
+  }
+  favorites = await getFavorites();
+  searchIndex = null;
+  await checkFolders();
+  showLibrary();
+  if (searching()) runSearch();
+  else showSelected();
 }
 
 songbooksEl.addEventListener('dblclick', (event) => {
@@ -311,7 +447,8 @@ songbooksEl.addEventListener('dblclick', (event) => {
   if (button) renameFolder(button.dataset.folder);
 });
 
-// Right-click a songbook: Open, New Song…, Rename…, Remove from Library
+// Right-click a songbook: Open, New Song…, Rename…, Open Folder, Change Folder…,
+// Bundle all as PDF (disabled for now), Remove from Library
 let contextMenu = null;
 function closeContextMenu() {
   if (contextMenu) contextMenu.remove();
@@ -330,6 +467,10 @@ songbooksEl.addEventListener('contextmenu', (event) => {
     + '<li><button type="button" role="menuitem" data-do="new-song">New Song…</button></li>'
     + '<li><button type="button" role="menuitem" data-do="rename">Rename…</button></li>'
     + '<li class="libraryMenuSeparator" role="separator"></li>'
+    + '<li><button type="button" role="menuitem" data-do="reveal">Open Folder</button></li>'
+    + '<li><button type="button" role="menuitem" data-do="change-folder">Change Folder…</button></li>'
+    + '<li><button type="button" role="menuitem" data-do="bundle-pdf" disabled>Bundle all as PDF…</button></li>'
+    + '<li class="libraryMenuSeparator" role="separator"></li>'
     + '<li><button type="button" role="menuitem" data-do="remove">Remove from Library</button></li>';
   contextMenu.addEventListener('click', (e) => {
     const item = e.target.closest('button[data-do]');
@@ -339,6 +480,8 @@ songbooksEl.addEventListener('contextmenu', (event) => {
       open: () => openFromSidebar(folder),
       'new-song': () => newSong({ folder }),
       rename: () => renameFolder(folder),
+      reveal: () => openFolder(folder),
+      'change-folder': () => changeFolder(folder),
       remove: () => removeFolder(folder),
     };
     actions[item.dataset.do]();
@@ -361,7 +504,7 @@ function openFromSidebar(folder) {
   if (searching()) {
     searchEl.value = '';
     selectFolder(folder);
-  } else if (showingFavorites || folder !== getFolder()) {
+  } else if (showingList() || folder !== getFolder()) {
     selectFolder(folder);
   }
 }
@@ -372,6 +515,9 @@ songbooksEl.addEventListener('click', (event) => {
 });
 favoritesBtn.addEventListener('click', () => {
   if (!showingFavorites || searching()) selectFavorites();
+});
+allBtn.addEventListener('click', () => {
+  if (!showingAll || searching()) selectAll();
 });
 
 // A song opens in its own window rather than in this one; a search result says
@@ -394,12 +540,7 @@ listEl.addEventListener('click', (event) => {
   openSongbookSong(folder, link.dataset.filename);
 });
 
-document.getElementById('addSongbook').addEventListener('click', chooseSongbook);
 document.getElementById('openSongbook').addEventListener('click', chooseSongbook);
-removeBtn.addEventListener('click', () => {
-  const open = getFolder();
-  if (open) removeFolder(open);
-});
 document.getElementById('openSong').addEventListener('click', chooseSong);
 document.getElementById('newSong').addEventListener('click', () => newSong());
 onMenu('new-song', () => newSong());
@@ -420,8 +561,10 @@ onLibraryChanged((next) => {
   library = next;
   searchIndex = null;
   showLibrary();
+  checkFolders();
   if (searching()) runSearch();
   else if (showingFavorites) showFavorites(); // songbook names, or songbooks gone
+  else if (showingAll) showAllSongs();
 });
 
 // A song was starred or unstarred (here, or in a song window)
@@ -543,8 +686,10 @@ document.addEventListener('keydown', (event) => {
 // Songs may have changed in their windows meanwhile: read them again next time
 window.addEventListener('focus', () => {
   searchIndex = null;
+  checkFolders();
   if (searching()) runSearch();
   else if (showingFavorites) showFavorites(); // titles may have changed
+  else if (showingAll) showAllSongs();
 });
 
 // The songbook (or Favorites) open in this window, else (if Settings says so) the
@@ -555,8 +700,11 @@ async function showFirstSongbook() {
   let folder = getFolder();
   if (!inLibrary(folder)) folder = null;
   const reopen = getSettings().reopenLastSongbook;
+  checkFolders();
   if (wasShowingFavorites()) await selectFavorites();
+  else if (wasShowingAll()) await selectAll();
   else if (!folder && reopen && library.selected === FAVORITES_SELECTED) await selectFavorites();
+  else if (!folder && reopen && library.selected === ALL_SELECTED) await selectAll();
   else if (!folder && reopen && inLibrary(library.selected)) await selectFolder(library.selected);
   else if (folder) await selectFolder(folder);
   else {

@@ -89,6 +89,17 @@
       if (library.selected === folder) library.selected = null;
       return saveLibrary(library);
     },
+    library_change_folder: ({ folder, to }) => {
+      const library = commands.library_get();
+      if (library.songbooks.some((s) => s.folder === to)) throw 'That folder is already a songbook in the Library.';
+      library.songbooks.find((s) => s.folder === folder).folder = to;
+      if (library.selected === folder) library.selected = to;
+      const favorites = commands.favorites_get();
+      for (const list of favorites.lists) list.songs.forEach((s) => { if (s.folder === folder) s.folder = to; });
+      saveFavorites(favorites);
+      return saveLibrary(library);
+    },
+    library_reveal: ({ folder }) => log('reveal folder', folder),
     library_select: ({ folder }) => saveLibrary({ ...commands.library_get(), selected: folder }),
     favorites_get: () => read('fakefavorites', { lists: [{ id: 'favorites', name: 'Favorites', songs: [] }] }),
     favorites_star: ({ folder, file, starred }) => {

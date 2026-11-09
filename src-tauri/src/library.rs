@@ -19,6 +19,8 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_fs::FsExt;
 
+use crate::favorites::{self, FavoritesState};
+
 /// Longest songbook name kept, in characters
 const MAX_NAME: usize = 80;
 
@@ -91,6 +93,8 @@ impl LibraryState {
 /// What `selected` holds when the sidebar's Favorites (favorites.rs) was chosen
 /// last, instead of a songbook's folder (always a full path, so never this).
 pub const FAVORITES_SELECTED: &str = "list:favorites";
+/// Likewise for the sidebar's All Songs
+pub const ALL_SELECTED: &str = "list:all";
 
 /// Sent to every window when the Library changes (a songbook added from a song
 /// window's New Song…, say); the payload is the Library.
@@ -215,11 +219,70 @@ pub fn library_remove(app: AppHandle, state: State<LibraryState>, folder: String
   })
 }
 
+/// Points a songbook at another folder (right-click > Change Folder…, for a folder
+/// that moved, or a drive that's named differently now). The name stays; so do its
+/// favorites, which follow. The new folder is one just picked in the Open dialog.
+#[tauri::command]
+pub fn library_change_folder(
+  app: AppHandle,
+  state: State<LibraryState>,
+  favorites: State<FavoritesState>,
+  folder: String,
+  to: String,
+) -> Result<Library, String> {
+  if !app.fs_scope().is_allowed(&to) {
+    return Err(format!("not a folder the app may read: {to}"));
+  }
+  let (known, taken) = {
+    let library = state.0.lock().unwrap();
+    (
+      library.songbooks.iter().any(|s| same_folder(&s.folder, &folder)),
+      library.songbooks.iter().any(|s| same_folder(&s.folder, &to) && !same_folder(&s.folder, &folder)),
+    )
+  };
+  if !known {
+    return Err(format!("not in the Library: {folder}"));
+  }
+  if taken {
+    return Err("That folder is already a songbook in the Library.".into());
+  }
+  favorites::folder_moved(&app, &favorites, &folder, &to);
+  Ok(change(&app, &state, |library| {
+    if let Some(songbook) = library.songbooks.iter_mut().find(|s| same_folder(&s.folder, &folder)) {
+      songbook.folder = to.clone();
+    }
+    if library.selected.as_deref().is_some_and(|s| same_folder(s, &folder)) {
+      library.selected = Some(to.clone());
+    }
+  }))
+}
+
+/// Shows a songbook's folder in Finder (Explorer, the file manager). Only folders
+/// of the Library.
+#[tauri::command]
+pub fn library_reveal(state: State<LibraryState>, folder: String) -> Result<(), String> {
+  if !state.has_songbook(&folder) {
+    return Err(format!("not in the Library: {folder}"));
+  }
+  let opener = if cfg!(target_os = "macos") {
+    "open"
+  } else if cfg!(target_os = "windows") {
+    "explorer"
+  } else {
+    "xdg-open"
+  };
+  std::process::Command::new(opener)
+    .arg(&folder)
+    .spawn()
+    .map(|_| ())
+    .map_err(|err| format!("can't open the folder: {err}"))
+}
+
 /// Remembers the songbook (or Favorites, FAVORITES_SELECTED) selected in the
 /// sidebar, for the next launch.
 #[tauri::command]
 pub fn library_select(app: AppHandle, state: State<LibraryState>, folder: String) -> Result<Library, String> {
-  if folder != FAVORITES_SELECTED && !state.has_songbook(&folder) {
+  if folder != FAVORITES_SELECTED && folder != ALL_SELECTED && !state.has_songbook(&folder) {
     return Err(format!("not in the Library: {folder}"));
   }
   Ok(change(&app, &state, |library| library.selected = Some(folder)))
