@@ -1,5 +1,12 @@
-node_modules/
+# Ignore common system and dependency files
 .DS_Store
+thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore dependency directories
+node_modules/
 
 # copied in from the @ukegeeks packages by scripts/vendor.js
 web/vendor/
