@@ -22,8 +22,8 @@
 import {
   addSongbook, ALL_EXTENSIONS, ALL_SELECTED, changeSongbookFolder, checkAccess, escapeHtml, FAVORITES_SELECTED, favoriteSongs, getFavorites, getFolder,
   getLibrary, getSettings, isStarred, loadSettings, onFavoritesChanged, onLibraryChanged, onSettingsChanged,
-  openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook, renameSongbook, revealSongbook, selectSongbook,
-  setFolder, songbookName, songExtensions, starSong, tauri,
+  onSongbookSongsChanged, openSongbook, openSongbookSong, openSongFile, pickSongFile, removeSongbook, renameSongbook, revealSongbook,
+  selectSongbook, setFolder, songbookName, songExtensions, starSong, tauri,
 } from './songbook.js';
 import { onMenu } from './menu.js';
 import { newSong } from './new-song.js';
@@ -590,12 +590,20 @@ onLibraryChanged((next) => {
   showLibrary();
   checkFolders();
   if (searching()) runSearch();
-  else if (showingFavorites) showFavorites(); // songbook names, or songbooks gone
-  else if (showingAll) showAllSongs();
+  else showSelected(); // songbook names, songbooks gone, or selected songbook's songs changed
 });
 
 // A song was starred or unstarred (here, or in a song window)
 onFavoritesChanged(favoritesChanged);
+
+// A song was created/renamed/removed in some window: refresh what this window shows.
+onSongbookSongsChanged(({ folder }) => {
+  searchIndex = null;
+  if (searching()) runSearch();
+  else if (showingFavorites) showFavorites();
+  else if (showingAll) showAllSongs();
+  else if (folder && folder === getFolder()) showSongbook(folder);
+});
 
 // ---- Search ----
 

@@ -10,6 +10,7 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 - **Click +** to open a dropdown with **New Song…**, **Open Song…**, and **Add Songbook…**.
 - **Existing behavior stays the same:** each menu item runs the same action as before.
 - **New Song dialog:** as you type Title/Artist, the app shows the filename it will create. You can override the base filename, and when that name already exists the dialog suggests a `(n)` filename.
+- **Song list updates immediately:** when New Song creates a file (from the song list or a song window), the selected songbook list refreshes right away.
 
 ### UGS-0031: Library sidebar feedback (2026-11-09)
 

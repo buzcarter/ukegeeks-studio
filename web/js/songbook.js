@@ -25,6 +25,8 @@ export const ALL_EXTENSIONS = ['.cpm', '.txt', '.cho', '.crd', '.chopro', '.chor
 const SETTINGS_EVENT = 'studio://settings';
 const LIBRARY_EVENT = 'studio://library';
 const FAVORITES_EVENT = 'studio://favorites';
+const SONGBOOK_SONGS_EVENT = 'studio://songbook-songs';
+const SONGBOOK_SONGS_KEY = 'studio.songbookSongsChanged';
 // before Settings existed, the song list's "Also list .cpm.txt songs" box (localStorage)
 const OLD_INCLUDE_TXT_KEY = 'studio.includeCpmTxt';
 
@@ -290,6 +292,30 @@ export function renameFavorite(folder, from, to) {
 export function onFavoritesChanged(callback) {
   tauri().event.listen(FAVORITES_EVENT, (event) => callback(event.payload))
     .catch((err) => console.error('[studio] Favorites events:', err));
+}
+
+/** A song was added/renamed/removed in a songbook; every window can refresh if needed. */
+export function notifySongbookSongsChanged(folder, filename = null) {
+  const payload = { folder, filename, when: Date.now() };
+  window.dispatchEvent(new CustomEvent(SONGBOOK_SONGS_EVENT, { detail: payload }));
+  try {
+    localStorage.setItem(SONGBOOK_SONGS_KEY, JSON.stringify(payload));
+  } catch {
+    // localStorage may be blocked; this window still got the CustomEvent above
+  }
+}
+
+/** Runs callback({ folder, filename }) when a songbook's song files changed. */
+export function onSongbookSongsChanged(callback) {
+  window.addEventListener(SONGBOOK_SONGS_EVENT, (event) => callback(event.detail || {}));
+  window.addEventListener('storage', (event) => {
+    if (event.key !== SONGBOOK_SONGS_KEY || !event.newValue) return;
+    try {
+      callback(JSON.parse(event.newValue));
+    } catch (err) {
+      console.warn('[studio] songbook songs change event:', err);
+    }
+  });
 }
 
 /**

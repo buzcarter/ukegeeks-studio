@@ -8,7 +8,7 @@
  */
 import {
   addSongbook, escapeHtml, getFolder, getLibrary, getSettings, joinPath, loadSettings, openSongbook,
-  openSongbookSong, openSongFile, SONG_EXTENSION, songbookName, songFileBase, tauri,
+  notifySongbookSongsChanged, openSongbookSong, openSongFile, SONG_EXTENSION, songbookName, songFileBase, tauri,
 } from './songbook.js';
 
 const { scrubForFilename } = globalThis.studioSongs;
@@ -141,6 +141,7 @@ export async function newSong({ folder: inFolder } = {}) {
   try {
     // always ".cpm", whatever song types Settings lists; named as Settings says
     filename = await songbook.create(answer.title, answer.artist, answer.baseName);
+    notifySongbookSongsChanged(folder, filename);
   } catch (err) {
     console.error('[studio] new song:', err);
     await tauri().dialog.message(`There was a problem creating "${answer.title}". (${err && err.message ? err.message : err})`, {
