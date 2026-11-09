@@ -8,6 +8,7 @@ A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele s
 - **Branches:** always edit on a `feature/…` or `bugfix/…` branch, never on `main`. Check the branch before the first edit and again before every commit: the owner merges PRs and switches checkouts to `main` mid-session.
 - **Commits:** one commit per finished chunk of work, not one big commit at the end. One PR per piece of work. Merge stacked PRs with "Create a merge commit", not squash.
 - **The owner pushes, publishes to npm, creates releases and changes GitHub settings.** Prepare the exact commands; don't run them.
+- **Never `git push`, and never to `main`/`master` by any route** (`git push origin HEAD:main` included). Make a branch from the local `main` (`git switch -c feature/ugs-NNNN_name main`) or add `--no-track` if you start from `origin/main`: a feature branch whose upstream is `origin/main` is how a plain `git push` lands on `main`. After creating a branch, `git rev-parse --abbrev-ref @{u}` should say there is no upstream (or the branch's own name).
 - **Commands for the owner to run:** in the Claude desktop app, commands the owner types with `!` always run in the session's folder, not where the last one ran. Start every command meant for another repo with `cd ~/Code/<repo> &&`.
 - **Indentation:** 2 spaces, no tabs, in new code. Code copied unchanged from older UkeGeeks repos keeps its tabs: match the file.
 - **Markdown:** a blank line between paragraphs.
