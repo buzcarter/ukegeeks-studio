@@ -24,7 +24,7 @@ Windows, not tabs or a split view: the editor finds its parts by id, so it's one
 Agreed with the owner on 2026-11-07:
 
 - **The main window is the Library:** a sidebar of songbooks, the selected one's songs beside it. Songs open in their own windows.
-- **Add Songbook to Library…** (Shift+Cmd+O, the + button, or the header's Add Songbook…) replaces Open Songbook…. A songbook stays until it's removed (− or right-click > Remove from Library), which never touches the folder.
+- **Add Songbook to Library…** (Shift+Cmd+O, or the header's Add Songbook…) replaces Open Songbook…. A songbook stays until it's removed (right-click > Remove from Library, after asking), which never touches the folder.
 - **One folder is one songbook.** Subfolders aren't scanned; add one to make it a songbook of its own.
 - **Open Recent lists songs only.** The first time, the Library starts from Open Recent's songbooks. The setting "Open the last songbook" became "Select the songbook I used last".
 - **Kept in `library.json`,** like recent.json: the folders are allowed again at launch, only folders the Open dialog already allowed can be added, and removing one ends its access at the next launch. A songbook whose folder is gone stays listed (a drive may just be unplugged); choosing it says the folder can't be read.
