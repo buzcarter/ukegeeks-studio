@@ -11,11 +11,14 @@
 <body>
   <header class="listHeader woodBar">
     <h1 class="woodLogo">UkeGeeks Studio</h1>
-    <span class="listButtons">
-      <button type="button" id="newSong" class="woodBtn">New Song…</button>
-      <button type="button" id="openSong" class="woodBtn">Open Song…</button>
-      <button type="button" id="openSongbook" class="woodBtn orange">Add Songbook…</button>
-    </span>
+    <div class="topAction">
+      <button type="button" id="topActionButton" class="woodBtn orange topActionBtn" aria-expanded="false" aria-controls="topActionMenu" aria-haspopup="true" title="New, Open, Add">+</button>
+      <ul id="topActionMenu" class="topActionMenu" role="menu" hidden>
+        <li><button type="button" role="menuitem" data-action="new-song">New Song…</button></li>
+        <li><button type="button" role="menuitem" data-action="open-song">Open Song…</button></li>
+        <li><button type="button" role="menuitem" data-action="add-songbook">Add Songbook…</button></li>
+      </ul>
+    </div>
   </header>
 
   <div class="libraryLayout">

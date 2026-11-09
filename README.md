@@ -10,7 +10,7 @@ Someone running a ukulele club. They have songsheets (paper, PDFs, text pasted f
 
 ## How it works
 
-- A **songbook is a folder**. Each song is a plain-text [ChordPro](https://www.chordpro.org/) file (`*.cpm.txt`), so nothing is locked in: the same files work in the self-hosted [UkeGeeks Songbook](https://github.com/buzcarter/UkeGeeks).
+- A **songbook is a folder**. Each song is a plain-text [ChordPro](https://www.chordpro.org/) file (typically `*.cpm` or `*.txt`), so nothing is locked in: the same files work in the self-hosted [UkeGeeks Songbook](https://github.com/buzcarter/UkeGeeks).
 - Songs open in the **Song-a-Matic editor**, with ukulele chord diagrams, transpose, GCEA/DGBE/ADF#B tunings, color themes and a Chord Builder.
 - Save writes the file. There's no server and no account.
 
