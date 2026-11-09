@@ -4,15 +4,15 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0029**.
+The next free number is **UGS-0030**.
 
 ## Doing
 
 | ID | Repos | What | Branch | Who |
 |---|---|---|---|---|
 | UGS-0024 | studio | Songbook feedback: top-bar actions collapsed into a + menu, the New Song filename shown and customizable, the songbook list refreshes when songs are created | `feature/task-0024_user-feedback-songbook` (not yet on `main`) | Buz |
-| UGS-0025 | editor | Editor cleanup: no `ugs`/`ugsEditorPlus` prefixes, the page HTML in `src/templates/editor.html`, action controls and toolbar as `<button>`s, no `hgroup`. Breaking, so it ships as 2.0.0 | `task/task-0001_cleanup-namespace-and-exports` (song-editor) | Buz |
 | UGS-0026 | studio | This shared backlog and the agent-collaboration rules | `feature/ugs-0026_shared-backlog` | Buz |
+| UGS-0029 | editor | The same agent-collaboration and never-push rules in the editor's `CLAUDE.md` (new), so Ludlow's Claude sees them | `feature/ugs-0029_editor-agent-rules` (song-editor) | Buz |
 
 ## Next (in order; rearrange freely)
 
@@ -37,6 +37,7 @@ The next free number is **UGS-0029**.
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0025 | editor | Editor cleanup: no `ugs`/`ugsEditorPlus` prefixes, the page HTML in `src/templates/editor.html`, action controls and toolbar as `<button>`s, no `hgroup`. Breaking, so it ships as 2.0.0 (version and changelog not yet bumped) | song-editor#21 |
 | UGS-0018 | studio | Favorites: a ☆ on every song (list, search results, song windows); Favorites at the top of the sidebar lists starred songs from every songbook. Kept in `favorites.json` as lists, ready for set lists | #20 |
 | UGS-0023 | studio | A new handoff after the Library (docs/HANDOFF.md) | #19 |
 | UGS-0017 | studio | Search the Library by title, artist or lyrics: a search box above the song list (Cmd+F), across every songbook | pushed to `main` |
