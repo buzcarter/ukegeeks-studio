@@ -91,7 +91,31 @@ impl Favorites {
   }
 }
 
+impl Favorites {
+  /// A songbook's folder changed (Change Folder…): its songs follow.
+  pub fn move_folder(&mut self, from: &str, to: &str) {
+    for list in &mut self.lists {
+      for song in list.songs.iter_mut().filter(|s| same_folder(&s.folder, from)) {
+        song.folder = to.into();
+      }
+      let mut seen: Vec<(String, String)> = Vec::new();
+      list.songs.retain(|s| {
+        let key = (s.folder.to_lowercase(), s.file.clone());
+        let fresh = !seen.contains(&key);
+        seen.push(key);
+        fresh
+      });
+    }
+  }
+}
+
 pub struct FavoritesState(Mutex<Favorites>);
+
+/// A songbook's folder changed: its favorites follow (no event: the Library's
+/// event comes with it and the song list reads the Favorites again).
+pub fn folder_moved(app: &AppHandle, state: &State<FavoritesState>, from: &str, to: &str) {
+  change(app, state, |favorites| favorites.move_folder(from, to));
+}
 
 fn file_path(app: &AppHandle) -> Option<PathBuf> {
   app.path().app_config_dir().ok().map(|dir| dir.join("favorites.json"))
@@ -200,6 +224,15 @@ mod tests {
     assert_eq!(files(&favorites), ["/b|y.cpm"]);
     favorites.star("/a", "nope.cpm", false);
     assert_eq!(files(&favorites), ["/b|y.cpm"]);
+  }
+
+  #[test]
+  fn a_moved_folder_takes_its_songs() {
+    let mut favorites = Favorites::default();
+    favorites.star("/a", "x.cpm", true);
+    favorites.star("/b", "x.cpm", true);
+    favorites.move_folder("/a/", "/B");
+    assert_eq!(files(&favorites), ["/B|x.cpm"]);
   }
 
   #[test]

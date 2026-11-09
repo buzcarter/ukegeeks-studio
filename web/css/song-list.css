@@ -105,27 +105,18 @@ body {
   font-size: 12px;
 }
 
-.libraryButtons {
-  display: flex;
-  gap: 4px;
-  padding: 8px;
-  border-top: 1px solid #d9d2c4;
-}
-
-.libraryBtn {
-  width: 28px;
-  height: 24px;
-  border: 1px solid #bfb5a3;
-  border-radius: 5px;
-  background: #f4f0e8;
-  color: #4a3b2a;
-  font: 600 16px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
-  cursor: pointer;
-}
-
-.libraryBtn:disabled {
-  opacity: 0.4;
-  cursor: default;
+/* a songbook whose folder can't be read */
+.songbookBroken {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c0392b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
 }
 
 /* right-click a songbook */
@@ -159,7 +150,12 @@ body {
   background: #e0d8c8;
 }
 
-.libraryMenu button:hover {
+.libraryMenu button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.libraryMenu button:hover:not(:disabled) {
   background: #7a2e0e;
   color: #fff;
 }

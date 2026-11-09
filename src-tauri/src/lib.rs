@@ -318,6 +318,8 @@ pub fn run() {
       library::library_rename,
       library::library_remove,
       library::library_select,
+      library::library_change_folder,
+      library::library_reveal,
       favorites::favorites_get,
       favorites::favorites_star,
       favorites::favorites_rename,

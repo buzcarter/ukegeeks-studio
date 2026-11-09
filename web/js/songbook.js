@@ -127,9 +127,9 @@ export function setFolder(folder) {
  * Shows the Open dialog for a songbook folder. Returns the chosen folder, or null if
  * cancelled. addSongbook() uses it.
  */
-export async function pickFolder() {
+export async function pickFolder(title = 'Add Songbook to Library') {
   const folder = await tauri().dialog.open({
-    title: 'Add Songbook to Library',
+    title,
     directory: true,
     multiple: false,
     // the songs sit directly in the folder; no access to its subfolders is needed
@@ -215,6 +215,23 @@ export function removeSongbook(folder) {
   return tauri().core.invoke('library_remove', { folder });
 }
 
+/**
+ * Right-click > Change Folder…: picks the songbook's new folder (it moved, or its
+ * drive has another name now); the name and favorites stay. Resolves to the Library
+ * and the new folder, { library, folder }, or null if cancelled.
+ */
+export async function changeSongbookFolder(folder) {
+  const to = await pickFolder('Change Songbook Folder');
+  if (!to || to === folder) return null;
+  const library = await tauri().core.invoke('library_change_folder', { folder, to });
+  return { library, folder: to };
+}
+
+/** Right-click > Open Folder: shows the songbook's folder in Finder (Explorer). */
+export function revealSongbook(folder) {
+  return tauri().core.invoke('library_reveal', { folder });
+}
+
 /** Remembers the songbook (or FAVORITES_SELECTED) selected in the sidebar, for the next launch. */
 export function selectSongbook(folder) {
   return tauri().core.invoke('library_select', { folder })
@@ -231,6 +248,8 @@ export function onLibraryChanged(callback) {
 
 /** The Library's `selected` when the sidebar's Favorites was chosen last. */
 export const FAVORITES_SELECTED = 'list:favorites';
+/** The Library's `selected` when the sidebar's All Songs was chosen last. */
+export const ALL_SELECTED = 'list:all';
 const FAVORITES_ID = 'favorites';
 
 /**
