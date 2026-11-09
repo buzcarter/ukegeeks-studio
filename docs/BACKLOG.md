@@ -4,7 +4,7 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0030**.
+The next free number is **UGS-0031**.
 
 ## Doing
 
@@ -12,6 +12,7 @@ The next free number is **UGS-0030**.
 |---|---|---|---|---|
 | UGS-0024 | studio | Songbook feedback: top-bar actions collapsed into a + menu, the New Song filename shown and customizable, the songbook list refreshes when songs are created | `feature/task-0024_user-feedback-songbook` (not yet on `main`) | Buz |
 | UGS-0026 | studio | This shared backlog and the agent-collaboration rules | `feature/ugs-0026_shared-backlog` | Buz |
+| UGS-0030 | editor | Turn on `noUncheckedIndexedAccess` and fix the ~107 errors it shows (a first brief for Ludlow's Claude) | [song-editor#22](https://github.com/buzcarter/song-editor/issues/22), branch `feature/ugs-0030_no-unchecked-indexed-access` | Ludlow |
 | UGS-0029 | editor | The same agent-collaboration and never-push rules in the editor's `CLAUDE.md` (new), so Ludlow's Claude sees them | `feature/ugs-0029_editor-agent-rules` (song-editor) | Buz |
 
 ## Next (in order; rearrange freely)
