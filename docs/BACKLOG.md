@@ -1,0 +1,63 @@
+# Backlog
+
+One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, the ACE extension, the Songbook, the website). Each item has one number, `UGS-NNNN`, that never changes when items are reordered, and says which repo(s) it touches. Work goes one item at a time, in order, unless a partner has taken an item (see "Agent collaboration" in [CLAUDE.md](../CLAUDE.md)).
+
+An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
+
+The next free number is **UGS-0029**.
+
+## Doing
+
+| ID | Repos | What | Branch | Who |
+|---|---|---|---|---|
+| UGS-0024 | studio | Songbook feedback: top-bar actions collapsed into a + menu, the New Song filename shown and customizable, the songbook list refreshes when songs are created | `feature/task-0024_user-feedback-songbook` (not yet on `main`) | Buz |
+| UGS-0025 | editor | Editor cleanup: no `ugs`/`ugsEditorPlus` prefixes, the page HTML in `src/templates/editor.html`, action controls and toolbar as `<button>`s, no `hgroup`. Breaking, so it ships as 2.0.0 | `task/task-0001_cleanup-namespace-and-exports` (song-editor) | Buz |
+| UGS-0026 | studio | This shared backlog and the agent-collaboration rules | `feature/ugs-0026_shared-backlog` | Buz |
+
+## Next (in order; rearrange freely)
+
+| ID | Repos | What | Depends on |
+|---|---|---|---|
+| UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
+| UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | UGS-0025 |
+
+## Later
+
+- **UGS-0028** (studio, editor): Studio adds and changes editor menus through an API (needs UGS-0027).
+- Editor: replace the pseudo-select pickers (`<li><a href="#12">`, about 44 anchors) with real controls (`<select>`, radio groups or a keyboard-friendly listbox). Add `aria-expanded` to the toolbar once menu state is tracked in one place (UGS-0027). Needs a look in a browser: the look changes.
+- Duplicate a songbook (owner's "Duplicate(?)", 2026-11-07): copy its songs to a new folder the player picks. Not yet: the app may only write where it's pointed, so it needs its own "where does the copy go" step; confirm what's wanted first.
+- Set lists (after Favorites, UGS-0018): named lists of songs from any songbook, in an order of the player's own ("Tuesday jam", "Open mic"), in the sidebar under Favorites. `favorites.json` already keeps lists; this adds making, renaming and reordering them.
+- Ace as the default editor instead of the Edit Song box (maybe 1.2); how the Chord Builder fits with it.
+- Phase 3: add a song from a pasted songsheet.
+- Phase 4: make the songbook (one PDF), and a Songbook menu with it.
+- Phase 5: ship for Mac and Windows: app icon, installers, signing, double-clicking a song in Finder opens it.
+- Phase 6: iPad, with toolbar buttons for what the menus do.
+
+## Done
+
+| ID | Repos | What | PR |
+|---|---|---|---|
+| UGS-0018 | studio | Favorites: a ☆ on every song (list, search results, song windows); Favorites at the top of the sidebar lists starred songs from every songbook. Kept in `favorites.json` as lists, ready for set lists | #20 |
+| UGS-0023 | studio | A new handoff after the Library (docs/HANDOFF.md) | #19 |
+| UGS-0017 | studio | Search the Library by title, artist or lyrics: a search box above the song list (Cmd+F), across every songbook | pushed to `main` |
+| UGS-0022 | studio | A songbook's right-click menu: Open, New Song… (in that songbook), Rename…, Remove from Library | pushed to `main` |
+| UGS-0021 | studio | Songbook names: asked when a folder is added (folders are often just "songs" or "cpm"), Rename… in the sidebar | #18 |
+| UGS-0020 | studio | On a Mac, the app stays running when its last window closes; clicking the Dock icon brings back the Library (elsewhere it still quits) | #17 |
+| UGS-0013 | studio | The Library: songbook folders in a sidebar beside the song list (`library.json`); Add Songbook to Library… replaces Open Songbook…; Open Recent lists songs only. Printing a whole songbook stays in Phase 4 | #16 |
+| UGS-0016 | studio | Each song in its own window: several songs open at once, to compare and copy between; a song from outside the Library opens the same way | pushed to `main`; fixes #15 |
+| UGS-0015 | studio | CHANGELOG.md, a new handoff (docs/HANDOFF.md), `npm run preview` (the pages in a browser with a fake Tauri) | #14 |
+| UGS-0014 | studio | Unsaved changes asks Save & … (Save & Close, Save & Quit, Save & Open…), Discard Edits, or Continue Editing (Esc); a failed save stays on the song | #10 |
+| UGS-0012 | studio | The Song-a-Matic's faux-wood look for the app's own pages and dialogs (`web/css/wood.css`) | #13 |
+| UGS-0011 | studio | File names follow song titles: a naming setting, and saving a song whose title or artist changed renames its file (never over another) | #12 |
+| UGS-0010 | studio | File > Print… (Cmd+P): one song, with the editor's print styles; half-inch margins on a Mac | #11 |
+| UGS-0009 | studio | File > New Song… (Cmd+N) and a New Song… button on the song list: title and artist, then "Title - Artist.cpm" in the open songbook | #9 |
+| UGS-0008 | studio | File > Open… for one song on its own; Save As switches to the new file | #8 |
+| UGS-0007 | studio | Settings window (Cmd+,): song file types, reopening the last songbook | #7 |
+| UGS-0006 | studio | Menus for 1.0: View, Help, Windows layout; DECISIONS.md | #6 |
+| UGS-0005 | studio | File > Open Recent, kept across launches | #5 |
+| UGS-0004 | studio | App menu; Save As; Quit asks about unsaved changes | #4 |
+| UGS-0003 | studio | `.cpm` songs; unsaved changes ("Edited", ask before closing) | #3 |
+| UGS-0002 | studio | Mac prototype: open a folder, list, edit, save | #2 |
+| UGS-0001 | studio | Project notes: README, CLAUDE.md, roadmap, handoff | #1 |
+
+UGS-0001 to UGS-0008 were numbered afterwards, by their PRs. Everything above was numbered per repo before this file existed; those numbers are now the UGS numbers.

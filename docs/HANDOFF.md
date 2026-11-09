@@ -88,7 +88,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 ## Working notes from the last session
 
 - **Merges:** the owner sometimes pushes a finished branch straight to `main` instead of opening a PR (tasks 0016, 0017, 0022), and deletes branches after merging. So check `git fetch` and `gh pr list` before assuming what's merged, and cut each new branch from `origin/main`.
-- **PR numbers** in BOARD.md and CHANGELOG.md are a guess (the next number) until GitHub assigns one; fix them when they turn out different.
+- **PR numbers** in BACKLOG.md and CHANGELOG.md are a guess (the next number) until GitHub assigns one; fix them when they turn out different.
 - **Two open branches that both add a row to the board and a CHANGELOG entry** conflict; stack the second on the first and say which to merge first.
 
 ## Open threads

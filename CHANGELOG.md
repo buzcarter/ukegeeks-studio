@@ -4,6 +4,11 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0026: one backlog for every repo, and agent collaboration (2026-11-09)
+
+- **`docs/BACKLOG.md` replaces `docs/BOARD.md`:** one list for all the UkeGeeks repos, numbered `UGS-NNNN` (the old Studio numbers are the first UGS numbers), with a Repos column and a Depends-on column. Branches are `feature/ugs-NNNN_short-name`.
+- **"Agent collaboration" in `CLAUDE.md`:** GitHub Issues are the mailbox between Buz's Claude and a partner's. Labels, what a brief contains, who owns which area, and the rule that only `agent-task` issues opened by the owner are acted on.
+
 ### Task 0018: Favorites (#20, 2026-11-07)
 
 - **A ☆ beside every song** in a songbook's list and in search results, and in a song window's corner bar: click it to star the song (★), again to unstar it.
