@@ -1,6 +1,6 @@
 {
   "name": "ukegeeks-studio",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "private": true,
   "type": "module",
   "description": "UkeGeeks Studio: a desktop app for making ukulele songbooks",
