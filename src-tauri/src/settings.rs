@@ -7,9 +7,12 @@
 //! them, so the song list can list the songs again.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
+
+use crate::store;
+
+const FILE: &str = "settings.json";
 
 const SETTINGS_EVENT: &str = "studio://settings";
 pub const SETTINGS_WINDOW: &str = "settings";
@@ -67,25 +70,9 @@ impl Settings {
 
 pub struct SettingsState(Mutex<Settings>);
 
-fn file_path(app: &AppHandle) -> Option<PathBuf> {
-  app.path().app_config_dir().ok().map(|dir| dir.join("settings.json"))
-}
-
 pub fn load(app: &AppHandle) -> SettingsState {
-  let settings: Settings = file_path(app)
-    .and_then(|path| std::fs::read_to_string(path).ok())
-    .and_then(|text| serde_json::from_str(&text).ok())
-    .unwrap_or_default();
+  let settings: Settings = store::read(app, FILE).unwrap_or_default();
   SettingsState(Mutex::new(settings.cleaned()))
-}
-
-fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
-  let path = file_path(app).ok_or("no config folder")?;
-  path
-    .parent()
-    .map_or(Ok(()), std::fs::create_dir_all)
-    .and_then(|_| std::fs::write(&path, serde_json::to_string_pretty(settings).unwrap_or_default()))
-    .map_err(|err| format!("can't save {}: {err}", path.display()))
 }
 
 #[tauri::command]
@@ -97,7 +84,7 @@ pub fn settings_get(state: State<SettingsState>) -> Settings {
 #[tauri::command]
 pub fn settings_set(app: AppHandle, state: State<SettingsState>, settings: Settings) -> Result<Settings, String> {
   let settings = settings.cleaned();
-  save(&app, &settings)?;
+  store::write(&app, FILE, &settings)?;
   *state.0.lock().unwrap() = settings.clone();
   if let Err(err) = app.emit(SETTINGS_EVENT, &settings) {
     eprintln!("[studio] can't send the new settings: {err}");

@@ -14,12 +14,16 @@
 //! from Open Recent, which now lists songs only.
 
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_fs::FsExt;
 
 use crate::favorites::{self, FavoritesState};
+use crate::paths::{folder_name, same_path as same_folder};
+use crate::{platform, store};
+
+const FILE: &str = "library.json";
 
 /// Longest songbook name kept, in characters
 const MAX_NAME: usize = 80;
@@ -54,14 +58,6 @@ impl From<SongbookEntry> for Songbook {
     let name = clean_name(&name, &folder);
     Songbook { folder, name }
   }
-}
-
-/// The folder's last part ("cpm" for ".../UkeGeeks/cpm").
-fn folder_name(folder: &str) -> String {
-  Path::new(folder)
-    .file_name()
-    .map(|name| name.to_string_lossy().into_owned())
-    .unwrap_or_else(|| folder.to_string())
 }
 
 /// A name as kept: spaces tidied, at most MAX_NAME characters; empty gives the
@@ -100,24 +96,11 @@ pub const ALL_SELECTED: &str = "list:all";
 /// window's New Song…, say); the payload is the Library.
 const LIBRARY_EVENT: &str = "studio://library";
 
-fn file_path(app: &AppHandle) -> Option<PathBuf> {
-  app.path().app_config_dir().ok().map(|dir| dir.join("library.json"))
-}
-
-/// The same folder? Trailing slashes aside, and ignoring case, as Mac and Windows
-/// folder names do.
-pub fn same_folder(a: &str, b: &str) -> bool {
-  let clean = |p: &str| p.trim_end_matches(['/', '\\']).to_lowercase();
-  clean(a) == clean(b)
-}
-
 /// Reads the Library (or starts it from `recent_songbooks`) and allows its folders
 /// again. Songbooks whose folders are gone stay listed (the song list says the
 /// folder can't be read), so a disconnected drive doesn't empty the Library.
 pub fn load(app: &AppHandle, recent_songbooks: &[String]) -> LibraryState {
-  let saved: Option<Library> = file_path(app)
-    .and_then(|path| std::fs::read_to_string(path).ok())
-    .and_then(|text| serde_json::from_str(&text).ok());
+  let saved: Option<Library> = store::read(app, FILE);
   let library = match saved {
     Some(library) => library,
     None => {
@@ -129,7 +112,7 @@ pub fn load(app: &AppHandle, recent_songbooks: &[String]) -> LibraryState {
           .collect(),
         selected: recent_songbooks.first().cloned(),
       };
-      save(app, &library);
+      store::write_or_log(app, FILE, &library);
       library
     }
   };
@@ -143,21 +126,10 @@ pub fn load(app: &AppHandle, recent_songbooks: &[String]) -> LibraryState {
   LibraryState(Mutex::new(library))
 }
 
-fn save(app: &AppHandle, library: &Library) {
-  let Some(path) = file_path(app) else { return };
-  let result = path
-    .parent()
-    .map_or(Ok(()), std::fs::create_dir_all)
-    .and_then(|_| std::fs::write(&path, serde_json::to_string_pretty(library).unwrap_or_default()));
-  if let Err(err) = result {
-    eprintln!("[studio] can't save {}: {err}", path.display());
-  }
-}
-
 fn change(app: &AppHandle, state: &State<LibraryState>, f: impl FnOnce(&mut Library)) -> Library {
   let mut library = state.0.lock().unwrap();
   f(&mut library);
-  save(app, &library);
+  store::write_or_log(app, FILE, &*library);
   if let Err(err) = app.emit(LIBRARY_EVENT, &*library) {
     eprintln!("[studio] can't send the Library: {err}");
   }
@@ -264,18 +236,7 @@ pub fn library_reveal(state: State<LibraryState>, folder: String) -> Result<(), 
   if !state.has_songbook(&folder) {
     return Err(format!("not in the Library: {folder}"));
   }
-  let opener = if cfg!(target_os = "macos") {
-    "open"
-  } else if cfg!(target_os = "windows") {
-    "explorer"
-  } else {
-    "xdg-open"
-  };
-  std::process::Command::new(opener)
-    .arg(&folder)
-    .spawn()
-    .map(|_| ())
-    .map_err(|err| format!("can't open the folder: {err}"))
+  platform::open(&folder).map_err(|err| format!("can't open the folder: {err}"))
 }
 
 /// Remembers the songbook (or Favorites, FAVORITES_SELECTED) selected in the

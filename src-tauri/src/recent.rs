@@ -11,11 +11,16 @@
 //! and the next launch no longer allows them.
 
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Mutex;
 use tauri::menu::{IsMenuItem, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Manager, State, Wry};
 use tauri_plugin_fs::FsExt;
+
+use crate::paths::{folder_name, same_path};
+use crate::store;
+
+const FILE: &str = "recent.json";
 
 const MAX_ITEMS: usize = 10;
 
@@ -46,16 +51,9 @@ pub struct RecentState {
   menu: Mutex<Option<Submenu<Wry>>>,
 }
 
-fn file_path(app: &AppHandle) -> Option<PathBuf> {
-  app.path().app_config_dir().ok().map(|dir| dir.join("recent.json"))
-}
-
 /// Reads the list, drops what no longer exists, and allows its folders again.
 pub fn load(app: &AppHandle) -> RecentState {
-  let mut recent: Recent = file_path(app)
-    .and_then(|path| std::fs::read_to_string(path).ok())
-    .and_then(|text| serde_json::from_str(&text).ok())
-    .unwrap_or_default();
+  let mut recent: Recent = store::read(app, FILE).unwrap_or_default();
 
   recent.songbooks.retain(|folder| Path::new(folder).is_dir());
   recent.songs.retain(|song| Path::new(&song.folder).join(&song.filename).is_file());
@@ -84,28 +82,9 @@ pub fn take_songbooks(app: &AppHandle, state: &RecentState) -> Vec<String> {
   let mut recent = state.list.lock().unwrap();
   let songbooks = std::mem::take(&mut recent.songbooks);
   if !songbooks.is_empty() {
-    save(app, &recent);
+    store::write_or_log(app, FILE, &*recent);
   }
   songbooks
-}
-
-fn save(app: &AppHandle, recent: &Recent) {
-  let Some(path) = file_path(app) else { return };
-  let result = path
-    .parent()
-    .map_or(Ok(()), std::fs::create_dir_all)
-    .and_then(|_| std::fs::write(&path, serde_json::to_string_pretty(recent).unwrap_or_default()));
-  if let Err(err) = result {
-    eprintln!("[studio] can't save {}: {err}", path.display());
-  }
-}
-
-/// The folder's last part ("cpm" for ".../UkeGeeks/cpm").
-fn folder_name(folder: &str) -> String {
-  Path::new(folder)
-    .file_name()
-    .map(|name| name.to_string_lossy().into_owned())
-    .unwrap_or_else(|| folder.to_string())
 }
 
 /// Labels for the menu; when two are the same, each gets its folder's name (or
@@ -168,7 +147,7 @@ fn update(app: &AppHandle, state: &RecentState, change: impl FnOnce(&mut Recent)
     change(&mut recent);
     recent.songbooks.truncate(MAX_ITEMS);
     recent.songs.truncate(MAX_ITEMS);
-    save(app, &recent);
+    store::write_or_log(app, FILE, &*recent);
   }
   refresh_menu(app, state);
 }
@@ -228,7 +207,7 @@ pub fn recent_add_song(
   let title = if title.trim().is_empty() { "Untitled".into() } else { title };
   let song = RecentSong { folder, filename, title, single };
   update(&app, &state, |recent| {
-    recent.songs.retain(|s| !(s.folder == song.folder && s.filename == song.filename));
+    recent.songs.retain(|s| !(same_path(&s.folder, &song.folder) && s.filename == song.filename));
     recent.songs.insert(0, song);
   });
   Ok(())

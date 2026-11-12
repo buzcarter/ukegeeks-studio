@@ -14,11 +14,14 @@
 //! favorite follows.
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 
-use crate::library::{same_folder, LibraryState};
+use crate::library::LibraryState;
+use crate::paths::same_path as same_folder;
+use crate::store;
+
+const FILE: &str = "favorites.json";
 
 /// The one list there is today
 pub const FAVORITES_ID: &str = "favorites";
@@ -117,35 +120,17 @@ pub fn folder_moved(app: &AppHandle, state: &State<FavoritesState>, from: &str, 
   change(app, state, |favorites| favorites.move_folder(from, to));
 }
 
-fn file_path(app: &AppHandle) -> Option<PathBuf> {
-  app.path().app_config_dir().ok().map(|dir| dir.join("favorites.json"))
-}
-
 /// Reads favorites.json, or starts an empty Favorites list.
 pub fn load(app: &AppHandle) -> FavoritesState {
-  let mut favorites: Favorites = file_path(app)
-    .and_then(|path| std::fs::read_to_string(path).ok())
-    .and_then(|text| serde_json::from_str(&text).ok())
-    .unwrap_or_default();
+  let mut favorites: Favorites = store::read(app, FILE).unwrap_or_default();
   favorites.favorites();
   FavoritesState(Mutex::new(favorites))
-}
-
-fn save(app: &AppHandle, favorites: &Favorites) {
-  let Some(path) = file_path(app) else { return };
-  let result = path
-    .parent()
-    .map_or(Ok(()), std::fs::create_dir_all)
-    .and_then(|_| std::fs::write(&path, serde_json::to_string_pretty(favorites).unwrap_or_default()));
-  if let Err(err) = result {
-    eprintln!("[studio] can't save {}: {err}", path.display());
-  }
 }
 
 fn change(app: &AppHandle, state: &State<FavoritesState>, f: impl FnOnce(&mut Favorites)) -> Favorites {
   let mut favorites = state.0.lock().unwrap();
   f(&mut favorites);
-  save(app, &favorites);
+  store::write_or_log(app, FILE, &*favorites);
   if let Err(err) = app.emit(FAVORITES_EVENT, &*favorites) {
     eprintln!("[studio] can't send the Favorites: {err}");
   }

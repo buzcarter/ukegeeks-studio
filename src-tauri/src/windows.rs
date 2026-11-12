@@ -6,7 +6,7 @@
 //!   holds (`song_window_path`), since Save As and renames change it.
 //! - **Menu items** go to the window in front (`send_menu`), not to every window: a
 //!   page's plain `listen` hears events sent to any window, so the pages listen for
-//!   events sent to their own label (web/js/menu.js).
+//!   events sent to their own label (web/js/lib/menu.js).
 //! - **Quit** asks each song window in turn about unsaved changes (`request_quit`):
 //!   the window answers with `quit` (go on) or `quit_cancel` (stop quitting). When
 //!   every song window has said yes, the app ends.
@@ -15,6 +15,8 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+
+use crate::paths::same_path;
 
 pub const MAIN_WINDOW: &str = "main";
 const SONG_PREFIX: &str = "song-";
@@ -51,13 +53,6 @@ pub fn is_song_window(label: &str) -> bool {
 /// The song list or a song window (not Settings)
 fn is_page_window(label: &str) -> bool {
   label == MAIN_WINDOW || is_song_window(label)
-}
-
-/// The same file? Trailing slashes aside, and ignoring case, as Mac and Windows file
-/// names do.
-fn same_path(a: &str, b: &str) -> bool {
-  let clean = |p: &str| p.trim_end_matches(['/', '\\']).to_lowercase();
-  clean(a) == clean(b)
 }
 
 /// The song list or song window in front, if any
