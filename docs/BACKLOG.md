@@ -4,14 +4,13 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0035**.
+The next free number is **UGS-0036**.
 
 ## Doing
 
 | ID | Repos | What | Branch | Who |
 |---|---|---|---|---|
-| UGS-0032 | studio | Code review, reorganisation and fixes: shared modules in `web/js/lib/`, `lib.rs` split up, one safe store for the JSON files, ESLint and CI, a stale song list after a rename, names holding HTML entities. What's left is in [HANDOFF.md](HANDOFF.md), "From the code review" | `feature/ugs-0032_code-review-cleanup` | Buz |
-| UGS-0030 | editor | Turn on `noUncheckedIndexedAccess` and fix the errors it shows. Written as a brief for Ludlow ([song-editor#22](https://github.com/buzcarter/song-editor/issues/22)); done in Buz's session instead | `feature/ugs-0030_no-unchecked-indexed-access` (song-editor) | Buz |
+| UGS-0034 | editor, studio | A host API on `mount()`: `editor.save()` and an `onChange` option, so Studio stops clicking `#saveBtn`, reading Ace and polling for "Edited". Editor 2.0.0-beta.1 (with UGS-0025's breaking markup) is ready to publish; Studio's editor page uses the API. Left: the owner publishes, then Studio's `package.json` and lock move from 1.0.0-beta.1 to it | `feature/ugs-0034_host-api` (song-editor), `feature/ugs-0034_editor-2` | Buz |
 
 ## Next (in order; rearrange freely)
 
@@ -19,13 +18,14 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | Depends on |
 |---|---|---|---|
-| UGS-0034 | editor, studio | A host API on `mount()` (`save()`, an `onChange` callback, so Studio stops clicking `#saveBtn` and polling for "Edited"); bump and changelog for 2.0.0 (UGS-0025 is breaking and unreleased; 1.1.0-beta.1 was never published); the owner publishes; then Studio moves from 1.0.0-beta.1 to it and drops its workarounds in `web/js/editor.js` | UGS-0030 |
-| UGS-0033 | editor | Keep the editor inside its own box: prefix its generic class names (`.overlay`, `.isHidden`, …) and scope its DOM lookups to the mounted container. The brief is written (`docs/brief-ugs-0031_scope-editor-css-and-dom.md` in the editor's checkout, untracked; it was numbered 0031 before that number went to the Library sidebar). Breaking, so it should ship in the same 2.0.0 as UGS-0025 if it can | |
+| UGS-0035 | songbook | Move the Songbook to `@ukegeeks/song-editor` 2.0.0-beta.1: its pages copy the editor's markup, which changed (buttons, no `hgroup`), so take it from `editorHtml()` again; check its own CSS and scripts for the old link markup | UGS-0034 published |
+| UGS-0033 | editor | Keep the editor inside its own box: prefix its generic class names (`.overlay`, `.isHidden`, …) and scope its DOM lookups to the mounted container. The brief is written (`docs/brief-ugs-0031_scope-editor-css-and-dom.md` in the editor's checkout, untracked; it was numbered 0031 before that number went to the Library sidebar). Breaking: it goes in a later 2.0.0 beta (2.0.0-beta.1 went out without it), before 2.0.0 itself | |
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
 | UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | UGS-0033 (both rewrite the toolbar markup) |
 
 ## Later
 
+- Editor bug (found 2026-11-11): Transpose works from the song as of the last Update click, so text typed since then, and not yet Updated, is dropped when you transpose. It should use the text in the box.
 - Editor: the rest of its TypeScript roadmap, in order: `noUnusedLocals`, ES modules (the sources are still plain scripts joined in a fixed order), dropping LESS.
 - **UGS-0028** (studio, editor): Studio adds and changes editor menus through an API (needs UGS-0027).
 - Editor: replace the pseudo-select pickers (`<li><a href="#12">`, about 44 anchors) with real controls (`<select>`, radio groups or a keyboard-friendly listbox). Add `aria-expanded` to the toolbar once menu state is tracked in one place (UGS-0027). Needs a look in a browser: the look changes.
@@ -41,6 +41,8 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0032 | studio | Code review, reorganisation and fixes: shared modules in `web/js/lib/`, `lib.rs` split up, one safe store for the JSON files, ESLint and CI, a stale song list after a rename, names holding HTML entities. What's left is in [HANDOFF.md](HANDOFF.md), "From the code review" | #22 |
+| UGS-0030 | editor | `noUncheckedIndexedAccess` on, and the 107 errors it showed fixed | song-editor#24 |
 | UGS-0024 | studio | Songbook feedback: top-bar actions collapsed into a + menu, the New Song filename shown and customizable, the songbook list refreshes when songs are created | #21 |
 | UGS-0031 | studio | Library sidebar feedback (2026-11-09 user test): All Songs, "!" for unreadable folders, Open Folder / Change Folder… / Bundle all as PDF (disabled) in the right-click menu, no +/− buttons, confirm before removing | #20 |
 | UGS-0029 | editor | The same agent-collaboration and never-push rules in the editor's `CLAUDE.md`, so a partner's Claude sees them | song-editor#23 |
