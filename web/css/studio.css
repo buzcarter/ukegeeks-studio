@@ -48,19 +48,6 @@
   color: #fdda61;
 }
 
-.studioClose {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.studioClose:hover {
-  color: #fdda61;
-}
-
 .studioProblem {
   margin: 3em;
   font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
