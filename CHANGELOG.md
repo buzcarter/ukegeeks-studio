@@ -4,6 +4,13 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0033: the editor keeps to its own box (2026-11-12)
+
+Studio moves to `@ukegeeks/song-editor` 2.0.0-beta.4, which starts its 75 generic class names with `ugsEditor-` (`.overlay` is `.ugsEditor-overlay`) and looks things up inside its own element. beta.4 is the same code as beta.2; there is no beta.3. The version itself was already in `package.json` (UGS-0034's bump).
+
+- Studio used none of the old class names, in its CSS, scripts or tests. Only comments in `web/css/wood.css` and `web/css/dialog.css` still said `.overlay` and `.baseBtn`; they name the new classes now.
+- Checked in the browser preview: a song opens, every menu opens and closes, themes, Transpose, the Chord Builder, Fullscreen and back, the "Edited" mark while typing and File > Save clearing it. No Studio element was styled or hidden differently.
+
 ### UGS-0034: the editor's host API (2026-11-11)
 
 The editor page talks to `@ukegeeks/song-editor` 2.0.0-beta.1 through its API only: `onChange` for the window title's "Edited", `editor.save()` for File > Save, and `editor.getSong()` everywhere (it covers Fullscreen). Gone: clicking the editor's Save button from code, reading Ace's text directly, and the once-a-second check for edits.

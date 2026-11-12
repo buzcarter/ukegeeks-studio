@@ -111,7 +111,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
-- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1, which Studio uses. Next for the editor: UGS-0033, then the Songbook's move to 2.0 (UGS-0035).
+- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1. UGS-0033 prefixed the editor's class names (`ugsEditor-…`) and scoped its DOM lookups, published as 2.0.0-beta.4, which Studio uses. Next: the Songbook's move to 2.0 (UGS-0035).
 
 ## From the code review (2026-11-11, UGS-0032)
 
