@@ -12,8 +12,9 @@
  *
  * All Songs, under Favorites, lists the songs of every songbook, sorted by title.
  *
- * The search box (Cmd+F) searches every songbook in the Library by title, artist or
- * lyrics (web/js/lib/search.js); clearing it (or Esc) shows the songbook again.
+ * The search box (Cmd+F) searches what the sidebar has selected, by title, artist or
+ * lyrics (web/js/lib/search.js): the open songbook, Favorites, or (All Songs) every
+ * songbook in the Library. Clearing it (or Esc) shows the list again.
  *
  * Favorites (src-tauri/src/favorites.rs): the ☆ beside every song (in a songbook, in
  * search results, and in song windows) stars it. Favorites, at the top of the
@@ -148,6 +149,7 @@ function showLibrary() {
     .join('');
   favoritesBtn.setAttribute('aria-current', String(view === FAVORITES));
   allBtn.setAttribute('aria-current', String(view === ALL));
+  showSearchLabel();
 }
 
 /** Which songbooks' folders can't be read; the sidebar marks them with a "!". */
@@ -348,7 +350,7 @@ async function removeFolder(folder) {
     return;
   }
   if (getFolder() === folder) setFolder(null);
-  searchIndex = null;
+  resetSearchIndex();
   showLibrary();
   checkFolders();
   // its songs and favorites aren't shown while it's out of the Library
@@ -365,7 +367,7 @@ async function renameFolder(folder) {
     showError(err);
     return;
   }
-  searchIndex = null; // results say which songbook a song is from
+  resetSearchIndex(); // results say which songbook a song is from
   showLibrary();
   refresh();
 }
@@ -392,7 +394,7 @@ async function changeFolder(folder) {
     return;
   }
   favorites = await getFavorites();
-  searchIndex = null;
+  resetSearchIndex();
   await checkFolders();
   showLibrary();
   showCurrent();
@@ -425,7 +427,7 @@ songbooksEl.addEventListener('contextmenu', (event) => {
 /** Favorites changed: Favorites lists them again; elsewhere just the stars change. */
 function favoritesChanged(next) {
   favorites = next;
-  if (view === FAVORITES && !searching()) refresh();
+  if (view === FAVORITES) refresh();
   else updateStars(listEl, starred);
 }
 
@@ -505,14 +507,14 @@ onMenu('open-file', chooseSong);
 
 // Settings changed which song types to list
 onSettingsChanged(() => {
-  searchIndex = null;
+  resetSearchIndex();
   showCurrent();
 });
 
 // The Library changed in another window (a songbook added from a song window's New Song…)
 onLibraryChanged((next) => {
   library = next;
-  searchIndex = null;
+  resetSearchIndex();
   showLibrary();
   checkFolders();
   refresh();
@@ -524,43 +526,89 @@ onFavoritesChanged(favoritesChanged);
 // A song was created, saved or renamed in some window: its title, artist or file
 // name may have changed
 onSongsChanged(({ folder }) => {
-  searchIndex = null;
+  resetSearchIndex();
   if (searching() || view !== SONGBOOK || folder === getFolder()) refresh();
 });
 
 // Coming back to this window: files may have changed outside the app meanwhile
 window.addEventListener('focus', () => {
-  searchIndex = null;
+  resetSearchIndex();
   checkFolders();
   refresh();
 });
 
 // ---- Search ----
 
-/** Every song of the Library, ready for searchSongs() (a promise); built when a search starts. */
-let searchIndex = null;
+/**
+ * The songs of each songbook read so far, ready for searchSongs(): folder → promise of
+ * entries. A songbook is read the first time a search needs it, so searching one
+ * songbook reads only that one. Emptied whenever songs may have changed.
+ */
+let searchIndex = new Map();
 
-/** Reads every songbook's songs. Songbooks that can't be read are skipped. */
-async function buildSearchIndex() {
-  const perSongbook = await Promise.all(library.songbooks.map(async ({ folder, name }) => {
-    const repo = openSongbook(folder);
-    const filenames = await repo.listFilenames().catch(() => []);
-    const songs = await Promise.all(filenames.map(async (filename) => {
-      const text = await repo.read(filename);
-      if (!text) return null;
-      const song = parseSong(text);
-      return makeEntry({
-        folder,
-        songbook: name,
-        filename,
-        title: fixLeadingArticle(song.title || filenameToTitle(repo.baseName(filename))),
-        artist: song.artist,
-        body: song.body,
-      });
-    }));
-    return songs.filter(Boolean);
+function resetSearchIndex() {
+  searchIndex = new Map();
+}
+
+/** Reads one songbook's songs (an empty list if its folder can't be read). */
+async function buildSongbookIndex(folder) {
+  const name = songbookName(library, folder);
+  const repo = openSongbook(folder);
+  const filenames = await repo.listFilenames().catch(() => []);
+  const songs = await Promise.all(filenames.map(async (filename) => {
+    const text = await repo.read(filename);
+    if (!text) return null;
+    const song = parseSong(text);
+    return makeEntry({
+      folder,
+      songbook: name,
+      filename,
+      title: fixLeadingArticle(song.title || filenameToTitle(repo.baseName(filename))),
+      artist: song.artist,
+      body: song.body,
+    });
   }));
-  return perSongbook.flat();
+  return songs.filter(Boolean);
+}
+
+function songbookIndex(folder) {
+  if (!searchIndex.has(folder)) searchIndex.set(folder, buildSongbookIndex(folder));
+  return searchIndex.get(folder);
+}
+
+/**
+ * What a search covers, from the sidebar's selection: the folders to read, which of
+ * their songs count, and its name ("in Favorites"). The songbook's name is left off
+ * each result when the search is of one songbook.
+ */
+function searchScope() {
+  if (view === FAVORITES) {
+    const songs = favoriteSongs(favorites).filter((s) => inLibrary(s.folder));
+    return {
+      folders: [...new Set(songs.map((s) => s.folder))],
+      counts: (entry) => starred(entry.folder, entry.filename),
+      where: 'Favorites',
+      showSongbook: true,
+    };
+  }
+  if (view === ALL) {
+    return { folders: library.songbooks.map((s) => s.folder), counts: () => true, where: 'All Songs', showSongbook: true };
+  }
+  const open = getFolder();
+  return {
+    folders: open ? [open] : [],
+    counts: () => true,
+    where: open ? songbookName(library, open) : '',
+    showSongbook: false,
+  };
+}
+
+/** The search box says what it searches. */
+function showSearchLabel() {
+  const { where } = searchScope();
+  const label = `Search ${where || 'a songbook'}`;
+  searchEl.placeholder = `${label}: title, artist or lyrics`;
+  searchEl.setAttribute('aria-label', label);
 }
 
 async function runSearch({ quiet = false } = {}) {
@@ -569,14 +617,21 @@ async function runSearch({ quiet = false } = {}) {
     showCurrent();
     return;
   }
+  const scope = searchScope();
+  const where = bold(scope.where);
+  if (view === SONGBOOK && !scope.folders.length) {
+    startShowing('', false);
+    listEl.innerHTML = '';
+    showStatus('Choose a songbook in the Library to search it.');
+    return;
+  }
   // typing more is the same search going on: the results stay until the new ones are ready
-  const isCurrent = startShowing('Searching the Library…', quiet || !!searchIndex);
-  if (!searchIndex) searchIndex = buildSearchIndex();
+  const isCurrent = startShowing(`Searching ${where}…`, quiet || scope.folders.every((f) => searchIndex.has(f)));
   let entries;
   try {
-    entries = await searchIndex;
+    entries = (await Promise.all(scope.folders.map(songbookIndex))).flat().filter(scope.counts);
   } catch (err) {
-    searchIndex = null;
+    resetSearchIndex();
     if (isCurrent()) showError(err);
     return;
   }
@@ -584,14 +639,14 @@ async function runSearch({ quiet = false } = {}) {
   const results = searchSongs(entries, query);
   const quoted = `“${escapeText(query)}”`;
   showStatus(results.length
-    ? `${results.length === 1 ? '1 song matches' : `${results.length} songs match`} ${quoted} in the Library`
-    : `No songs in the Library match ${quoted}.`);
+    ? `${results.length === 1 ? '1 song matches' : `${results.length} songs match`} ${quoted} in ${where}`
+    : `No songs in ${where} match ${quoted}.`);
   showRows(results.map(({ entry, snippet }) => ({
     folder: entry.folder,
     filename: entry.filename,
     title: entry.title,
     details: [entry.artist],
-    songbook: entry.songbook,
+    songbook: scope.showSongbook ? entry.songbook : undefined,
     snippetHtml: snippet ? markWords(snippet, query) : '',
   })));
 }
