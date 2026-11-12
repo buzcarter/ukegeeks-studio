@@ -47,17 +47,18 @@ In the window, click **Add Songbook…** and pick a folder of `*.cpm` files (for
 
 View > Enter Full Screen and Help (UkeGeeks Studio Help, ChordPro Reference) have no shortcuts. On Windows the shortcuts use Ctrl instead of Cmd, Quit is File > Exit, Settings… is in File, and About is in Help. The editor's own controls (themes, transpose, the Chord Builder) stay in the editor.
 
-Editing files under `web/` reloads the window. `npm test` runs the tests for the song list code. `npm run preview` serves the pages to a browser on http://localhost:8765 with a fake Tauri (no real files), for trying the pages without the app; see `scripts/preview/fake-tauri.js`. What changed, PR by PR: [CHANGELOG.md](CHANGELOG.md).
+Editing files under `web/` reloads the window. `npm test` runs the tests for the song list code and `npm run lint` checks the JavaScript; in `src-tauri/`, `cargo test` runs the Rust tests. `npm run preview` serves the pages to a browser on http://localhost:8765 with a fake Tauri (no real files), for trying the pages without the app; see `scripts/preview/fake-tauri.js`. What changed, PR by PR: [CHANGELOG.md](CHANGELOG.md).
 
 ### How the project is laid out
 
 | Folder | What's in it |
 |---|---|
 | `web/` | The app's pages: plain HTML, CSS and JavaScript, no bundler. `index.html` is the song list, `editor.html` the editor. |
-| `web/js/songs.js` | Reads song titles and artists, sorts the list, saves songs. From the Songbook's `server/lib/songs.js`, changed to use Tauri's file access. |
+| `web/js/` | One script per page (`list.js`, `editor.js`, `settings.js`); what they share is in `lib/`, the pages' dialogs in `dialogs/`, pieces of the song list in `ui/`. |
+| `web/js/lib/songs.js` | Reads song titles and artists, sorts the list, saves songs. From the Songbook's `server/lib/songs.js`, changed to use Tauri's file access. |
 | `web/vendor/` | The editor, Song Formatter and Ace, copied from `node_modules/` by `scripts/vendor.js` each time the app starts. Not committed. |
 | `web/fonts/` | The fonts the editor's color themes use, so the app works offline. |
-| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` builds the menu; `src/windows.rs` the song windows; `src/library.rs` keeps the Library in `library.json`, `src/favorites.rs` the Favorites in `favorites.json`, `src/recent.rs` File > Open Recent in `recent.json` and `src/settings.rs` the settings in `settings.json` (all in `~/Library/Application Support/org.ukegeeks.studio/`). |
+| `src-tauri/` | The Tauri app. `capabilities/default.json` lists what the pages may do: pick a folder, then read and write the files directly in it. `src/lib.rs` starts the app; `src/menu.rs` builds the menu; `src/windows.rs` the song windows; `src/library.rs` keeps the Library in `library.json`, `src/favorites.rs` the Favorites in `favorites.json`, `src/recent.rs` File > Open Recent in `recent.json` and `src/settings.rs` the settings in `settings.json` (all in `~/Library/Application Support/org.ukegeeks.studio/`, written by `src/store.rs`). The full map is in [docs/HANDOFF.md](docs/HANDOFF.md). |
 
 ## Part of the UkeGeeks family
 

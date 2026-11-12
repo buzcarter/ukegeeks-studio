@@ -19,18 +19,20 @@
  * only a song of a songbook in the Library. When Save renames its file, the
  * favorite follows; Save As makes a new song, which starts unstarred.
  */
+import { newSong } from './dialogs/new-song.js';
+import { getSettings, loadSettings, SONG_EXTENSION, songFileBase } from './lib/app-settings.js';
+import { getFavorites, isStarred, onFavoritesChanged, renameFavorite, showStar, starIsOn, starSong } from './lib/favorites.js';
+import { escapeText } from './lib/html.js';
+import { findSongbook, getLibrary, onLibraryChanged, songbookName } from './lib/library.js';
+import { cancelQuit, onMenu, quitApp } from './lib/menu.js';
+import { cleanPath, folderName, splitPath } from './lib/paths.js';
 import {
-  addRecentSong, escapeHtml, fileUri, findSongbook, folderName, getFavorites, getFolder, getLibrary, getSettings,
-  isStarred, loadSettings, onFavoritesChanged, onLibraryChanged, openSongbook, openSongFile, pickSongFile,
-  renameFavorite, saveSongFile, setFolder, SONG_EXTENSION, songbookName, songFileBase, splitPath, starSong, tauri,
-} from './songbook.js';
-import { cancelQuit, onMenu, quitApp } from './menu.js';
-import { newSong } from './new-song.js';
+  addRecentSong, fileUri, getFolder, notifySongsChanged, openSongbook, openSongFile, pickSongFile, saveSongFile, setFolder,
+} from './lib/songbook.js';
+import { parseSong } from './lib/songs.js';
+import { errorMessage, invoke, showProblem, tauri } from './lib/tauri.js';
 
-const { parseSong } = globalThis.studioSongs;
 const container = document.getElementById('songEditor');
-
-const cleanPath = (path) => path.replace(/[\/\\]+$/, '').normalize('NFC');
 
 // File > Open… (Cmd+O) and New Song… (Cmd+N) open other windows; this song stays.
 onMenu('open-file', async () => {
@@ -65,23 +67,15 @@ function setUpStar(folder, getFilename) {
   let favorites = { lists: [] };
   let inLibrary = false;
   const show = () => {
-    const starred = isStarred(favorites, folder, getFilename());
-    const label = starred ? 'Remove from Favorites' : 'Add to Favorites';
     star.hidden = !inLibrary;
-    star.textContent = starred ? '★' : '☆';
-    star.setAttribute('aria-pressed', String(starred));
-    star.title = label;
-    star.setAttribute('aria-label', label);
+    showStar(star, isStarred(favorites, folder, getFilename()));
   };
   star.addEventListener('click', async () => {
-    const starred = star.getAttribute('aria-pressed') !== 'true';
     try {
-      favorites = await starSong(folder, getFilename(), starred);
+      favorites = await starSong(folder, getFilename(), !starIsOn(star));
       show();
     } catch (err) {
-      await tauri().dialog.message(`There was a problem changing Favorites. (${err && err.message ? err.message : err})`, {
-        title: 'Favorites', kind: 'error',
-      });
+      await showProblem('Favorites', 'There was a problem changing Favorites.', err);
     }
   });
   onFavoritesChanged((next) => {
@@ -101,13 +95,13 @@ function setUpStar(folder, getFilename) {
   return show;
 }
 
-function showProblem(message) {
-  container.innerHTML = `<p class="studioProblem">${escapeHtml(message)}</p>`;
+function showPageProblem(message) {
+  container.innerHTML = `<p class="studioProblem">${escapeText(message)}</p>`;
 }
 
 /** Tells Rust which file this window holds, so opening it again brings this window forward. */
 function tellPath(path) {
-  return tauri().core.invoke('song_window_path', { path })
+  return invoke('song_window_path', { path })
     .catch((err) => console.warn('[studio] song_window_path:', err));
 }
 
@@ -150,7 +144,7 @@ async function openSong(params) {
 async function main() {
   const opened = await openSong(new URLSearchParams(location.search));
   if (opened.problem) {
-    showProblem(opened.problem);
+    showPageProblem(opened.problem);
     return;
   }
   const { song, folder, songbook } = opened;
@@ -194,6 +188,8 @@ async function main() {
     named = { title: parsed.title, artist: parsed.artist };
     songName = parsed.title || filename;
     addRecentSong(folder, filename, songName, !songbook);
+    // song lists show the title, artist and file: they read the songbook again
+    if (songbook) notifySongsChanged(folder, filename);
   }
 
   const editor = ugsEditorPlus.songAmatic.mount(container, {
@@ -273,9 +269,7 @@ async function main() {
       return true;
     } catch (err) {
       console.error(`[studio] saving ${filename}:`, err);
-      await tauri().dialog.message(`There was a problem saving "${filename}", so it's still open. (${err && err.message ? err.message : err})`, {
-        title: 'Unsaved changes', kind: 'error',
-      });
+      await showProblem('Unsaved changes', `There was a problem saving "${filename}", so it's still open.`, err);
       return false;
     }
   }
@@ -323,19 +317,18 @@ async function main() {
       await songbook.update(name, text); // temp file + rename, like Save
     } catch (err) {
       console.error(`[studio] saving as ${newPath}:`, err);
-      await tauri().dialog.message(`There was a problem saving "${name}". (${err && err.message ? err.message : err})`, {
-        title: 'Save As', kind: 'error',
-      });
+      await showProblem('Save As', `There was a problem saving "${name}".`, err);
       return;
     }
     // now editing the new file; the old one keeps its last saved text
+    await notifySongsChanged(folder, name);
     location.href = songbook.songUri(name);
   });
 
   // File > Print… (Cmd+P): the song as shown, with the editor's print styles
   // (ugsEditorPlus.print.css). On a Mac the print_page command opens the system Print
   // dialog with sensible margins; elsewhere window.print() does.
-  onMenu('print', () => tauri().core.invoke('print_page').catch(() => window.print()));
+  onMenu('print', () => invoke('print_page').catch(() => window.print()));
 
   // Quit (Cmd+Q, or Quit in the Dock): Rust asks each song window in turn
   onMenu('quit', async () => {
@@ -355,5 +348,5 @@ async function main() {
 
 main().catch((err) => {
   console.error('[studio]', err);
-  showProblem(err.message || String(err));
+  showPageProblem(errorMessage(err));
 });

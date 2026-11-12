@@ -11,6 +11,7 @@
  * - Title matches rank first, then artist, then lyrics; the whole search as a phrase
  *   ranks higher than scattered words.
  */
+import { escapeHtml } from './html.js';
 
 /** Text for comparing: lower case, no accents, straight quotes, single spaces. */
 export function fold(text) {
@@ -120,4 +121,30 @@ export function searchSongs(entries, query, { limit = 300 } = {}) {
     || a.entry.title.localeCompare(b.entry.title, undefined, { sensitivity: 'base', numeric: true })
     || a.entry.songbook.localeCompare(b.entry.songbook));
   return results.slice(0, limit).map(({ entry, where, snippet }) => ({ entry, where, snippet }));
+}
+
+/**
+ * A snippet as HTML, with the search's words in <mark>. The marks are placed by
+ * position in the folded text, which lines up with the original only when folding
+ * kept its length; otherwise the snippet goes unmarked.
+ */
+export function markWords(text, query) {
+  const words = wordsOf(query);
+  const folded = fold(text);
+  if (folded.length !== text.length || !words.length) return escapeHtml(text);
+  const marks = new Array(text.length).fill(false);
+  for (const word of words) {
+    for (let i = folded.indexOf(word); i >= 0; i = folded.indexOf(word, i + 1)) {
+      marks.fill(true, i, i + word.length);
+    }
+  }
+  let html = '';
+  for (let i = 0; i < text.length;) {
+    let end = i + 1;
+    while (end < text.length && marks[end] === marks[i]) end += 1;
+    const run = escapeHtml(text.slice(i, end));
+    html += marks[i] ? `<mark>${run}</mark>` : run;
+    i = end;
+  }
+  return html;
 }

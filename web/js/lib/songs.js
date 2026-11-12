@@ -1,4 +1,3 @@
-'use strict';
 /**
  * Song file access: listing, safe filename resolution, ChordPro metadata parsing,
  * the (in-memory) song list cache, creating and updating songs.
@@ -10,8 +9,7 @@
  * app, a small Node stand-in in the tests). The ChordPro and filename functions are
  * unchanged.
  *
- * Loads in the app as <script type="module"> (sets globalThis.studioSongs) and in
- * Node with require() (module.exports).
+ * An ES module: the pages import it, and so do the tests (test/songs.test.js, in Node).
  *
  * Security model: a song id from a URL or request body is NEVER joined onto a path
  * directly. It's normalized to a bare filename, then must match a file that actually
@@ -75,7 +73,8 @@ function filenameToTitle(name) {
 function scrubForFilename(value, maxLength = 120) {
   const cleaned = String(value || '')
     .normalize('NFC')
-    .replace(/[\/\\:*?"<>|\x00-\x1f\x7f]/g, ' ')
+    // eslint-disable-next-line no-control-regex -- control characters are exactly what must go
+    .replace(/[/\\:*?"<>|\x00-\x1f\x7f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/^[.\s]+|[.\s]+$/g, '');
@@ -94,7 +93,7 @@ class SongRepository {
    */
   constructor(cfg) {
     this.fs = cfg.fs;
-    this.dir = cfg.songDirectory.replace(/[\/\\]+$/, '');
+    this.dir = cfg.songDirectory.replace(/[/\\]+$/, '');
     // Tauri hands back "\" paths on Windows; both separators work there
     this.sep = this.dir.includes('\\') && !this.dir.includes('/') ? '\\' : '/';
     // Song file extensions, the first used for new songs: [".cpm"], or [".cpm", ".cpm.txt"]
@@ -149,7 +148,7 @@ class SongRepository {
   async resolve(id) {
     if (typeof id !== 'string') return null;
     const name = id.normalize('NFC').trim();
-    if (!name || name.length > 255 || /[\/\\\0]/.test(name) || name.startsWith('.')) {
+    if (!name || name.length > 255 || /[/\\\0]/.test(name) || name.startsWith('.')) {
       return null;
     }
     const candidates = this.isSongFilename(name)
@@ -167,7 +166,7 @@ class SongRepository {
 
   /** Absolute path for a filename returned by resolve()/listFilenames(). */
   pathFor(filename) {
-    if (typeof filename !== 'string' || !filename || filename === '.' || filename === '..' || /[\/\\\0]/.test(filename)) {
+    if (typeof filename !== 'string' || !filename || filename === '.' || filename === '..' || /[/\\\0]/.test(filename)) {
       throw new Error('refusing path outside song directory');
     }
     return this.dir + this.sep + filename;
@@ -360,10 +359,5 @@ function randomHex(bytes) {
   return Array.from(globalThis.crypto.getRandomValues(new Uint8Array(bytes)), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// readEditorSettings() (the Songbook's settings file) isn't carried over: the app has no settings file yet.
-const api = { SongRepository, parseSong, fixLeadingArticle, filenameToTitle, scrubForFilename, scrubForTag };
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = api;
-} else {
-  globalThis.studioSongs = api;
-}
+// readEditorSettings() (the Songbook's settings file) isn't carried over: the app keeps its settings in Rust.
+export { SongRepository, parseSong, fixLeadingArticle, filenameToTitle, scrubForFilename, scrubForTag, foldName };

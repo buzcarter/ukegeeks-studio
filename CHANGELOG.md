@@ -1,10 +1,33 @@
 # Changelog
 
-What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothing is released yet: the app runs from source (`npm run dev`), version 0.1.0. Task numbers refer to [docs/BOARD.md](docs/BOARD.md).
+What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothing is released yet: the app runs from source (`npm run dev`), version 0.1.0. Item numbers refer to [docs/BACKLOG.md](docs/BACKLOG.md).
 
 ## Unreleased
 
-### Task 0024: top bar + menu (in progress, 2026-11-09)
+### UGS-0032: code review, reorganisation and fixes (2026-11-11)
+
+A review of the whole app against "is this written to best practices yet?". What it found and what's still open is in [docs/HANDOFF.md](docs/HANDOFF.md), "From the code review".
+
+Fixed:
+
+- **A stale song list.** When Save renamed a song's file (its title or artist changed) or Save As added one, the song list kept the old row, and clicking it said "Can't open the song". Every save in a songbook now tells all windows, and the list reads its folder again when its window comes forward.
+- **Names holding an HTML entity.** A folder or file really named `Tom &amp; Jerry` couldn't be opened from the list. Paths and names are escaped exactly now (`escapeText`); only song text keeps its entities (`escapeHtml`).
+- **The app's own files are safer.** `library.json`, `favorites.json`, `recent.json` and `settings.json` are written through a temp file and a rename. One that isn't valid JSON is set aside as `<name>.unreadable.json`; before, the Library started empty and the next change replaced the file.
+- **Listing a songbook parses only what changed.** The parse cache never hit, because each listing made a new `SongRepository`; one is kept per folder now.
+
+Reorganised (no change in behaviour):
+
+- **Pages:** `web/js/songbook.js`, which held everything the pages share, is split into `web/js/lib/` (`tauri`, `html`, `paths`, `app-settings`, `library`, `favorites`, `songbook`, with `songs`, `search` and `menu` moved in). The dialogs are in `web/js/dialogs/` on one helper; the song rows and right-click menu in `web/js/ui/`. `list.js` tracks one `view` instead of paired flags.
+- **`songs.js` is a plain ES module** (it set `globalThis.studioSongs`); `package.json` says `"type": "module"`, so the tests and scripts are ES modules too.
+- **Rust:** `lib.rs` is startup only. The menu is `menu.rs`; `print.rs`, `song_file.rs` and `dock_quit.rs` hold what their names say; `store.rs` is the one reader and writer of the JSON files; `paths.rs` and `platform.rs` replace three copies of `same_path`/`folder_name` and two of "open with the OS".
+
+New:
+
+- **`npm run lint`** (ESLint 10) and **CI** (`.github/workflows/ci.yml`): lint, `npm test` and `cargo test` on every pull request.
+- **Tests:** 29 in Node (were 19: paths, escaping, file naming, songbook names, marking search words) and 13 in Rust (were 8: the store, paths).
+- **Docs:** `CLAUDE.md` has the checkouts' real folders (`~/Code/UkeGeeks/ugs-*`) and says the editor is Buz's again; the backlog's finished items are under Done.
+
+### UGS-0024: top bar + menu (2026-11-09, PR #21)
 
 - **Top title bar:** New Song…, Open Song… and Add Songbook… are now one **+** button in the wooden header.
 - **Click +** to open a dropdown with **New Song…**, **Open Song…**, and **Add Songbook…**.

@@ -1,15 +1,14 @@
-'use strict';
 /**
- * Tests for web/js/songs.js. SongRepository gets a stand-in for Tauri's fs plugin
+ * Tests for web/js/lib/songs.js. SongRepository gets a stand-in for Tauri's fs plugin
  * built on Node's fs, which, like Tauri, rejects with plain strings.
  */
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const nodeFs = require('node:fs/promises');
-const os = require('node:os');
-const path = require('node:path');
+import assert from 'node:assert/strict';
+import nodeFs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
 
-const { SongRepository, parseSong, fixLeadingArticle, filenameToTitle, scrubForFilename } = require('../web/js/songs.js');
+import { SongRepository, parseSong, fixLeadingArticle, filenameToTitle, scrubForFilename } from '../web/js/lib/songs.js';
 
 const EXT = '.cpm.txt';
 

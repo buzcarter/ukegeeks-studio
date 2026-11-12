@@ -162,6 +162,10 @@
     if (event.key === 'fakefavorites') {
       emit('studio://favorites', JSON.parse(event.newValue));
     }
+    if (event.key === 'fakeevent' && event.newValue) {
+      const { name, payload } = JSON.parse(event.newValue);
+      emit(name, payload);
+    }
   });
 
   const appWindow = {
@@ -184,6 +188,13 @@
       async listen(name, callback) {
         (listeners[name] = listeners[name] || []).push(callback);
         return () => {};
+      },
+      // a page's own event (studio://songbook-songs): this tab and, through a
+      // "storage" event, the others
+      async emit(name, payload) {
+        log('emit', name, JSON.stringify(payload));
+        emit(name, payload);
+        localStorage.setItem('fakeevent', JSON.stringify({ name, payload, when: Date.now() }));
       },
     },
     dialog: {

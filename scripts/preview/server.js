@@ -7,13 +7,13 @@
  * Not for real use: the files are fake (localStorage). Run `npm run vendor` first
  * (`npm run preview` does) so web/vendor/ has the editor.
  */
-const fs = require('node:fs');
-const http = require('node:http');
-const path = require('node:path');
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
 
 const PORT = Number(process.env.PORT) || 8765;
-const root = path.resolve(__dirname, '../../web');
-const fake = fs.readFileSync(path.join(__dirname, 'fake-tauri.js'), 'utf8');
+const root = path.resolve(import.meta.dirname, '../../web');
+const fake = fs.readFileSync(path.join(import.meta.dirname, 'fake-tauri.js'), 'utf8');
 const TYPES = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png',
   '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.json': 'application/json',
