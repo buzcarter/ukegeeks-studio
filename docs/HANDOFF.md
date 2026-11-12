@@ -1,6 +1,6 @@
 # Handoff: after the Library
 
-Written 2026-11-07 (late), after the Library work (tasks 0013, 0016, 0017, 0020–0022) reached `main`; refreshed from the handoff written after Phase 2.5. Read [CLAUDE.md](../CLAUDE.md) first (how the owner works), then [BOARD.md](BOARD.md) (what's next), [DECISIONS.md](DECISIONS.md) (why things are the way they are) and [ROADMAP.md](ROADMAP.md) (the phases). [CHANGELOG.md](../CHANGELOG.md) has every PR.
+Written 2026-11-07 (late), after the Library work (tasks 0013, 0016, 0017, 0020–0022) reached `main`; refreshed from the handoff written after Phase 2.5. Read [CLAUDE.md](../CLAUDE.md) first (how the owner works), then [BACKLOG.md](BACKLOG.md) (what's next), [DECISIONS.md](DECISIONS.md) (why things are the way they are) and [ROADMAP.md](ROADMAP.md) (the phases). [CHANGELOG.md](../CHANGELOG.md) has every PR.
 
 ## Where things stand
 
@@ -29,35 +29,45 @@ Phase 2.5 is done, and so is the Library from the owner's user stories (DECISION
 
 ## How the code is laid out
 
+Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bundler; a page script wires its page together, and what the pages share is in `web/js/lib/`.
+
 | Where | What |
 |---|---|
-| `web/index.html`, `web/js/list.js` | The song list. |
+| `web/index.html`, `web/js/list.js` | The song list and the Library sidebar. What the list shows is a search's results, else the sidebar's selection (`view`: a songbook, Favorites or All Songs). |
 | `web/editor.html`, `web/js/editor.js` | The editor page, one per song window: `?folder=<folder>&song=<file>` for a songbook's song, `?file=<path>` for a song on its own. One song per page (the editor finds its parts by id). |
-| `web/settings.html`, `web/js/settings.js` | The Settings window. It doesn't load `menu.js`, on purpose. |
-| `web/js/songbook.js` | The open folder, settings, recent lists, paths, and the Tauri helpers the pages share. |
-| `web/js/songs.js` | `SongRepository` and the ChordPro parsing, from the Songbook's `server/lib/songs.js`. Tested in `test/songs.test.js`. |
-| `web/js/menu.js` | Menu events from Rust → `onMenu(id, handler)`. |
-| `web/js/new-song.js`, `web/css/dialog.css` | The New Song dialog (the page's own `<dialog>`). |
+| `web/settings.html`, `web/js/settings.js` | The Settings window. It doesn't load `lib/menu.js`, on purpose. |
+| `web/js/lib/tauri.js` | The way to Tauri: `tauri()`, `invoke()`, `onEvent()`, `errorMessage()`, `showProblem()`. |
+| `web/js/lib/songs.js` | `SongRepository` and the ChordPro parsing, from the Songbook's `server/lib/songs.js`. Tested in `test/songs.test.js`. |
+| `web/js/lib/songbook.js` | The songbook open in this window, its `SongRepository` (one kept per folder), opening songs in their windows, and the "songs changed" event (`notifySongsChanged`, `onSongsChanged`). |
+| `web/js/lib/library.js`, `favorites.js`, `app-settings.js` | The pages' side of `library.rs`, `favorites.rs` and `settings.rs`: read, change, hear about changes. |
+| `web/js/lib/search.js` | Searching the Library: lyrics without chords, folding case and accents, ranking, marking the words. Plain functions, tested in `test/search.test.js`. |
+| `web/js/lib/paths.js`, `html.js` | Path helpers; `escapeHtml` (song text: keeps entities like `&copy;`) and `escapeText` (paths, names, anything read back from a `data-` attribute). |
+| `web/js/lib/menu.js` | Menu events from Rust → `onMenu(id, handler)`. |
+| `web/js/dialogs/` | The pages' own `<dialog>`s: New Song and Songbook Name, on `form-dialog.js`. Styled by `web/css/dialog.css`. |
+| `web/js/ui/` | Pieces of the song list: `song-rows.js` (a row, its star) and `context-menu.js` (the right-click menu). |
 | `web/css/wood.css` | The faux-wood look. |
-| `src-tauri/src/lib.rs` | The menu and where its items go, the `save_song_file` and `print_page` commands, and Dock > Quit. |
+| `src-tauri/src/lib.rs` | Startup only: plugins, commands, state, and staying open on a Mac. |
+| `src-tauri/src/menu.rs` | The menu and where its items go; the Help pages. |
 | `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
-| `src-tauri/src/favorites.rs` | Favorites, kept in `favorites.json` as lists of `{ folder, file }` (one list today): star, unstar, follow a rename. Rust unit tests. |
-| `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. Rust unit tests: `cargo test` in `src-tauri/`. |
-| `web/js/songbook-name.js` | The Songbook Name dialog (adding a songbook, Rename…). |
-| `web/js/search.js` | Searching the Library: lyrics without chords, folding case and accents, ranking. Plain functions, tested in `test/search.test.js`; `list.js` reads the songs and shows the results. |
-| `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json` in `~/Library/Application Support/org.ukegeeks.studio/`. |
+| `src-tauri/src/store.rs` | Reads and writes the app's JSON files in `~/Library/Application Support/org.ukegeeks.studio/`: temp file then rename; a file that isn't valid JSON is set aside as `<name>.unreadable.json`, never overwritten. |
+| `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. |
+| `src-tauri/src/favorites.rs` | Favorites, kept in `favorites.json` as lists of `{ folder, file }` (one list today): star, unstar, follow a rename. |
+| `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json`. |
+| `src-tauri/src/song_file.rs`, `print.rs`, `dock_quit.rs` | `save_song_file` (a song outside a songbook folder), `print_page` (a Mac print sheet with margins), and Dock > Quit asking about unsaved changes (Mac). |
+| `src-tauri/src/paths.rs`, `platform.rs` | `same_path`, `folder_name`; opening a folder or web page with the OS. |
 | `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
 | `scripts/preview/` | `npm run preview`: the pages in a browser with a fake Tauri. |
 
 ## How to test
 
-- **`npm test`:** `SongRepository` and the ChordPro parsing, and search (19 tests). `cargo test` in `src-tauri/` has the Library's and Favorites' (7).
+- **`npm test`:** `SongRepository` and the ChordPro parsing, search, and the pages' plain helpers (29 tests). `cargo test` in `src-tauri/` has the Library's, Favorites', the store's and the paths' (13).
+- **`npm run lint`:** ESLint over the pages, tests and scripts. CI (`.github/workflows/ci.yml`) runs lint and both test suites on every PR.
 - **`npm run preview`:** serves `web/` on http://localhost:8765 with a stand-in for `window.__TAURI__` (`scripts/preview/fake-tauri.js`). Files live in localStorage, and dialogs answer from globals (`__nextOpen`, `__nextSave`, `__nextChoice`, …). Drive menu items with `__menu('save')`, and read what the page asked Tauri to do in `__log`. Open it in Claude Code's browser pane. The fake's header comment explains it all.
 - **The preview server reads `fake-tauri.js` once at start:** after changing it, stop and start the preview. Its seeded data lives in the browser's localStorage (`fakefs:…`, `fakelibrary`, …); clear a key to reseed it.
 - **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors, then ask the owner to try it, saying exactly what to click. Launch it as `./target/debug/ukegeeks-studio & pid=$!; sleep 6; kill $pid`. **Never `pkill` by name:** that also kills the owner's own `npm run dev`, which runs the same binary. Put the launch on a line of its own, not after `cd … && cargo build &&`: there `&` backgrounds the whole chain and `$!` is a subshell, not the app. The owner's `tauri dev` also rebuilds and restarts on Rust edits, so their running app may already have the branch's code.
 - **Port 8765 taken** (another chat's preview): the server reads `PORT`, so `PORT=8766 npm run preview` works.
-- **Commands for the owner:** the desktop app's `!` shell doesn't load their profile, so cargo isn't on its PATH. Give them `cd ~/Code/ukegeeks-studio && PATH="$HOME/.cargo/bin:$PATH" npm run dev`.
+- **Commands for the owner:** the desktop app's `!` shell doesn't load their profile, so cargo isn't on its PATH. Give them `cd ~/Code/UkeGeeks/ugs-ukegeeks-studio && PATH="$HOME/.cargo/bin:$PATH" npm run dev`.
 - **Windows:** the Windows menu code (`cfg(not(target_os = "macos"))`) has never been compiled; only the Mac target is installed.
 
 ## Tauri lessons (2.12.5; checked, don't relearn)
@@ -101,4 +111,16 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
-- **The song-editor TypeScript conversion** happens in another repo (`~/Code/ukegeeks-unnamed-editor-project`). Don't touch it from here; when a new `@ukegeeks/song-editor` is published, updating it here is its own task.
+- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). Studio still runs `@ukegeeks/song-editor` 1.0.0-beta.1; the editor's `main` is two releases on (1.1.0-beta.1 unpublished, then the breaking 2.0.0 cleanup). Moving Studio to it is UGS-0034: see "From the code review" below.
+
+## From the code review (2026-11-11, UGS-0032)
+
+Done in UGS-0032: the reorganisation above, the shared JSON store, lint and CI, and three bugs (a stale song list after a save renamed a file, names holding HTML entities, a parse cache that never hit). Still open, most important first:
+
+- **Studio reaches into the editor's page** (`web/js/editor.js`): it clicks `#saveBtn`, writes `#chordProSource`, reads Ace's text from `.ace_editor`, and polls once a second for "Edited" because the editor has no change event. All of it breaks or becomes needless with the editor's 2.0.0. UGS-0034: give `mount()` a small host API (`save()`, `onChange`, the fixed `getSong()`), publish, then move Studio to it and delete the workarounds.
+- **Song titles with entities:** editor 1.0.0-beta.1 decodes `&copy;` in the Edit Song box, so saving such a song rewrites it (and can rename its file). Fixed in the editor's 1.1.0-beta.1; arrives with UGS-0034.
+- **Open Recent forgets songs on an unplugged drive:** `recent.rs` drops entries whose file is missing at launch, and the next save makes that permanent. The Library keeps such songbooks; Recent should too (hide, don't drop).
+- **The Windows menu and paths have never been compiled or run.** CI only runs `cargo test` on macOS; add a `windows-latest` job when Windows work starts (Phase 5).
+- **No type checking of the pages.** `// @ts-check` with a `jsconfig.json` and the Tauri API's types would catch wrong command arguments; worth doing with UGS-0034, when the editor's types can be used too.
+- **`cargo clippy` and `cargo fmt` aren't installed** on this machine (`rustup component add clippy rustfmt`), so neither has been run. The code uses 2-space indentation, which needs a `rustfmt.toml` (`tab_spaces = 2`, `max_width = 120`) before `cargo fmt` is safe to run.
+- **`npm audit`** reports a moderate advisory in `minimatch`, which only ESLint (a dev tool) uses; it goes away when ESLint updates.

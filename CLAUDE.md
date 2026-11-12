@@ -5,16 +5,17 @@ A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele s
 ## Working with the owner (Buz)
 
 - **Items and branches:** work goes in numbered items on [docs/BACKLOG.md](docs/BACKLOG.md), one backlog for all the UkeGeeks repos, one item at a time. An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), for example `feature/ugs-0030_make-new-pickles`, in whichever repo the work lands. New items take the next free number (the file says which); numbers never change when items are reordered. The item's PR updates the backlog (Doing → Done, with the PR number). Older branches named `task-NNNN` keep their names.
-- **Branches:** always edit on a `feature/…` or `bugfix/…` branch, never on `main`. Check the branch before the first edit and again before every commit: the owner merges PRs and switches checkouts to `main` mid-session.
+- **Branches:** always edit on a `feature/…` or `bugfix/…` branch, never on `main`. Check the branch before the first edit and again before every commit: the owner merges PRs and switches checkouts to `main` mid-session. There should only be one branch (current work) + main at a time.
 - **Commits:** one commit per finished chunk of work, not one big commit at the end. One PR per piece of work. Merge stacked PRs with "Create a merge commit", not squash.
 - **The owner pushes, publishes to npm, creates releases and changes GitHub settings.** Prepare the exact commands; don't run them.
 - **Never `git push`, and never to `main`/`master` by any route** (`git push origin HEAD:main` included). Make a branch from the local `main` (`git switch -c feature/ugs-NNNN_name main`) or add `--no-track` if you start from `origin/main`: a feature branch whose upstream is `origin/main` is how a plain `git push` lands on `main`. After creating a branch, `git rev-parse --abbrev-ref @{u}` should say there is no upstream (or the branch's own name).
-- **Commands for the owner to run:** in the Claude desktop app, commands the owner types with `!` always run in the session's folder, not where the last one ran. Start every command meant for another repo with `cd ~/Code/<repo> &&`.
+- **Commands for the owner to run:** in the Claude desktop app, commands the owner types with `!` always run in the session's folder, not where the last one ran. Start every command meant for another repo with `cd ~/Code/UkeGeeks/<folder> &&`.
+- **Before a commit:** `npm run lint` and `npm test`; after Rust changes, `cargo test` in `src-tauri/`. CI (`.github/workflows/ci.yml`) runs the same.
 - **Indentation:** 2 spaces, no tabs, in new code. Code copied unchanged from older UkeGeeks repos keeps its tabs: match the file.
 - **Markdown:** a blank line between paragraphs.
 - **"Move, don't rewrite":** when bringing in existing UkeGeeks code (song parsing, the editor), keep it the same and change it in a separate step.
 - **No PHP** on this machine (only relevant to the Songbook repo).
-- **Disk space is tight:** about 10 GB free on 2026-11-07 (`src-tauri/target/` was 2.3 GB). Tauri's `src-tauri/target/` folder grows by several GB; say so before anything that builds a lot (release builds, extra Rust targets), and `cargo clean` when it's no longer needed.
+- **Mind the disk:** `src-tauri/target/` was 2.9 GB on 2026-11-11 (48 GB free then; it was down to 10 GB on 2026-11-07). Tauri's `src-tauri/target/` folder grows by several GB; say so before anything that builds a lot (release builds, extra Rust targets), and `cargo clean` when it's no longer needed.
 
 ## Machine
 
@@ -24,14 +25,16 @@ A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele s
 
 ## Related checkouts
 
+Every checkout is a folder in `~/Code/UkeGeeks/`.
+
 | Repo | Local folder | Default branch |
 |---|---|---|
-| buzcarter/ukegeeks-studio (this) | `~/Code/ukegeeks-studio` | `main` |
-| buzcarter/song-editor | `~/Code/ukegeeks-unnamed-editor-project` (folder keeps its old name) | `main` |
-| buzcarter/song-formatter | `~/Code/ugs-song-formatter` (`~/Code/song-formatter` is a stale copy) | `master` |
-| buzcarter/ace-chordpro-extension | `~/Code/ugs-ace-chordpro-extension` | `main` |
-| buzcarter/UkeGeeks (the Songbook) | `~/Code/UkeGeeks` | `main` |
-| buzcarter/ukegeeks-org-site (private) | `~/Sites/ukegeeks.org/public_html` | |
+| buzcarter/ukegeeks-studio (this) | `ugs-ukegeeks-studio` | `main` |
+| buzcarter/song-editor | `ugs-editor` | `main` |
+| buzcarter/song-formatter | `ugs-song-formatter` | `master` |
+| buzcarter/ace-chordpro-extension | `ugs-ace-chordpro-extension` | `main` |
+| buzcarter/UkeGeeks (the Songbook) | `ugs-songbook` | `main` |
+| buzcarter/ukegeeks-org-site (private) | `ugs-website` | |
 
 All are GPL-3.0.
 
@@ -44,9 +47,9 @@ Buz's partner Ludlow Brown (GitHub `ludlowbrown`) also works on UkeGeeks with hi
 | Area | Owner |
 |---|---|
 | Studio (this repo), the Songbook, the website, Song Formatter, ACE extension | Buz |
-| TypeScript conversion of `@ukegeeks/song-editor` (`~/Code/UkeGeeks/ugs-editor`) | Ludlow |
+| `@ukegeeks/song-editor` (`~/Code/UkeGeeks/ugs-editor`), its TypeScript conversion included | Buz, since 2026-11-11 (it was Ludlow's, who isn't expected to be available) |
 
-Anything not listed: ask Buz. If a task needs a change in an area that belongs to the other person, write it up as an issue for them; don't edit it.
+So, for now, editor work is done in Buz's sessions like any other item, on a branch in the editor's repo; the rules below are for when a partner is working again. Anything not listed: ask Buz. If a task needs a change in an area that belongs to the other person, write it up as an issue for them; don't edit it.
 
 **Sending work (Buz's Claude)**
 

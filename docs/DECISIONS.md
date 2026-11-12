@@ -72,7 +72,7 @@ For 1.0 the Song-a-Matic editor stays as it is, with its own menus (themes, tran
 
 **Why:** keep 1.0 simple. And the OS menu only exists on Mac and Windows: Tauri's menu API is desktop-only, Android has no menu bar, and Tauri can't fill the iPad's (iPadOS 26) menu bar yet. So everything must be reachable from the page anyway; the OS menu is a second way in, mostly for keyboard shortcuts.
 
-**How:** each menu item is an event the page handles (`web/js/menu.js`, `onMenu(id, handler)`). An iPad toolbar button can call the same handler later.
+**How:** each menu item is an event the page handles (`web/js/lib/menu.js`, `onMenu(id, handler)`). An iPad toolbar button can call the same handler later.
 
 ### What's in the menus for 1.0
 
@@ -142,4 +142,4 @@ Tauri's persisted-scope plugin keeps every folder ever picked, forever. The app 
 
 ### Quit goes through the page (PR #4)
 
-In Tauri 2.12 the built-in Quit item and Quit in the Dock end the app at once (NSApp `terminate:`), with no event to catch. So Quit is the app's own menu item, which asks the page about unsaved changes first; Quit in the Dock is caught by adding `applicationShouldTerminate:` to Tauri's app delegate (`src-tauri/src/lib.rs`).
+In Tauri 2.12 the built-in Quit item and Quit in the Dock end the app at once (NSApp `terminate:`), with no event to catch. So Quit is the app's own menu item, which asks the page about unsaved changes first; Quit in the Dock is caught by adding `applicationShouldTerminate:` to Tauri's app delegate (`src-tauri/src/dock_quit.rs`).
