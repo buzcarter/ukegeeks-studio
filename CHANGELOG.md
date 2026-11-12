@@ -4,6 +4,10 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0037: search only what's selected (2026-11-12)
+
+The search box (Cmd+F) searches what the sidebar has selected, not the whole Library: the open songbook, Favorites (the starred songs), or All Songs (every songbook). It says which in its placeholder ("Search Favorites: …") and in the results line ("3 songs match “love” in Hawaiian Classics"). Results name their songbook only where more than one is searched. A songbook's songs are read the first time a search needs them, so searching one songbook reads only that one. With no songbook open, searching asks you to choose one.
+
 ### UGS-0036: song window title, no Close button (2026-11-12)
 
 - The window title of a song is "Title - Artist (Songbook)", then "— Edited" while there are unsaved changes. For a song on its own the folder's name is in the parens. It follows a Save that changes the title or artist, and a rename of the songbook.

@@ -4,7 +4,7 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0037**.
+The next free number is **UGS-0038**.
 
 ## Doing
 
@@ -38,6 +38,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0037 | studio | The search box searches only what the sidebar has selected: the open songbook, Favorites (starred songs), or All Songs (every songbook). Its placeholder and results say which | #NN |
 | UGS-0036 | studio | A song window has no Close button in its corner bar (the red button and Cmd+W close it), and its title reads "Title - Artist (Songbook)" | #NN |
 | UGS-0033 | editor, studio | Keep the editor inside its own box: its 75 generic class names (`.overlay`, `.isHidden`, `.active`…) start with `ugsEditor-`, and its DOM lookups stay inside the mounted element. Published as `@ukegeeks/song-editor` 2.0.0-beta.4 (the same code as beta.2; there is no beta.3). Studio uses none of the old names, so its half was a check: the pages, the menus, the Chord Builder, Fullscreen and Save work on it, and only three CSS comments needed the new names | song-editor#26 (and #27, the version bump), #NN |
 | UGS-0034 | editor, studio | A host API on `mount()`: `editor.save()` and an `onChange` option, published as `@ukegeeks/song-editor` 2.0.0-beta.1 (with UGS-0025's breaking markup). Studio's editor page uses it and no longer clicks `#saveBtn`, reads Ace or polls for "Edited" | song-editor#25, #23, and the version bump's PR |

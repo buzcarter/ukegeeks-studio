@@ -47,12 +47,12 @@ Agreed with the owner on 2026-11-07 ("quickly find my favorite songs that span s
 
 Chosen without a separate talk, to keep moving (2026-11-07); change freely:
 
-- **One search box above the song list, across the whole Library** (the story: "quickly play any song"). Clearing it, Esc, or choosing a songbook goes back to that songbook's songs.
+- **One search box above the song list, searching what the sidebar has selected** (UGS-0037, replacing "across the whole Library"): the open songbook only; Favorites, only the starred songs; All Songs, every songbook. The box says which ("Search Favorites: …"). Clearing it, Esc, or choosing something in the sidebar goes back to the list.
 - **Title, artist and lyrics.** Lyrics are the song's words without chords, directives, comments or tabs, so "hello world" finds "[C]Hello [G]world". Case, accents and curly quotes don't matter.
 - **Every word must match somewhere;** a word can be part of a longer one. Title matches rank first, then artist, then lyrics; the whole search as a phrase ranks higher.
 - **Results show their songbook,** and for a lyric match the line with the words marked.
 - **Cmd+F in the Library window,** not a menu item: as a menu shortcut it would take Cmd+F from the editor's own Find in song windows.
-- **No saved index:** the songs are read when a search starts, and again whenever the Library window comes forward (songs may have changed in their windows). Plenty fast for hundreds of songs; revisit for thousands.
+- **No saved index:** a songbook's songs are read the first time a search needs them (so searching one songbook reads only that one), and again whenever the Library window comes forward (songs may have changed in their windows). Plenty fast for hundreds of songs; revisit for thousands.
 
 ### How song windows work (task 0016)
 

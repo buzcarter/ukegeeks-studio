@@ -10,7 +10,7 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
   - A sidebar of songbooks: folders added with Add Songbook to Library… (Shift+Cmd+O, +, or the header's Add Songbook…), each with a name the player gives it (folders are often just "songs" or "cpm"). Kept in `library.json`.
   - Right-click a songbook: Open, New Song… (in that songbook), Rename… (or double-click), Open Folder, Change Folder…, Bundle all as PDF… (disabled until Phase 4) and Remove from Library (asks first; the folder stays on disk). All Songs, under Favorites, lists every song; a red "!" marks a songbook whose folder can't be read (UGS-0031).
   - The selected songbook's songs, sorted like the Songbook. It's selected again at launch.
-  - **Search** (Cmd+F, the box above the songs): every songbook, by title, artist or lyrics (chords ignored). Results show their songbook and a lyric line.
+  - **Search** (Cmd+F, the box above the songs): what the sidebar has selected (the open songbook, Favorites, or All Songs = every songbook), by title, artist or lyrics (chords ignored). Results across songbooks show their songbook; all show a lyric line.
   - **Favorites** (task 0018): a ☆ beside every song (and in a song window's corner bar) stars it; Favorites, at the top of the sidebar, lists starred songs from every songbook. Kept in `favorites.json`, as lists, ready for set lists.
 - **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name (and the ☆); the window title reads "Title - Artist (Songbook)". Close is the red button or Cmd+W. File > Open Recent lists the last 10 songs.
 - **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
