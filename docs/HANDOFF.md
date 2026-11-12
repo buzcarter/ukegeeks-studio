@@ -12,7 +12,7 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
   - The selected songbook's songs, sorted like the Songbook. It's selected again at launch.
   - **Search** (Cmd+F, the box above the songs): every songbook, by title, artist or lyrics (chords ignored). Results show their songbook and a lyric line.
   - **Favorites** (task 0018): a ☆ beside every song (and in a song window's corner bar) stars it; Favorites, at the top of the sidebar, lists starred songs from every songbook. Kept in `favorites.json`, as lists, ready for set lists.
-- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name and a Close button. File > Open Recent lists the last 10 songs.
+- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name (and the ☆); the window title reads "Title - Artist (Songbook)". Close is the red button or Cmd+W. File > Open Recent lists the last 10 songs.
 - **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
 - **Songs:**
   - The Song-a-Matic editor (`@ukegeeks/song-editor`) edits a song.

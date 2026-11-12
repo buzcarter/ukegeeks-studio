@@ -4,6 +4,11 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0036: song window title, no Close button (2026-11-12)
+
+- The window title of a song is "Title - Artist (Songbook)", then "— Edited" while there are unsaved changes. For a song on its own the folder's name is in the parens. It follows a Save that changes the title or artist, and a rename of the songbook.
+- The Close button in the corner bar is gone: the window's red button and Cmd+W do the same, and still ask about unsaved changes.
+
 ### UGS-0033: the editor keeps to its own box (2026-11-12)
 
 Studio moves to `@ukegeeks/song-editor` 2.0.0-beta.4, which starts its 75 generic class names with `ugsEditor-` (`.overlay` is `.ugsEditor-overlay`) and looks things up inside its own element. beta.4 is the same code as beta.2; there is no beta.3. The version itself was already in `package.json` (UGS-0034's bump).
