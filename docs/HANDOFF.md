@@ -12,7 +12,7 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
   - The selected songbook's songs, sorted like the Songbook. It's selected again at launch.
   - **Search** (Cmd+F, the box above the songs): every songbook, by title, artist or lyrics (chords ignored). Results show their songbook and a lyric line.
   - **Favorites** (task 0018): a ☆ beside every song (and in a song window's corner bar) stars it; Favorites, at the top of the sidebar, lists starred songs from every songbook. Kept in `favorites.json`, as lists, ready for set lists.
-- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name and a Close button. File > Open Recent lists the last 10 songs.
+- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name (and the ☆); the window title reads "Title - Artist (Songbook)". Close is the red button or Cmd+W. File > Open Recent lists the last 10 songs.
 - **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
 - **Songs:**
   - The Song-a-Matic editor (`@ukegeeks/song-editor`) edits a song.
@@ -111,7 +111,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
-- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1, which Studio uses. Next for the editor: UGS-0033, then the Songbook's move to 2.0 (UGS-0035).
+- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1. UGS-0033 prefixed the editor's class names (`ugsEditor-…`) and scoped its DOM lookups, published as 2.0.0-beta.4, which Studio uses. Next: the Songbook's move to 2.0 (UGS-0035).
 
 ## From the code review (2026-11-11, UGS-0032)
 

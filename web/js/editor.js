@@ -41,21 +41,19 @@ onMenu('open-file', async () => {
 });
 onMenu('new-song', () => newSong());
 
-// Close: the same as the window's red button or Cmd+W, so unsaved changes are asked about
-document.getElementById('closeSong').addEventListener('click', () => {
-  tauri().window.getCurrentWindow().close().catch((err) => console.error('[studio] close:', err));
-});
-
 /**
  * Where the song lives, for the corner bar and Save's message: its songbook's name
  * from the Library (else the folder's name), or for a song on its own its folder's.
  */
 let placeName = '';
+// the window title shows the place too, so it is told when the place is known or renamed
+let onPlaceChange = () => {};
 async function showPlace(folder, inSongbook) {
   placeName = inSongbook ? songbookName(await getLibrary(), folder) : folderName(folder);
   const place = document.getElementById('songPlace');
   place.textContent = `${inSongbook ? 'Songbook' : 'Folder'}: ${placeName}`;
   place.title = folder;
+  onPlaceChange();
 }
 
 /**
@@ -197,7 +195,7 @@ async function main() {
     // @ukegeeks/ace-chordpro-extension's dist/, copied in by scripts/vendor.js
     aceUrl: 'vendor/ace/',
     // typing (the Edit Song box or Fullscreen), Transpose, Reformat, the Chord Builder
-    onChange: () => showDirty(),
+    onChange: () => showTitle(),
     save: async (text) => {
       const before = filename;
       try {
@@ -207,8 +205,7 @@ async function main() {
         throw err; // the editor shows its "problem saving" alert
       }
       savedText = text;
-      shownDirty = null; // the title may have changed too
-      showDirty();
+      showTitle(); // the title or artist may have changed too
       // say where, not just the name: "Saved Beta.cpm in My Songs"
       return `${filename === before ? 'Saved' : 'Saved as'} ${filename} in ${placeName || folderName(folder)}`;
     },
@@ -220,18 +217,21 @@ async function main() {
   // (getSong() is Fullscreen's text while Fullscreen is open)
   const isDirty = () => editor.getSong() !== savedText;
 
-  // The window title shows the song, plus "Edited" while there are unsaved changes:
-  // checked when the editor says the song changed (onChange) and after a save.
-  let shownDirty = null;
-  function showDirty() {
-    const dirty = isDirty();
-    if (dirty === shownDirty) return;
-    shownDirty = dirty;
-    const title = `${songName}${dirty ? ' — Edited' : ''}`;
+  // The window title: "Title - Artist (Songbook)", plus "— Edited" while there are unsaved
+  // changes. Checked when the editor says the song changed (onChange), after a save, and
+  // when the songbook is known or renamed.
+  let shownTitle = null;
+  function showTitle() {
+    const artist = named.artist ? ` - ${named.artist}` : '';
+    const place = placeName ? ` (${placeName})` : '';
+    const title = `${songName}${artist}${place}${isDirty() ? ' — Edited' : ''}`;
+    if (title === shownTitle) return;
+    shownTitle = title;
     document.title = `${title} · UkeGeeks Studio`;
     tauri().window.getCurrentWindow().setTitle(title).catch((err) => console.warn('[studio] setTitle:', err));
   }
-  showDirty();
+  onPlaceChange = showTitle;
+  showTitle();
 
   window.studioEditor = editor; // studioEditor.getSong() in the Web Inspector console
   window.studioIsDirty = isDirty;
