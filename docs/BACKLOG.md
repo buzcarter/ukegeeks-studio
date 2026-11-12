@@ -10,6 +10,7 @@ The next free number is **UGS-0036**.
 
 | ID | Repos | What | Branch | Who |
 |---|---|---|---|---|
+| UGS-0033 | editor | Keep the editor inside its own box: its 75 generic class names (`.overlay`, `.isHidden`, `.active`…) start with `ugsEditor-`, and its DOM lookups stay inside the mounted element. Done and tested as editor 2.0.0-beta.2; left: the owner merges and publishes, then Studio moves to it (a version change only: Studio uses none of the old names) | `feature/ugs-0033_scope-editor-css-and-dom` (song-editor) | Buz |
 
 ## Next (in order; rearrange freely)
 
@@ -17,10 +18,9 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | Depends on |
 |---|---|---|---|
-| UGS-0035 | songbook | Move the Songbook to `@ukegeeks/song-editor` 2.0.0-beta.1: its pages copy the editor's markup, which changed (buttons, no `hgroup`), so take it from `editorHtml()` again; check its own CSS and scripts for the old link markup | |
-| UGS-0033 | editor | Keep the editor inside its own box: prefix its generic class names (`.overlay`, `.isHidden`, …) and scope its DOM lookups to the mounted container. The brief is written (`docs/brief-ugs-0031_scope-editor-css-and-dom.md` in the editor's checkout, untracked; it was numbered 0031 before that number went to the Library sidebar). Breaking: it goes in a later 2.0.0 beta (2.0.0-beta.1 went out without it), before 2.0.0 itself | |
+| UGS-0035 | songbook | Move the Songbook to `@ukegeeks/song-editor` 2.0.0-beta.2: its pages copy the editor's markup, which changed (buttons, no `hgroup`, `ugsEditor-` class names), so take it from `editorHtml()` again; check its own CSS and scripts for the old link markup and class names | |
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
-| UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | UGS-0033 (both rewrite the toolbar markup) |
+| UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | |
 
 ## Later
 
