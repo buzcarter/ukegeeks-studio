@@ -1,4 +1,3 @@
-'use strict';
 /**
  * Copies the @ukegeeks packages' browser files into web/vendor/, where the app's
  * pages load them. Runs before `tauri dev` and `tauri build` (beforeDevCommand /
@@ -11,10 +10,12 @@
  *
  * Same idea as the Songbook's VENDORED list in scripts/build.js.
  */
-const fs = require('node:fs/promises');
-const path = require('node:path');
+import fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 
-const ROOT = path.resolve(__dirname, '..');
+const require = createRequire(import.meta.url);
+const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(ROOT, 'web/vendor');
 
 // pkg: npm package; to: folder under web/vendor/; files: paths inside the package

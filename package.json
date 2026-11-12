@@ -2,6 +2,7 @@
   "name": "ukegeeks-studio",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "UkeGeeks Studio: a desktop app for making ukulele songbooks",
   "license": "GPL-3.0-or-later",
   "author": "Buz Carter <buz@ukegeeks.org>",
@@ -10,7 +11,8 @@
     "url": "git+https://github.com/buzcarter/ukegeeks-studio.git"
   },
   "scripts": {
-    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"test/**/*.test.js\"",
+    "test": "node --test \"test/**/*.test.js\"",
+    "lint": "eslint .",
     "vendor": "node scripts/vendor.js",
     "tauri": "tauri",
     "dev": "tauri dev",
@@ -22,7 +24,10 @@
     "@ukegeeks/song-formatter": "1.0.0-beta.1"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "2.12.4"
+    "@eslint/js": "10.0.1",
+    "@tauri-apps/cli": "2.12.4",
+    "eslint": "10.14.0",
+    "globals": "17.14.0"
   },
   "engines": {
     "node": ">=24"

@@ -1,5 +1,5 @@
 /**
- * The app menu's own items (built in src-tauri/src/lib.rs) arrive as a
+ * The app menu's own items (built in src-tauri/src/menu.rs) arrive as a
  * "studio://menu" event with the item's id, sent to one window only
  * (src-tauri/src/windows.rs): "new-song", "open-file", "save", "save-as", "print" to
  * the window in front; "open-songbook" (File > Add Songbook to Library…) to the song
@@ -11,6 +11,8 @@
  * The listener starts as soon as this module loads, so Quit works even on a page
  * that failed to open its song.
  */
+import { invoke } from './tauri.js';
+
 const MENU_EVENT = 'studio://menu';
 
 const handlers = new Map();
@@ -20,12 +22,12 @@ const handlers = new Map();
  * window, and ends the app after the last.
  */
 export function quitApp() {
-  return window.__TAURI__.core.invoke('quit');
+  return invoke('quit');
 }
 
 /** Says no to Quit (Continue Editing): nothing closes. */
 export function cancelQuit() {
-  return window.__TAURI__.core.invoke('quit_cancel');
+  return invoke('quit_cancel');
 }
 
 /** Runs handler(detail) when the menu item with this id is chosen; replaces any earlier one. */

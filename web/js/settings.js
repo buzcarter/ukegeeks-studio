@@ -5,7 +5,8 @@
  * This page doesn't load menu.js: the menu's events (Save, Quit) are for the main
  * window, which asks about unsaved changes.
  */
-import { getSettings, loadSettings, saveSettings } from './songbook.js';
+import { getSettings, loadSettings, saveSettings } from './lib/app-settings.js';
+import { errorMessage } from './lib/tauri.js';
 
 const typeBoxes = [...document.querySelectorAll('input[name="songType"]')];
 const reopenBox = document.getElementById('reopenLastSongbook');
@@ -44,7 +45,7 @@ async function save() {
     saveProblem.hidden = true;
   } catch (err) {
     console.error('[studio] settings_set:', err);
-    saveProblem.textContent = `Couldn't save the settings. (${err && err.message ? err.message : err})`;
+    saveProblem.textContent = `Couldn't save the settings. (${errorMessage(err)})`;
     saveProblem.hidden = false;
   }
 }

@@ -1,9 +1,8 @@
-'use strict';
-/** Tests for web/js/search.js: searching the Library by title, artist or lyrics. */
-const test = require('node:test');
-const assert = require('node:assert/strict');
+/** Tests for web/js/lib/search.js: searching the Library by title, artist or lyrics. */
+import assert from 'node:assert/strict';
+import test from 'node:test';
 
-const load = () => import('../web/js/search.js');
+import { fold, lyricLines, makeEntry, markWords, searchSongs } from '../web/js/lib/search.js';
 
 const songs = [
   { title: 'Rose, The', artist: 'Bette Midler', body: '{title: The Rose}\n{artist: Bette Midler}\n[C]Some say [G]love, it is a [F]river' },
@@ -15,18 +14,15 @@ const songs = [
 ].map((s, i) => ({ folder: '/f', songbook: i < 2 ? 'Beach' : 'Classics', filename: `s${i}.cpm`, ...s }));
 
 test('lyricLines drops chords, directives, comments and tabs', async () => {
-  const { lyricLines } = await load();
   assert.deepEqual(lyricLines(songs[3].body), ['Don’t stop believing']);
   assert.deepEqual(lyricLines(songs[1].body), ['Hello world, my friend']);
 });
 
 test('fold ignores case, accents, curly quotes and extra spaces', async () => {
-  const { fold } = await load();
   assert.equal(fold('  Café   DON’T '), "cafe don't");
 });
 
 test('every word must match: title, artist or lyrics', async () => {
-  const { makeEntry, searchSongs } = await load();
   const entries = songs.map(makeEntry);
   const titles = (q) => searchSongs(entries, q).map((r) => r.entry.title);
   assert.deepEqual(titles('hello world'), ['Hello World']);
@@ -38,7 +34,6 @@ test('every word must match: title, artist or lyrics', async () => {
 });
 
 test('chords between words and tabs, comments do not count', async () => {
-  const { makeEntry, searchSongs } = await load();
   const entries = songs.map(makeEntry);
   // "love" is in the Rose's lyrics and Lovely Day's title; not in the Café comment or tab
   const results = searchSongs(entries, 'love');
@@ -52,8 +47,20 @@ test('chords between words and tabs, comments do not count', async () => {
 });
 
 test('the songbook goes along with each result', async () => {
-  const { makeEntry, searchSongs } = await load();
   const [result] = searchSongs(songs.map(makeEntry), 'withers');
   assert.equal(result.entry.songbook, 'Classics');
   assert.equal(result.where, 'artist');
+});
+
+test('markWords marks the search\'s words in a snippet, whatever their case or accents', () => {
+  assert.equal(markWords('Some say love, it is a river', 'LOVE river'), 'Some say <mark>love</mark>, it is a <mark>river</mark>');
+  assert.equal(markWords('Au café', 'cafe'), 'Au <mark>café</mark>');
+  assert.equal(markWords('lovely love', 'love'), '<mark>love</mark>ly <mark>love</mark>');
+});
+
+test('markWords escapes the snippet, and leaves it unmarked when folding changed its length', () => {
+  assert.equal(markWords('Tom <b> & Jerry', 'jerry'), 'Tom &lt;b&gt; &amp; <mark>Jerry</mark>');
+  // "ﬁ" folds to one character but "…  …" (two spaces) folds shorter: positions no longer line up
+  assert.equal(markWords('one  two', 'two'), 'one  two');
+  assert.equal(markWords('nothing here', ''), 'nothing here');
 });
