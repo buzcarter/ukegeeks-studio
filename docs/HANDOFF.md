@@ -111,7 +111,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
-- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API and made 2.0.0-beta.1; Studio's editor page is written for it. Until the owner publishes it, `package.json` still says 1.0.0-beta.1: to run this branch, `npm install --no-save <the tarball from npm pack in ugs-editor>` then `npm run vendor`. After the publish: set the version in `package.json`, `npm install`, commit both files.
+- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1, which Studio uses. Next for the editor: UGS-0033, then the Songbook's move to 2.0 (UGS-0035).
 
 ## From the code review (2026-11-11, UGS-0032)
 
