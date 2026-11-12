@@ -7,7 +7,7 @@
  *
  * Save writes the file (temp file + rename: SongRepository.update in a songbook,
  * the save_song_file command for a song on its own). The song is
- * "dirty" while the Edit Song text differs from what was last opened or saved: the
+ * "dirty" while its text (the editor's getSong()) differs from what was last opened or saved: the
  * window title says "Edited", and closing the window or quitting asks first: Save &
  * Close / Save & Quit, Discard Edits, or Continue Editing.
  *
@@ -196,6 +196,8 @@ async function main() {
     song: song.body,
     // @ukegeeks/ace-chordpro-extension's dist/, copied in by scripts/vendor.js
     aceUrl: 'vendor/ace/',
+    // typing (the Edit Song box or Fullscreen), Transpose, Reformat, the Chord Builder
+    onChange: () => showDirty(),
     save: async (text) => {
       const before = filename;
       try {
@@ -212,23 +214,14 @@ async function main() {
     },
   });
 
-  // Compare with the editor's own text as opened, not the file's: the Edit Song box
-  // decodes HTML entities ("&amp;" shows as "&"), so the two can differ untouched.
+  // Compare with the editor's own text as opened, not the file's: a text box turns
+  // Windows line endings into "\n", so the two can differ untouched.
   savedText = editor.getSong();
+  // (getSong() is Fullscreen's text while Fullscreen is open)
+  const isDirty = () => editor.getSong() !== savedText;
 
-  // While Fullscreen is open, getSong() still returns the Edit Song box, which gets
-  // Ace's text only when Fullscreen closes; read Ace's text instead. (Better fixed in
-  // @ukegeeks/song-editor: getSong() could return Ace's text during Fullscreen.)
-  function currentText() {
-    const aceEl = document.querySelector('.ace_editor'); // Fullscreen is added to <body>, outside container
-    const ace = aceEl && aceEl.getClientRects().length && aceEl.env && aceEl.env.editor;
-    return ace ? ace.getValue() : editor.getSong();
-  }
-  const isDirty = () => currentText() !== savedText;
-
-  // The window title shows the song, plus "Edited" while there are unsaved changes.
-  // The editor has no change event, so check after typing and clicks, and on a timer
-  // for edits the page doesn't see as events (Fullscreen, the Chord Builder).
+  // The window title shows the song, plus "Edited" while there are unsaved changes:
+  // checked when the editor says the song changed (onChange) and after a save.
   let shownDirty = null;
   function showDirty() {
     const dirty = isDirty();
@@ -239,8 +232,6 @@ async function main() {
     tauri().window.getCurrentWindow().setTitle(title).catch((err) => console.warn('[studio] setTitle:', err));
   }
   showDirty();
-  for (const type of ['input', 'keyup', 'click']) document.addEventListener(type, showDirty);
-  setInterval(showDirty, 1000);
 
   window.studioEditor = editor; // studioEditor.getSong() in the Web Inspector console
   window.studioIsDirty = isDirty;
@@ -262,7 +253,7 @@ async function main() {
     });
     if (choice === DISCARD) return true;
     if (choice !== saveLabel) return false;
-    const text = currentText();
+    const text = editor.getSong();
     try {
       await write(text);
       savedText = text;
@@ -274,17 +265,9 @@ async function main() {
     }
   }
 
-  // File > Save (Cmd+S): the editor's own Save button, so its "Saved …" message and
-  // "problem saving" alert show as usual. The button saves the Edit Song box, which
-  // gets Fullscreen's text only when Fullscreen closes: copy it in first.
-  function save() {
-    const box = document.getElementById('chordProSource');
-    const button = document.getElementById('saveBtn');
-    if (!box || !button) return;
-    box.value = currentText();
-    button.click();
-  }
-  onMenu('save', save);
+  // File > Save (Cmd+S): what the editor's Save button does, so its "Saved …" message
+  // and "problem saving" alert show as usual. In Fullscreen it saves Fullscreen's text.
+  onMenu('save', () => editor.save());
 
   // File > Save As… (Shift+Cmd+S). The native dialog asks before replacing a file;
   // nothing else is overwritten.
@@ -296,11 +279,11 @@ async function main() {
     });
     if (typeof newPath !== 'string') return;
     if (cleanPath(newPath) === cleanPath(path)) {
-      save();
+      await editor.save();
       return;
     }
     const { dir, name } = splitPath(newPath);
-    const text = currentText();
+    const text = editor.getSong();
     try {
       if (!songbook || cleanPath(dir) !== cleanPath(folder)) {
         // a song on its own: the dialog gave access to this one file

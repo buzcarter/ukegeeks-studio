@@ -84,8 +84,8 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 - **Dialogs:** `dialog.message()` with `buttons: { yes, no, cancel }` returns the clicked label, and Esc returns the cancel label. `dialog.ask` uses the `dialog:allow-message` permission.
 - **The page's own `<dialog>`:** its `close` event can come late or not at all in a background page, so answer from submit, `cancel` and button clicks instead.
 - **Printing:** `window.print()` on a Mac prints with zero margins, which printers clip. `print_page` opens WKWebView's print sheet with half-inch margins.
-- **Unsaved changes:** the dirty check compares with the editor's own text right after mount, not the file's, because the Edit Song box decodes HTML entities.
-- **Fullscreen:** while it's open, Ace's editor sits outside the editor's container, and `getSong()` doesn't see its text; `editor.js` reads Ace directly.
+- **Unsaved changes:** the editor's `onChange` says when the song changed; the dirty check compares `editor.getSong()` with the text right after mount (not the file's: a text box turns Windows line endings into `\n`). No timer.
+- **The editor's API only:** `editor.js` uses `mount()`'s `save`/`onChange` options and `editor.getSong()`/`editor.save()` (which cover Fullscreen too). Don't reach into the editor's page; its markup changes between versions.
 - **Menu:** it's built in `setup()` (so Open Recent can be rebuilt), and menu calls are safe from any thread.
 - **Events to one window:** `emit_to(label, …)` still reaches every page that listens with a plain `listen()`, which hears events sent to any target. Listen with `{ target: { kind: 'AnyLabel', label } }` to get only your window's events (and still the global ones from `emit`).
 - **Window URLs:** `WebviewUrl::App("editor.html?x=1")` keeps the query string (it's joined onto the app URL).
@@ -111,16 +111,15 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
-- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). Studio still runs `@ukegeeks/song-editor` 1.0.0-beta.1; the editor's `main` is two releases on (1.1.0-beta.1 unpublished, then the breaking 2.0.0 cleanup). Moving Studio to it is UGS-0034: see "From the code review" below.
+- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API and made 2.0.0-beta.1; Studio's editor page is written for it. Until the owner publishes it, `package.json` still says 1.0.0-beta.1: to run this branch, `npm install --no-save <the tarball from npm pack in ugs-editor>` then `npm run vendor`. After the publish: set the version in `package.json`, `npm install`, commit both files.
 
 ## From the code review (2026-11-11, UGS-0032)
 
-Done in UGS-0032: the reorganisation above, the shared JSON store, lint and CI, and three bugs (a stale song list after a save renamed a file, names holding HTML entities, a parse cache that never hit). Still open, most important first:
+Done in UGS-0034: Studio no longer reaches into the editor's page, and song titles with entities are no longer rewritten on save (the editor's box keeps the exact text). Done in UGS-0032: the reorganisation above, the shared JSON store, lint and CI, and three bugs (a stale song list after a save renamed a file, names holding HTML entities, a parse cache that never hit). Still open, most important first:
 
-- **Studio reaches into the editor's page** (`web/js/editor.js`): it clicks `#saveBtn`, writes `#chordProSource`, reads Ace's text from `.ace_editor`, and polls once a second for "Edited" because the editor has no change event. All of it breaks or becomes needless with the editor's 2.0.0. UGS-0034: give `mount()` a small host API (`save()`, `onChange`, the fixed `getSong()`), publish, then move Studio to it and delete the workarounds.
-- **Song titles with entities:** editor 1.0.0-beta.1 decodes `&copy;` in the Edit Song box, so saving such a song rewrites it (and can rename its file). Fixed in the editor's 1.1.0-beta.1; arrives with UGS-0034.
+- **A window title shows a song title's entities as typed** (`Rock &amp; Roll`); the song list shows `Rock & Roll`. Decode for the title bar.
 - **Open Recent forgets songs on an unplugged drive:** `recent.rs` drops entries whose file is missing at launch, and the next save makes that permanent. The Library keeps such songbooks; Recent should too (hide, don't drop).
 - **The Windows menu and paths have never been compiled or run.** CI only runs `cargo test` on macOS; add a `windows-latest` job when Windows work starts (Phase 5).
-- **No type checking of the pages.** `// @ts-check` with a `jsconfig.json` and the Tauri API's types would catch wrong command arguments; worth doing with UGS-0034, when the editor's types can be used too.
+- **No type checking of the pages.** `// @ts-check` with a `jsconfig.json` and the Tauri API's types would catch wrong command arguments; the editor's 2.0 types (`@ukegeeks/song-editor/browser`) can be used too.
 - **`cargo clippy` and `cargo fmt` aren't installed** on this machine (`rustup component add clippy rustfmt`), so neither has been run. The code uses 2-space indentation, which needs a `rustfmt.toml` (`tab_spaces = 2`, `max_width = 120`) before `cargo fmt` is safe to run.
 - **`npm audit`** reports a moderate advisory in `minimatch`, which only ESLint (a dev tool) uses; it goes away when ESLint updates.

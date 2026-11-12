@@ -4,6 +4,14 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0034: the editor's host API (2026-11-11)
+
+The editor page talks to `@ukegeeks/song-editor` 2.0.0-beta.1 through its API only: `onChange` for the window title's "Edited", `editor.save()` for File > Save, and `editor.getSong()` everywhere (it covers Fullscreen). Gone: clicking the editor's Save button from code, reading Ace's text directly, and the once-a-second check for edits.
+
+- "Edited" shows as you type, in Fullscreen too, and after Transpose or a Chord Builder change.
+- A song whose text holds an HTML entity (`&amp;`, `&copy;`) is no longer rewritten, or its file renamed, by a save.
+- The editor's buttons are real buttons (its 2.0 markup).
+
 ### UGS-0032: code review, reorganisation and fixes (2026-11-11)
 
 A review of the whole app against "is this written to best practices yet?". What it found and what's still open is in [docs/HANDOFF.md](docs/HANDOFF.md), "From the code review".
