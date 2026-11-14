@@ -37,7 +37,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
-| UGS-0039 | editor, studio | Edit opens the Ace editor in a window of its own, and the songsheet follows as you type except mid-command (an open `[` or `{`); the Chord Builder is Chords on the toolbar. The editor gained `onEdit` and `setSong()`. Studio's `package.json` moves to the editor's next release once it's on npm | song-editor#NN, #NN |
+| UGS-0039 | editor, studio | Edit is Studio's own menu (Edit Song, Define Chords, Open Songbook, Favorite), through new editor hooks that change nothing for other pages: `editMenu`, `setSong()`, `openChordBuilder()`. Edit Song opens the Ace editor in a window of its own, and the songsheet follows as you type except mid-command (an open `[` or `{`). The corner ☆ is gone. Studio's `package.json` moves to the editor's next release once it's on npm | song-editor#NN, #NN |
 | UGS-0038 | editor | Chord Builder: clicking a chord's mini-diagram opens that chord; the builder on its own bundle, tested part by part (2.0.0-beta.5) | song-editor#28 |
 | UGS-0037 | studio | The search box searches only what the sidebar has selected: the open songbook, Favorites (starred songs), or All Songs (every songbook). Its placeholder and results say which | #NN |
 | UGS-0036 | studio | A song window has no Close button in its corner bar (the red button and Cmd+W close it), and its title reads "Title - Artist (Songbook)" | #NN |

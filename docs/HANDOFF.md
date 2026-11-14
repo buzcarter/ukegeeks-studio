@@ -11,11 +11,11 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
   - Right-click a songbook: Open, New Song… (in that songbook), Rename… (or double-click), Open Folder, Change Folder…, Bundle all as PDF… (disabled until Phase 4) and Remove from Library (asks first; the folder stays on disk). All Songs, under Favorites, lists every song; a red "!" marks a songbook whose folder can't be read (UGS-0031).
   - The selected songbook's songs, sorted like the Songbook. It's selected again at launch.
   - **Search** (Cmd+F, the box above the songs): what the sidebar has selected (the open songbook, Favorites, or All Songs = every songbook), by title, artist or lyrics (chords ignored). Results across songbooks show their songbook; all show a lyric line.
-  - **Favorites** (task 0018): a ☆ beside every song (and in a song window's corner bar) stars it; Favorites, at the top of the sidebar, lists starred songs from every songbook. Kept in `favorites.json`, as lists, ready for set lists.
-- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name (and the ☆); the window title reads "Title - Artist (Songbook)". Close is the red button or Cmd+W. File > Open Recent lists the last 10 songs.
+  - **Favorites** (task 0018): a ☆ beside every song (and Favorite in a song window's Edit menu) stars it; Favorites, at the top of the sidebar, lists starred songs from every songbook. Kept in `favorites.json`, as lists, ready for set lists.
+- **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name; the window title reads "Title - Artist (Songbook)". Close is the red button or Cmd+W. File > Open Recent lists the last 10 songs.
 - **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
 - **Songs:**
-  - The Song-a-Matic editor (`@ukegeeks/song-editor`) shows a song; its toolbar's Edit opens the **Edit window** (UGS-0039): the text in Ace, in a window of its own. The songsheet follows as you type, except mid-command (an open `[` or `{`). Chords on the toolbar is the Chord Builder.
+  - The Song-a-Matic editor (`@ukegeeks/song-editor`) shows a song; its toolbar's Edit is Studio's menu (UGS-0039): Edit Song, Define Chords (the Chord Builder), Open Songbook, Favorite. Edit Song opens the **Edit window**: the text in Ace, in a window of its own. The songsheet follows as you type, except mid-command (an open `[` or `{`).
   - Save (Cmd+S) writes it; Save As… (Shift+Cmd+S) saves under a new name.
   - New Song… (Cmd+N) and Open… (Cmd+O, one song on its own, outside a songbook).
   - Print… (Cmd+P).
@@ -49,7 +49,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 | `web/css/wood.css` | The faux-wood look. |
 | `src-tauri/src/lib.rs` | Startup only: plugins, commands, state, and staying open on a Mac. |
 | `src-tauri/src/menu.rs` | The menu and where its items go; the Help pages. |
-| `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), the Edit windows (`open_edit_window`; one closes with its song window, and its menu items go there), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
+| `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), Edit > Open Songbook (`show_songbook`), the Edit windows (`open_edit_window`; one closes with its song window, and its menu items go there), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
 | `src-tauri/src/store.rs` | Reads and writes the app's JSON files in `~/Library/Application Support/org.ukegeeks.studio/`: temp file then rename; a file that isn't valid JSON is set aside as `<name>.unreadable.json`, never overwritten. |
 | `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. |
 | `src-tauri/src/favorites.rs` | Favorites, kept in `favorites.json` as lists of `{ folder, file }` (one list today): star, unstar, follow a rename. |
@@ -86,7 +86,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 - **The page's own `<dialog>`:** its `close` event can come late or not at all in a background page, so answer from submit, `cancel` and button clicks instead.
 - **Printing:** `window.print()` on a Mac prints with zero margins, which printers clip. `print_page` opens WKWebView's print sheet with half-inch margins.
 - **Unsaved changes:** the editor's `onChange` says when the song changed; the dirty check compares `editor.getSong()` with the text right after mount (not the file's: a text box turns Windows line endings into `\n`). No timer.
-- **The editor's API only:** `editor.js` uses `mount()`'s `save`/`onChange`/`onEdit` options and `editor.getSong()`/`setSong()`/`save()`. Don't reach into the editor's page; its markup changes between versions.
+- **The editor's API only:** `editor.js` uses `mount()`'s `save`/`onChange`/`editMenu` options and `editor.getSong()`/`setSong()`/`save()`/`setEditMenu()`/`openChordBuilder()`. Don't reach into the editor's page; its markup changes between versions.
 - **Menu:** it's built in `setup()` (so Open Recent can be rebuilt), and menu calls are safe from any thread.
 - **Events to one window:** `emit_to(label, …)` still reaches every page that listens with a plain `listen()`, which hears events sent to any target. Listen with `{ target: { kind: 'AnyLabel', label } }` to get only your window's events (and still the global ones from `emit`).
 - **Window URLs:** `WebviewUrl::App("editor.html?x=1")` keeps the query string (it's joined onto the app URL).
@@ -104,7 +104,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 
 ## Open threads
 
-- **UGS-0039 waits on an editor release.** Studio's branch calls `onEdit` and `setSong()`, which are on the editor's `feature/ugs-0039_host-edit-and-chords-menu` branch. Until that's published and `package.json` is bumped, try it with `npm install --no-save ../ugs-editor` (after `npm run build` there); a plain `npm install` puts 2.0.0-beta.4 back, where Edit still opens the old box and typing in the Edit window fails.
+- **UGS-0039 waits on an editor release.** Studio's branch uses `editMenu`, `setSong()` and `openChordBuilder()`, which are on the editor's `feature/ugs-0039_host-edit-and-chords-menu` branch. Until that's published and `package.json` is bumped, try it with `npm install --no-save ../ugs-editor` (after `npm run build` there); a plain `npm install` puts 2.0.0-beta.4 back, where Edit still opens the old box and the song page fails on `setEditMenu`.
 - **The Edit window in the real app** hasn't been tried by the owner: where it opens (beside the song window), Cmd+S and Cmd+Z in it, and closing either window. The preview (`npm run preview`) pairs one song tab with one `edit-window.html` tab; open the second by hand, since the browser pane opens no new tabs.
 - **The Edit window has no help panel** (Fullscreen's shortcuts and snippets list). The text is the editor's `ugsEditorPlus.aceHelpHtml`, styled by the editor's stylesheet.
 

@@ -4,14 +4,14 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
-### UGS-0039: the Edit window, and Chords on the toolbar (2026-11-14)
+### UGS-0039: the Edit menu and the Edit window (2026-11-14)
 
-Needs `@ukegeeks/song-editor` with `onEdit` and `setSong()` (its UGS-0039 branch; the release after 2.0.0-beta.5). `package.json` still says 2.0.0-beta.4: bump it once that release is on npm.
+Needs `@ukegeeks/song-editor` with the `editMenu` hook, `setSong()` and `openChordBuilder()` (its UGS-0039 branch; the release after 2.0.0-beta.5, all additions). `package.json` still says 2.0.0-beta.4: bump it once that release is on npm.
 
-- **Edit opens a window, not a box.** The toolbar's Edit button opens the song's text in the Ace editor (ChordPro colors, snippets, chord completion) in a window of its own, beside the song's. A song opens showing just the songsheet.
+- **Edit is Studio's own menu,** shown through the editor's `editMenu` hook: Edit Song, Define Chords (the Chord Builder), Open Songbook (the song's songbook in the song list) and Favorite, checked while the song is starred. The last two are only for a song of a songbook in the Library. The ☆ in the corner bar is gone.
+- **Edit Song opens a window, not a box.** The song's text in the Ace editor (ChordPro colors, snippets, chord completion) in a window of its own, beside the song's. A song opens showing just the songsheet.
 - **The songsheet follows as you type,** except mid-command: after an opening `[` or `{` it waits until the cursor is past the closing bracket (or leaves the line, or the Edit window closes). "Edited" and Save have every keystroke either way.
 - Transpose, the Chord Builder and Reformat change the Edit window's text too. File > Save, Save As… and Print… chosen in the Edit window act on its song. It closes with its song window; closing it alone loses nothing.
-- **Chords** on the toolbar opens the Chord Builder (the editor's change).
 - "Saved Beta.cpm in My Songs" shows in the corner bar for a few seconds: the editor shows it in its Edit Song box, which no longer opens.
 
 ### UGS-0037: search only what's selected (2026-11-12)
