@@ -25,6 +25,8 @@ export default [
         ...globals.browser,
         // the editor's bundle, loaded by editor.html before the page's module
         ugsEditorPlus: 'readonly',
+        // Ace, loaded by edit-window.html before the page's module
+        ace: 'readonly',
       },
     },
   },

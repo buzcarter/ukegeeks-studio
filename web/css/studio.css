@@ -28,6 +28,17 @@
   display: none;
 }
 
+/* "Saved Beta.cpm in My Songs", for a few seconds after a save */
+.studioStatus {
+  font-weight: normal;
+  font-size: 13px;
+  color: #fdda61;
+}
+
+.studioStatus:empty {
+  display: none;
+}
+
 /* ☆/★: the song in Favorites (songs of a songbook in the Library only) */
 .studioStar {
   align-self: center;

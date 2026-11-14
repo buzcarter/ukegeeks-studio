@@ -6,7 +6,7 @@
  *   web/vendor/song-editor/js|css|img/editor/   the editor's dist/, side by side:
  *                                               its CSS and mount() find images at ../img/editor/
  *   web/vendor/song-formatter/                  reads ChordPro, draws the song and diagrams
- *   web/vendor/ace/                             the Fullscreen editor, loaded on demand
+ *   web/vendor/ace/                             Ace, for the Edit window (web/edit-window.html)
  *
  * Same idea as the Songbook's VENDORED list in scripts/build.js.
  */

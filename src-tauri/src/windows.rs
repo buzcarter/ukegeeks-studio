@@ -4,6 +4,10 @@
 //! - **Opening a song** (`open_song_window`) opens a window for it, or brings its
 //!   window forward if it's already open. Each song window tells Rust which file it
 //!   holds (`song_window_path`), since Save As and renames change it.
+//! - **The Edit window** (`edit-1` for `song-1`, …; `open_edit_window`) is a song's
+//!   text in the Ace editor, beside its song window. The two pages talk to each
+//!   other (web/js/lib/edit-window.js); the song window owns the song. It closes
+//!   with its song window, and a menu item chosen in it goes to its song window.
 //! - **Menu items** go to the window in front (`send_menu`), not to every window: a
 //!   page's plain `listen` hears events sent to any window, so the pages listen for
 //!   events sent to their own label (web/js/lib/menu.js).
@@ -20,6 +24,11 @@ use crate::paths::same_path;
 
 pub const MAIN_WINDOW: &str = "main";
 const SONG_PREFIX: &str = "song-";
+const EDIT_PREFIX: &str = "edit-";
+
+/// Tells a song window that its Edit window closed.
+const EDIT_CLOSED_EVENT: &str = "studio://edit-closed";
+const EDIT_WIDTH: f64 = 760.0;
 
 /// The event the pages listen for; the payload is the menu item's id.
 pub const MENU_EVENT: &str = "studio://menu";
@@ -50,6 +59,16 @@ pub fn is_song_window(label: &str) -> bool {
   label.starts_with(SONG_PREFIX)
 }
 
+/// A song window's Edit window: `edit-3` for `song-3`.
+fn edit_label(song_label: &str) -> Option<String> {
+  song_label.strip_prefix(SONG_PREFIX).map(|n| format!("{EDIT_PREFIX}{n}"))
+}
+
+/// An Edit window's song window: `song-3` for `edit-3`.
+fn song_label(edit_label: &str) -> Option<String> {
+  edit_label.strip_prefix(EDIT_PREFIX).map(|n| format!("{SONG_PREFIX}{n}"))
+}
+
 /// The song list or a song window (not Settings)
 fn is_page_window(label: &str) -> bool {
   label == MAIN_WINDOW || is_song_window(label)
@@ -61,6 +80,16 @@ fn focused_page_window(app: &AppHandle) -> Option<WebviewWindow> {
     .webview_windows()
     .into_values()
     .find(|w| is_page_window(w.label()) && w.is_focused().unwrap_or(false))
+}
+
+/// The window a menu item is for: the song list or song window in front, or the
+/// song window of the Edit window in front.
+fn front_page_window(app: &AppHandle) -> Option<WebviewWindow> {
+  let front = app.webview_windows().into_values().find(|w| w.is_focused().unwrap_or(false))?;
+  if is_page_window(front.label()) {
+    return Some(front);
+  }
+  song_label(front.label()).and_then(|label| app.get_webview_window(&label))
 }
 
 fn bring_forward(window: &WebviewWindow) {
@@ -104,11 +133,12 @@ pub fn show_main(app: &AppHandle, query: &str) -> bool {
   false
 }
 
-/// Sends a menu item to the window in front; if that's Settings or nothing, to the
+/// Sends a menu item to the window in front (from an Edit window, to its song
+/// window: Save there saves the song); if that's Settings or nothing, to the
 /// song list, or failing that, to a song window. (Save, Save As and Print mean
 /// something only in a song window; the song list ignores them.)
 pub fn send_menu(app: &AppHandle, id: &str) {
-  let target = focused_page_window(app)
+  let target = front_page_window(app)
     .or_else(|| app.get_webview_window(MAIN_WINDOW))
     .or_else(|| app.webview_windows().into_values().find(|w| is_song_window(w.label())));
   match target {
@@ -177,6 +207,38 @@ pub fn open_song(app: &AppHandle, path: &str, url: &str) -> Result<(), String> {
 #[tauri::command]
 pub fn open_song_window(app: AppHandle, path: String, url: String) -> Result<(), String> {
   open_song(&app, &path, &url)
+}
+
+/// Where a window `width` wide goes to sit beside `window`: at its right edge, or
+/// as far right as the screen allows (then it overlaps). None if the screen can't be read.
+fn beside(window: &WebviewWindow, width: f64) -> Option<(f64, f64)> {
+  let scale = window.scale_factor().ok()?;
+  let pos = window.outer_position().ok()?.to_logical::<f64>(scale);
+  let size = window.outer_size().ok()?.to_logical::<f64>(scale);
+  let monitor = window.current_monitor().ok()??;
+  let screen_pos = monitor.position().to_logical::<f64>(monitor.scale_factor());
+  let screen_size = monitor.size().to_logical::<f64>(monitor.scale_factor());
+  let x = (pos.x + size.width).min(screen_pos.x + screen_size.width - width).max(screen_pos.x);
+  Some((x, pos.y))
+}
+
+/// A song window's Edit button: opens its Edit window (the song's text in the Ace
+/// editor, edit-window.html) beside it, or brings it forward.
+#[tauri::command]
+pub fn open_edit_window(app: AppHandle, window: WebviewWindow) -> Result<(), String> {
+  let label = edit_label(window.label()).ok_or_else(|| format!("not a song window: {}", window.label()))?;
+  if let Some(open) = app.get_webview_window(&label) {
+    bring_forward(&open);
+    return Ok(());
+  }
+  let mut builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App("edit-window.html".into()))
+    .title("Edit Song")
+    .inner_size(EDIT_WIDTH, 850.0)
+    .min_inner_size(420.0, 320.0);
+  if let Some((x, y)) = beside(&window, EDIT_WIDTH) {
+    builder = builder.position(x, y);
+  }
+  builder.build().map(|_| ()).map_err(|err| format!("can't open the Edit window: {err}"))
 }
 
 /// A song window says which file it holds (when it opens, and after a rename or
@@ -268,11 +330,18 @@ pub fn quit_cancel(state: State<WindowsState>) {
 }
 
 /// A window closed: forget its song, and if it was the one asked about quitting, go
-/// on to the next. Once only Settings is left, close it too, so the app can end
+/// on to the next. A song window's Edit window closes with it; an Edit window tells
+/// its song window (which may have text still to draw). Once only Settings is left, close it too, so the app can end
 /// (not on a Mac, where the app keeps running with no windows).
 pub fn on_destroyed(app: &AppHandle, label: &str) {
   let state = app.state::<WindowsState>();
   state.songs.lock().unwrap().remove(label);
+  if let Some(edit) = edit_label(label).and_then(|l| app.get_webview_window(&l)) {
+    let _ = edit.close();
+  }
+  if let Some(song) = song_label(label) {
+    let _ = app.emit_to(song.as_str(), EDIT_CLOSED_EVENT, ());
+  }
   let was_asked = state.quit.lock().unwrap().asking.as_deref() == Some(label);
   if was_asked {
     ask_next(app);
@@ -282,5 +351,27 @@ pub fn on_destroyed(app: &AppHandle, label: &str) {
     if let Some(settings) = app.get_webview_window(crate::settings::SETTINGS_WINDOW) {
       let _ = settings.close();
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn a_song_window_and_its_edit_window_share_a_number() {
+    assert_eq!(edit_label("song-3").as_deref(), Some("edit-3"));
+    assert_eq!(song_label("edit-3").as_deref(), Some("song-3"));
+    assert_eq!(edit_label("main"), None);
+    assert_eq!(edit_label("edit-3"), None);
+    assert_eq!(song_label("song-3"), None);
+    assert_eq!(song_label("settings"), None);
+  }
+
+  #[test]
+  fn an_edit_window_is_not_a_page_window() {
+    assert!(is_page_window("main"));
+    assert!(is_page_window("song-1"));
+    assert!(!is_page_window("edit-1"));
   }
 }

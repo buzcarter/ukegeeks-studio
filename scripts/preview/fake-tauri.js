@@ -18,6 +18,9 @@
  * - Windows: each browser tab is one. The song list is "main"; opening a song
  *   (open_song_window) opens a tab named after its path, so opening it again goes
  *   to that tab, like the app's song windows. Quit answers are logged.
+ * - The Edit window (open_edit_window) opens a tab too, "edit-1" to the song tab's
+ *   "song-1": events sent to one window (emitTo) reach the tab with that label, so
+ *   try it with one song tab open. Closing the Edit tab tells the song tab.
  * - Everything the pages ask Tauri to do is logged in window.__log.
  *
  * In the console, for example:
@@ -141,11 +144,23 @@
     quit: () => {},
     quit_cancel: () => {},
     open_song_window: ({ path, url }) => { window.open(url, `song:${path}`); },
+    open_edit_window: () => { window.open('edit-window.html', 'edit:1'); },
     song_window_path: () => {},
   };
 
   // the app's window labels: "main" for the song list, "song-N" for songs
-  if (!window.name) window.name = location.pathname.endsWith('editor.html') ? 'song:?' : 'main';
+  if (!window.name) {
+    const page = location.pathname.split('/').pop();
+    window.name = { 'editor.html': 'song:?', 'edit-window.html': 'edit:1' }[page] || 'main';
+  }
+  const label = window.name === 'main' ? 'main' : (window.name.startsWith('edit:') ? 'edit-1' : 'song-1');
+  // an event for one window (emitTo): this tab if it's the one, else the others hear of it
+  const emitTo = (target, name, payload) => {
+    if (target === label) emit(name, payload);
+    else localStorage.setItem('fakeevent', JSON.stringify({ name, payload, target, when: Date.now() }));
+  };
+  // as Rust tells a song window that its Edit window closed
+  if (label === 'edit-1') window.addEventListener('pagehide', () => emitTo('song-1', 'studio://edit-closed'));
   function saveLibrary(library) {
     localStorage.setItem('fakelibrary', JSON.stringify(library));
     emit('studio://library', library);
@@ -163,13 +178,13 @@
       emit('studio://favorites', JSON.parse(event.newValue));
     }
     if (event.key === 'fakeevent' && event.newValue) {
-      const { name, payload } = JSON.parse(event.newValue);
-      emit(name, payload);
+      const { name, payload, target } = JSON.parse(event.newValue);
+      if (!target || target === label) emit(name, payload);
     }
   });
 
   const appWindow = {
-    label: window.name === 'main' ? 'main' : 'song-1',
+    label,
     async setTitle(title) { log('title', title); },
     async onCloseRequested(callback) { window.__close = callback; },
     async destroy() { log('destroy'); },
@@ -195,6 +210,10 @@
         log('emit', name, JSON.stringify(payload));
         emit(name, payload);
         localStorage.setItem('fakeevent', JSON.stringify({ name, payload, when: Date.now() }));
+      },
+      async emitTo(target, name, payload) {
+        log('emitTo', target, name, JSON.stringify(payload));
+        emitTo(target, name, payload);
       },
     },
     dialog: {

@@ -15,12 +15,18 @@
  * songbook folder, as a song of the songbook; anywhere else, as a song on its own
  * (the Save dialog gives access to that one file).
  *
+ * The toolbar's Edit button opens the Edit window (edit-window.html): the song's text
+ * in the Ace editor, in a window of its own. What's typed there arrives here
+ * (lib/edit-window.js) and the songsheet follows, except mid-command (an open `[` or
+ * `{`), when only the text is taken. This page still owns the song: "Edited", Save.
+ *
  * The ☆ in the corner bar stars the song (Favorites, src-tauri/src/favorites.rs):
  * only a song of a songbook in the Library. When Save renames its file, the
  * favorite follows; Save As makes a new song, which starts unstarred.
  */
 import { newSong } from './dialogs/new-song.js';
 import { getSettings, loadSettings, SONG_EXTENSION, songFileBase } from './lib/app-settings.js';
+import { EDIT_EVENTS, onWindowEvent, sendToPartner } from './lib/edit-window.js';
 import { getFavorites, isStarred, onFavoritesChanged, renameFavorite, showStar, starIsOn, starSong } from './lib/favorites.js';
 import { escapeText } from './lib/html.js';
 import { findSongbook, getLibrary, onLibraryChanged, songbookName } from './lib/library.js';
@@ -91,6 +97,15 @@ function setUpStar(folder, getFilename) {
     checkLibrary(library);
   });
   return show;
+}
+
+/** A message in the corner bar for a few seconds: "Saved Beta.cpm in My Songs" */
+let statusTimer;
+function showStatus(message) {
+  const status = document.getElementById('songStatus');
+  status.textContent = message;
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => { status.textContent = ''; }, 4000);
 }
 
 function showPageProblem(message) {
@@ -190,12 +205,24 @@ async function main() {
     if (songbook) notifySongsChanged(folder, filename);
   }
 
+  // true while text typed in the Edit window is put into the editor
+  let fromEditWindow = false;
+  // the Edit window's text is mid-command: the editor has it, the songsheet doesn't yet
+  let waitingToDraw = false;
+
   const editor = ugsEditorPlus.songAmatic.mount(container, {
     song: song.body,
-    // @ukegeeks/ace-chordpro-extension's dist/, copied in by scripts/vendor.js
-    aceUrl: 'vendor/ace/',
-    // typing (the Edit Song box or Fullscreen), Transpose, Reformat, the Chord Builder
-    onChange: () => showTitle(),
+    // the toolbar's Edit button: the Edit window, not the editor's Edit Song box
+    onEdit: () => {
+      invoke('open_edit_window')
+        .catch((err) => showProblem('Edit', 'There was a problem opening the Edit window.', err));
+    },
+    // typing (in the Edit window), Transpose, Reformat, the Chord Builder
+    onChange: (text) => {
+      showTitle();
+      // changed here: the Edit window shows it too
+      if (!fromEditWindow) sendToPartner(EDIT_EVENTS.SONG, { text });
+    },
     save: async (text) => {
       const before = filename;
       try {
@@ -207,7 +234,9 @@ async function main() {
       savedText = text;
       showTitle(); // the title or artist may have changed too
       // say where, not just the name: "Saved Beta.cpm in My Songs"
-      return `${filename === before ? 'Saved' : 'Saved as'} ${filename} in ${placeName || folderName(folder)}`;
+      const message = `${filename === before ? 'Saved' : 'Saved as'} ${filename} in ${placeName || folderName(folder)}`;
+      showStatus(message); // the editor shows it too, but in its Edit Song box, which stays closed
+      return message;
     },
   });
 
@@ -227,11 +256,35 @@ async function main() {
     const title = `${songName}${artist}${place}${isDirty() ? ' — Edited' : ''}`;
     if (title === shownTitle) return;
     shownTitle = title;
+    sendToPartner(EDIT_EVENTS.SONG, { title });
     document.title = `${title} · UkeGeeks Studio`;
     tauri().window.getCurrentWindow().setTitle(title).catch((err) => console.warn('[studio] setTitle:', err));
   }
   onPlaceChange = showTitle;
   showTitle();
+
+  // The Edit window. It asks for the song when it opens (and gets it now, if it was
+  // open while this page loaded again: Save As).
+  const sendSong = () => sendToPartner(EDIT_EVENTS.SONG, { text: editor.getSong(), title: shownTitle });
+  onWindowEvent(EDIT_EVENTS.READY, sendSong);
+  sendSong();
+  onWindowEvent(EDIT_EVENTS.TYPED, ({ text, mid }) => {
+    if (typeof text !== 'string') return;
+    fromEditWindow = true;
+    try {
+      // mid-command the text is taken (Save and "Edited" have it) but not drawn
+      editor.setSong(text, { render: !mid });
+    } finally {
+      fromEditWindow = false;
+    }
+    waitingToDraw = !!mid;
+  });
+  // closed mid-command: draw what was typed
+  onWindowEvent(EDIT_EVENTS.CLOSED, () => {
+    if (!waitingToDraw) return;
+    waitingToDraw = false;
+    editor.setSong(editor.getSong());
+  });
 
   window.studioEditor = editor; // studioEditor.getSong() in the Web Inspector console
   window.studioIsDirty = isDirty;
