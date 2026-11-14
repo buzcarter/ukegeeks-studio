@@ -145,6 +145,7 @@
     quit_cancel: () => {},
     open_song_window: ({ path, url }) => { window.open(url, `song:${path}`); },
     open_edit_window: () => { window.open('edit-window.html', 'edit:1'); },
+    show_songbook: ({ folder }) => emitTo('main', 'studio://show-songbook', folder),
     song_window_path: () => {},
   };
 

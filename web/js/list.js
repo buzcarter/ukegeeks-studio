@@ -40,7 +40,7 @@ import {
   checkAccess, getFolder, onSongsChanged, openSongbook, openSongbookSong, openSongFile, pickSongFile, setFolder,
 } from './lib/songbook.js';
 import { filenameToTitle, fixLeadingArticle, parseSong } from './lib/songs.js';
-import { errorMessage, tauri } from './lib/tauri.js';
+import { errorMessage, onEvent, tauri } from './lib/tauri.js';
 import { showContextMenu } from './ui/context-menu.js';
 import { songRow, updateStars } from './ui/song-rows.js';
 
@@ -520,6 +520,11 @@ onLibraryChanged((next) => {
   refresh();
 });
 
+// A song window's Edit > Open Songbook (src-tauri/src/windows.rs, show_songbook)
+onEvent('studio://show-songbook', (folder) => {
+  if (inLibrary(folder)) selectFolder(folder);
+});
+
 // A song was starred or unstarred (here, or in a song window)
 onFavoritesChanged(favoritesChanged);
 
@@ -699,12 +704,15 @@ async function showFirst() {
 
 // The song list was closed and a menu item opened it again (src-tauri/src/windows.rs):
 // index.html?open=1 for File > Add Songbook to Library… (shows the picker);
-// index.html?menu=new-song or menu=open-file for New Song… and Open….
+// index.html?menu=new-song or menu=open-file for New Song… and Open…;
+// index.html?folder=<folder> for a song window's Edit > Open Songbook.
 const params = new URLSearchParams(location.search);
 const showPicker = params.has('open');
+const showFolder = params.get('folder');
 const menuItem = params.get('menu');
 if (location.search) history.replaceState(null, '', 'index.html');
 showFirst().then(() => {
+  if (inLibrary(showFolder)) selectFolder(showFolder);
   if (showPicker) chooseSongbook();
   else if (menuItem === 'new-song') newSong();
   else if (menuItem === 'open-file') chooseSong();

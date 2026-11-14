@@ -41,6 +41,7 @@ pub fn run() {
       windows::quit_cancel,
       windows::open_song_window,
       windows::open_edit_window,
+      windows::show_songbook,
       windows::song_window_path,
       song_file::save_song_file,
       print::print_page,

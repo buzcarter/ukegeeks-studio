@@ -39,26 +39,6 @@
   display: none;
 }
 
-/* ☆/★: the song in Favorites (songs of a songbook in the Library only) */
-.studioStar {
-  align-self: center;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: 18px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
-  cursor: pointer;
-}
-
-.studioStar[hidden] {
-  display: none;
-}
-
-.studioStar:hover,
-.studioStar[aria-pressed="true"] {
-  color: #fdda61;
-}
-
 .studioProblem {
   margin: 3em;
   font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;

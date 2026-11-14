@@ -29,6 +29,8 @@ const EDIT_PREFIX: &str = "edit-";
 /// Tells a song window that its Edit window closed.
 const EDIT_CLOSED_EVENT: &str = "studio://edit-closed";
 const EDIT_WIDTH: f64 = 760.0;
+/// Tells the song list which songbook to show; the payload is its folder.
+const SHOW_SONGBOOK_EVENT: &str = "studio://show-songbook";
 
 /// The event the pages listen for; the payload is the menu item's id.
 pub const MENU_EVENT: &str = "studio://menu";
@@ -239,6 +241,13 @@ pub fn open_edit_window(app: AppHandle, window: WebviewWindow) -> Result<(), Str
     builder = builder.position(x, y);
   }
   builder.build().map(|_| ()).map_err(|err| format!("can't open the Edit window: {err}"))
+}
+
+/// A song window's Edit > Open Songbook: brings the song list forward, showing
+/// that songbook.
+#[tauri::command]
+pub fn show_songbook(app: AppHandle, folder: String) {
+  send_to_main(&app, &format!("folder={}", encode(&folder)), SHOW_SONGBOOK_EVENT, folder);
 }
 
 /// A song window says which file it holds (when it opens, and after a rename or
