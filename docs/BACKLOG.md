@@ -4,7 +4,7 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0038**.
+The next free number is **UGS-0040**.
 
 ## Doing
 
@@ -28,7 +28,6 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 - Editor: replace the pseudo-select pickers (`<li><a href="#12">`, about 44 anchors) with real controls (`<select>`, radio groups or a keyboard-friendly listbox). Add `aria-expanded` to the toolbar once menu state is tracked in one place (UGS-0027). Needs a look in a browser: the look changes.
 - Duplicate a songbook (owner's "Duplicate(?)", 2026-11-07): copy its songs to a new folder the player picks. Not yet: the app may only write where it's pointed, so it needs its own "where does the copy go" step; confirm what's wanted first.
 - Set lists (after Favorites, UGS-0018): named lists of songs from any songbook, in an order of the player's own ("Tuesday jam", "Open mic"), in the sidebar under Favorites. `favorites.json` already keeps lists; this adds making, renaming and reordering them.
-- Ace as the default editor instead of the Edit Song box (maybe 1.2); how the Chord Builder fits with it.
 - Phase 3: add a song from a pasted songsheet.
 - Phase 4: make the songbook (one PDF), and a Songbook menu with it.
 - Phase 5: ship for Mac and Windows: app icon, installers, signing, double-clicking a song in Finder opens it.
@@ -38,6 +37,8 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0039 | editor, studio | Edit opens the Ace editor in a window of its own, and the songsheet follows as you type except mid-command (an open `[` or `{`); the Chord Builder is Chords on the toolbar. The editor gained `onEdit` and `setSong()`. Studio's `package.json` moves to the editor's next release once it's on npm | song-editor#NN, #NN |
+| UGS-0038 | editor | Chord Builder: clicking a chord's mini-diagram opens that chord; the builder on its own bundle, tested part by part (2.0.0-beta.5) | song-editor#28 |
 | UGS-0037 | studio | The search box searches only what the sidebar has selected: the open songbook, Favorites (starred songs), or All Songs (every songbook). Its placeholder and results say which | #NN |
 | UGS-0036 | studio | A song window has no Close button in its corner bar (the red button and Cmd+W close it), and its title reads "Title - Artist (Songbook)" | #NN |
 | UGS-0033 | editor, studio | Keep the editor inside its own box: its 75 generic class names (`.overlay`, `.isHidden`, `.active`…) start with `ugsEditor-`, and its DOM lookups stay inside the mounted element. Published as `@ukegeeks/song-editor` 2.0.0-beta.4 (the same code as beta.2; there is no beta.3). Studio uses none of the old names, so its half was a check: the pages, the menus, the Chord Builder, Fullscreen and Save work on it, and only three CSS comments needed the new names | song-editor#26 (and #27, the version bump), #NN |

@@ -15,7 +15,7 @@ UkeGeeks Studio is a working Mac app, run from source with `npm run dev`. Nothin
 - **Song windows:** each song opens in its own window (or comes forward if open). Its corner bar shows the songbook's name (and the ☆); the window title reads "Title - Artist (Songbook)". Close is the red button or Cmd+W. File > Open Recent lists the last 10 songs.
 - **On a Mac** the app stays running with no windows; the Dock icon brings back the Library.
 - **Songs:**
-  - The Song-a-Matic editor (`@ukegeeks/song-editor`) edits a song.
+  - The Song-a-Matic editor (`@ukegeeks/song-editor`) shows a song; its toolbar's Edit opens the **Edit window** (UGS-0039): the text in Ace, in a window of its own. The songsheet follows as you type, except mid-command (an open `[` or `{`). Chords on the toolbar is the Chord Builder.
   - Save (Cmd+S) writes it; Save As… (Shift+Cmd+S) saves under a new name.
   - New Song… (Cmd+N) and Open… (Cmd+O, one song on its own, outside a songbook).
   - Print… (Cmd+P).
@@ -35,6 +35,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 |---|---|
 | `web/index.html`, `web/js/list.js` | The song list and the Library sidebar. What the list shows is a search's results, else the sidebar's selection (`view`: a songbook, Favorites or All Songs). |
 | `web/editor.html`, `web/js/editor.js` | The editor page, one per song window: `?folder=<folder>&song=<file>` for a songbook's song, `?file=<path>` for a song on its own. One song per page (the editor finds its parts by id). |
+| `web/edit-window.html`, `web/js/edit-window.js` | The Edit window (`edit-N` beside `song-N`): Ace only. It sends what's typed to its song window, which owns the song. The events are listed in `web/js/lib/edit-window.js`; `lib/mid-command.js` decides when the songsheet waits (tested in `test/mid-command.test.js`). |
 | `web/settings.html`, `web/js/settings.js` | The Settings window. It doesn't load `lib/menu.js`, on purpose. |
 | `web/js/lib/tauri.js` | The way to Tauri: `tauri()`, `invoke()`, `onEvent()`, `errorMessage()`, `showProblem()`. |
 | `web/js/lib/songs.js` | `SongRepository` and the ChordPro parsing, from the Songbook's `server/lib/songs.js`. Tested in `test/songs.test.js`. |
@@ -48,14 +49,14 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 | `web/css/wood.css` | The faux-wood look. |
 | `src-tauri/src/lib.rs` | Startup only: plugins, commands, state, and staying open on a Mac. |
 | `src-tauri/src/menu.rs` | The menu and where its items go; the Help pages. |
-| `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
+| `src-tauri/src/windows.rs` | The song windows (`open_song_window`, `song_window_path`), menu items to the window in front, Show Song List (`show_main`), the Edit windows (`open_edit_window`; one closes with its song window, and its menu items go there), and Quit asking each song window in turn (`quit`, `quit_cancel`). |
 | `src-tauri/src/store.rs` | Reads and writes the app's JSON files in `~/Library/Application Support/org.ukegeeks.studio/`: temp file then rename; a file that isn't valid JSON is set aside as `<name>.unreadable.json`, never overwritten. |
 | `src-tauri/src/library.rs` | The Library, kept in `library.json`: songbooks (`{ folder, name }`), the one selected last; folders allowed again at launch. |
 | `src-tauri/src/favorites.rs` | Favorites, kept in `favorites.json` as lists of `{ folder, file }` (one list today): star, unstar, follow a rename. |
 | `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json`. |
 | `src-tauri/src/song_file.rs`, `print.rs`, `dock_quit.rs` | `save_song_file` (a song outside a songbook folder), `print_page` (a Mac print sheet with margins), and Dock > Quit asking about unsaved changes (Mac). |
 | `src-tauri/src/paths.rs`, `platform.rs` | `same_path`, `folder_name`; opening a folder or web page with the OS. |
-| `src-tauri/capabilities/default.json` | What the main window may do. Its description says why each permission is there. |
+| `src-tauri/capabilities/default.json`, `edit.json` | What the song list and song windows may do, and the Edit windows (events and their own title only). Each description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
 | `scripts/preview/` | `npm run preview`: the pages in a browser with a fake Tauri. |
 
@@ -85,7 +86,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 - **The page's own `<dialog>`:** its `close` event can come late or not at all in a background page, so answer from submit, `cancel` and button clicks instead.
 - **Printing:** `window.print()` on a Mac prints with zero margins, which printers clip. `print_page` opens WKWebView's print sheet with half-inch margins.
 - **Unsaved changes:** the editor's `onChange` says when the song changed; the dirty check compares `editor.getSong()` with the text right after mount (not the file's: a text box turns Windows line endings into `\n`). No timer.
-- **The editor's API only:** `editor.js` uses `mount()`'s `save`/`onChange` options and `editor.getSong()`/`editor.save()` (which cover Fullscreen too). Don't reach into the editor's page; its markup changes between versions.
+- **The editor's API only:** `editor.js` uses `mount()`'s `save`/`onChange`/`onEdit` options and `editor.getSong()`/`setSong()`/`save()`. Don't reach into the editor's page; its markup changes between versions.
 - **Menu:** it's built in `setup()` (so Open Recent can be rebuilt), and menu calls are safe from any thread.
 - **Events to one window:** `emit_to(label, …)` still reaches every page that listens with a plain `listen()`, which hears events sent to any target. Listen with `{ target: { kind: 'AnyLabel', label } }` to get only your window's events (and still the global ones from `emit`).
 - **Window URLs:** `WebviewUrl::App("editor.html?x=1")` keeps the query string (it's joined onto the app URL).
@@ -102,6 +103,10 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Two open branches that both add a row to the board and a CHANGELOG entry** conflict; stack the second on the first and say which to merge first.
 
 ## Open threads
+
+- **UGS-0039 waits on an editor release.** Studio's branch calls `onEdit` and `setSong()`, which are on the editor's `feature/ugs-0039_host-edit-and-chords-menu` branch. Until that's published and `package.json` is bumped, try it with `npm install --no-save ../ugs-editor` (after `npm run build` there); a plain `npm install` puts 2.0.0-beta.4 back, where Edit still opens the old box and typing in the Edit window fails.
+- **The Edit window in the real app** hasn't been tried by the owner: where it opens (beside the song window), Cmd+S and Cmd+Z in it, and closing either window. The preview (`npm run preview`) pairs one song tab with one `edit-window.html` tab; open the second by hand, since the browser pane opens no new tabs.
+- **The Edit window has no help panel** (Fullscreen's shortcuts and snippets list). The text is the editor's `ugsEditorPlus.aceHelpHtml`, styled by the editor's stylesheet.
 
 - **Set lists** (after Favorites): named lists in the player's own order. `favorites.json` already keeps lists; it needs making, renaming and reordering them, and a sidebar section.
 - **Task 0019, first-run welcome/tour:** after Favorites, so it shows the app as it will be.
