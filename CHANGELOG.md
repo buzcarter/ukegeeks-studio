@@ -6,7 +6,7 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ### UGS-0039: the Edit menu and the Edit window (2026-11-14)
 
-Needs `@ukegeeks/song-editor` with the `editMenu` hook, `setSong()` and `openChordBuilder()` (its UGS-0039 branch; the release after 2.0.0-beta.5, all additions). `package.json` still says 2.0.0-beta.4: bump it once that release is on npm.
+Studio is on `@ukegeeks/song-editor` 2.0.0-beta.6, the first release with the `editMenu` hook, `setSong()` and `openChordBuilder()` (all additions: other pages are unchanged).
 
 - **Edit is Studio's own menu,** shown through the editor's `editMenu` hook: Edit Song, Define Chords (the Chord Builder), Open Songbook (the song's songbook in the song list) and Favorite, checked while the song is starred. The last two are only for a song of a songbook in the Library. The ☆ in the corner bar is gone.
 - **Edit Song opens a window, not a box.** The song's text in the Ace editor (ChordPro colors, snippets, chord completion) in a window of its own, beside the song's. A song opens showing just the songsheet.

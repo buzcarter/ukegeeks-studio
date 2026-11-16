@@ -104,7 +104,6 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 
 ## Open threads
 
-- **UGS-0039 waits on an editor release.** Studio's branch uses `editMenu`, `setSong()` and `openChordBuilder()`, which are on the editor's `feature/ugs-0039_host-edit-and-chords-menu` branch. Until that's published and `package.json` is bumped, try it with `npm install --no-save ../ugs-editor` (after `npm run build` there); a plain `npm install` puts 2.0.0-beta.4 back, where Edit still opens the old box and the song page fails on `setEditMenu`.
 - **The Edit window in the real app** hasn't been tried by the owner: where it opens (beside the song window), Cmd+S and Cmd+Z in it, and closing either window. The preview (`npm run preview`) pairs one song tab with one `edit-window.html` tab; open the second by hand, since the browser pane opens no new tabs.
 - **The Edit window has no help panel** (Fullscreen's shortcuts and snippets list). The text is the editor's `ugsEditorPlus.aceHelpHtml`, styled by the editor's stylesheet.
 
