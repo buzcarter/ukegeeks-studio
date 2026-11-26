@@ -28,24 +28,15 @@
   display: none;
 }
 
-/* ☆/★: the song in Favorites (songs of a songbook in the Library only) */
-.studioStar {
-  align-self: center;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: 18px/1 -apple-system, "Helvetica Neue", Arial, sans-serif;
-  cursor: pointer;
-}
-
-.studioStar[hidden] {
-  display: none;
-}
-
-.studioStar:hover,
-.studioStar[aria-pressed="true"] {
+/* "Saved Beta.cpm in My Songs", for a few seconds after a save */
+.studioStatus {
+  font-weight: normal;
+  font-size: 13px;
   color: #fdda61;
+}
+
+.studioStatus:empty {
+  display: none;
 }
 
 .studioProblem {

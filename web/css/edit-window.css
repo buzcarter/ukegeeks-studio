@@ -1,0 +1,20 @@
+/* The Edit window: Ace fills it. (Its colors come from Ace's theme.) */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: #323232; /* the theme's, so the window doesn't flash white as it opens */
+}
+
+.editSource {
+  position: absolute;
+  inset: 0;
+}
+
+.editProblem {
+  position: absolute;
+  inset: 0;
+  margin: 3em;
+  font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color: #ffb4ab;
+}

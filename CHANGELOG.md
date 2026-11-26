@@ -4,6 +4,20 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothi
 
 ## Unreleased
 
+### UGS-0039: the Edit menu and the Edit window (2026-11-14)
+
+Needs `@ukegeeks/song-editor` with the `editMenu` hook, `setSong()` and `openChordBuilder()` (its UGS-0039 branch; the release after 2.0.0-beta.5, all additions). `package.json` still says 2.0.0-beta.4: bump it once that release is on npm.
+
+- **Edit is Studio's own menu,** shown through the editor's `editMenu` hook: Edit Song, Define Chords (the Chord Builder), Open Songbook (the song's songbook in the song list) and Favorite, checked while the song is starred. The last two are only for a song of a songbook in the Library. The ☆ in the corner bar is gone.
+- **Edit Song opens a window, not a box.** The song's text in the Ace editor (ChordPro colors, snippets, chord completion) in a window of its own, beside the song's. A song opens showing just the songsheet.
+- **The songsheet follows as you type,** except mid-command: after an opening `[` or `{` it waits until the cursor is past the closing bracket (or leaves the line, or the Edit window closes). "Edited" and Save have every keystroke either way.
+- Transpose, the Chord Builder and Reformat change the Edit window's text too. File > Save, Save As… and Print… chosen in the Edit window act on its song. It closes with its song window; closing it alone loses nothing.
+- "Saved Beta.cpm in My Songs" shows in the corner bar for a few seconds: the editor shows it in its Edit Song box, which no longer opens.
+
+### UGS-0037: search only what's selected (2026-11-12)
+
+The search box (Cmd+F) searches what the sidebar has selected, not the whole Library: the open songbook, Favorites (the starred songs), or All Songs (every songbook). It says which in its placeholder ("Search Favorites: …") and in the results line ("3 songs match “love” in Hawaiian Classics"). Results name their songbook only where more than one is searched. A songbook's songs are read the first time a search needs them, so searching one songbook reads only that one. With no songbook open, searching asks you to choose one.
+
 ### UGS-0036: song window title, no Close button (2026-11-12)
 
 - The window title of a song is "Title - Artist (Songbook)", then "— Edited" while there are unsaved changes. For a song on its own the folder's name is in the parens. It follows a Save that changes the title or artist, and a rename of the songbook.
