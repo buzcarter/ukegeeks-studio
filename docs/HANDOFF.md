@@ -104,7 +104,6 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 
 ## Open threads
 
-- **UGS-0039 waits on an editor release.** Studio's branch uses `editMenu`, `setSong()` and `openChordBuilder()`, which are on the editor's `feature/ugs-0039_host-edit-and-chords-menu` branch. Until that's published and `package.json` is bumped, try it with `npm install --no-save ../ugs-editor` (after `npm run build` there); a plain `npm install` puts 2.0.0-beta.4 back, where Edit still opens the old box and the song page fails on `setEditMenu`.
 - **The Edit window in the real app** hasn't been tried by the owner: where it opens (beside the song window), Cmd+S and Cmd+Z in it, and closing either window. The preview (`npm run preview`) pairs one song tab with one `edit-window.html` tab; open the second by hand, since the browser pane opens no new tabs.
 - **The Edit window has no help panel** (Fullscreen's shortcuts and snippets list). The text is the editor's `ugsEditorPlus.aceHelpHtml`, styled by the editor's stylesheet.
 
@@ -116,7 +115,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Phase 5 work that's already visible:**
   - The dev build has no app icon; dialogs show a folder icon.
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
-- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1. UGS-0033 prefixed the editor's class names (`ugsEditor-…`) and scoped its DOM lookups, published as 2.0.0-beta.4, which Studio uses. Next: the Songbook's move to 2.0 (UGS-0035).
+- **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1. UGS-0033 prefixed the editor's class names (`ugsEditor-…`) and scoped its DOM lookups, published as 2.0.0-beta.4. UGS-0039's hooks came in beta.6. All of it is 2.0.0 since UkeGeeks 2026.12 (UGS-0040), which Studio and the Songbook use.
 
 ## From the code review (2026-11-11, UGS-0032)
 

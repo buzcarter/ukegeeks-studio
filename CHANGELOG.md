@@ -1,12 +1,21 @@
 # Changelog
 
-What changed in UkeGeeks Studio, newest first, one entry per pull request. Nothing is released yet: the app runs from source (`npm run dev`), version 0.1.0. Item numbers refer to [docs/BACKLOG.md](docs/BACKLOG.md).
+What changed in UkeGeeks Studio, newest first, one entry per pull request. The app runs from source (`npm run dev`); there are no installers yet (Phase 5). Item numbers refer to [docs/BACKLOG.md](docs/BACKLOG.md).
 
 ## Unreleased
 
+## 0.1.0 (2026-12)
+
+The first release, part of **UkeGeeks 2026.12**: on `@ukegeeks/song-editor` 2.0.0 and `@ukegeeks/song-formatter` 1.0.0, both stable. Its version is 0.1.0 everywhere (package.json, Cargo.toml, tauri.conf.json, the git tag). Everything below, back to UGS-0002, is in it.
+
+### UGS-0040: UkeGeeks 2026.12
+
+- Studio pins `@ukegeeks/song-editor` 2.0.0 and `@ukegeeks/song-formatter` 1.0.0 (the same code as beta.6 and beta.1).
+- Fixes `main`: #26 was merged without its last three commits, so `main` declared editor 2.0.0-beta.4, which has no `setEditMenu()`, and a fresh `npm install` broke the song window. Those commits are here.
+
 ### UGS-0039: the Edit menu and the Edit window (2026-11-14)
 
-Needs `@ukegeeks/song-editor` with the `editMenu` hook, `setSong()` and `openChordBuilder()` (its UGS-0039 branch; the release after 2.0.0-beta.5, all additions). `package.json` still says 2.0.0-beta.4: bump it once that release is on npm.
+Studio is on `@ukegeeks/song-editor` 2.0.0-beta.6, the first release with the `editMenu` hook, `setSong()` and `openChordBuilder()` (all additions: other pages are unchanged).
 
 - **Edit is Studio's own menu,** shown through the editor's `editMenu` hook: Edit Song, Define Chords (the Chord Builder), Open Songbook (the song's songbook in the song list) and Favorite, checked while the song is starred. The last two are only for a song of a songbook in the Library. The ☆ in the corner bar is gone.
 - **Edit Song opens a window, not a box.** The song's text in the Ace editor (ChordPro colors, snippets, chord completion) in a window of its own, beside the song's. A song opens showing just the songsheet.

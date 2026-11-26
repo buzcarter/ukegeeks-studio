@@ -4,7 +4,7 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0040**.
+The next free number is **UGS-0041**.
 
 ## Doing
 
@@ -16,7 +16,6 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | Depends on |
 |---|---|---|---|
-| UGS-0035 | songbook | Move the Songbook to `@ukegeeks/song-editor` 2.0.0-beta.4: its pages copy the editor's markup, which changed (buttons, no `hgroup`, `ugsEditor-` class names), so take it from `editorHtml()` again; check its own CSS and scripts for the old link markup and class names | |
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
 | UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | |
 
@@ -37,11 +36,13 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
-| UGS-0039 | editor, studio | Edit is Studio's own menu (Edit Song, Define Chords, Open Songbook, Favorite), through new editor hooks that change nothing for other pages: `editMenu`, `setSong()`, `openChordBuilder()`. Edit Song opens the Ace editor in a window of its own, and the songsheet follows as you type except mid-command (an open `[` or `{`). The corner ☆ is gone. Studio's `package.json` moves to the editor's next release once it's on npm | song-editor#NN, #NN |
+| UGS-0040 | all | **UkeGeeks 2026.12**: Song Formatter 1.0.0 and Song Editor 2.0.0 (stable, npm `latest`), Songbook 2.0.0, Studio 0.1.0 (one version in package.json, Cargo and Tauri), ukegeeks.org re-synced. Also lands three Studio commits #26 missed: the move to editor beta.6 (without it `main` declared beta.4, which has no `setEditMenu()`) and two docs fixes | song-formatter#40, song-editor#32, UkeGeeks#42, #27 |
+| UGS-0035 | songbook | The Songbook on Song Editor 2.x: beta.6, its login page, New Song dialog and PHP song page on the `ugsEditor-` class names, the Edit Song box keeping a song's exact text, and the package renamed `@ukegeeks/songbook` | UkeGeeks#40, #41 |
+| UGS-0039 | editor, studio | Edit is Studio's own menu (Edit Song, Define Chords, Open Songbook, Favorite), through new editor hooks that change nothing for other pages: `editMenu`, `setSong()`, `openChordBuilder()`. Edit Song opens the Ace editor in a window of its own, and the songsheet follows as you type except mid-command (an open `[` or `{`). The corner ☆ is gone. Studio is on `@ukegeeks/song-editor` 2.0.0-beta.6, the release with these hooks | song-editor#30 (and #31, the version bump), #26 |
 | UGS-0038 | editor | Chord Builder: clicking a chord's mini-diagram opens that chord; the builder on its own bundle, tested part by part (2.0.0-beta.5) | song-editor#28 |
-| UGS-0037 | studio | The search box searches only what the sidebar has selected: the open songbook, Favorites (starred songs), or All Songs (every songbook). Its placeholder and results say which | #NN |
-| UGS-0036 | studio | A song window has no Close button in its corner bar (the red button and Cmd+W close it), and its title reads "Title - Artist (Songbook)" | #NN |
-| UGS-0033 | editor, studio | Keep the editor inside its own box: its 75 generic class names (`.overlay`, `.isHidden`, `.active`…) start with `ugsEditor-`, and its DOM lookups stay inside the mounted element. Published as `@ukegeeks/song-editor` 2.0.0-beta.4 (the same code as beta.2; there is no beta.3). Studio uses none of the old names, so its half was a check: the pages, the menus, the Chord Builder, Fullscreen and Save work on it, and only three CSS comments needed the new names | song-editor#26 (and #27, the version bump), #NN |
+| UGS-0037 | studio | The search box searches only what the sidebar has selected: the open songbook, Favorites (starred songs), or All Songs (every songbook). Its placeholder and results say which | #26 |
+| UGS-0036 | studio | A song window has no Close button in its corner bar (the red button and Cmd+W close it), and its title reads "Title - Artist (Songbook)" | #25 |
+| UGS-0033 | editor, studio | Keep the editor inside its own box: its 75 generic class names (`.overlay`, `.isHidden`, `.active`…) start with `ugsEditor-`, and its DOM lookups stay inside the mounted element. Published as `@ukegeeks/song-editor` 2.0.0-beta.4 (the same code as beta.2; there is no beta.3). Studio uses none of the old names, so its half was a check: the pages, the menus, the Chord Builder, Fullscreen and Save work on it, and only three CSS comments needed the new names | song-editor#26 (and #27, the version bump), #25 |
 | UGS-0034 | editor, studio | A host API on `mount()`: `editor.save()` and an `onChange` option, published as `@ukegeeks/song-editor` 2.0.0-beta.1 (with UGS-0025's breaking markup). Studio's editor page uses it and no longer clicks `#saveBtn`, reads Ace or polls for "Edited" | song-editor#25, #23, and the version bump's PR |
 | UGS-0032 | studio | Code review, reorganisation and fixes: shared modules in `web/js/lib/`, `lib.rs` split up, one safe store for the JSON files, ESLint and CI, a stale song list after a rename, names holding HTML entities. What's left is in [HANDOFF.md](HANDOFF.md), "From the code review" | #22 |
 | UGS-0030 | editor | `noUncheckedIndexedAccess` on, and the 107 errors it showed fixed | song-editor#24 |
