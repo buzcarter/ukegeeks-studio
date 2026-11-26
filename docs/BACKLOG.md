@@ -4,7 +4,7 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0041**.
+The next free number is **UGS-0043**.
 
 ## Doing
 
@@ -21,7 +21,6 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 ## Later
 
-- Editor bug (found 2026-11-11): Transpose works from the song as of the last Update click, so text typed since then, and not yet Updated, is dropped when you transpose. It should use the text in the box.
 - Editor: the rest of its TypeScript roadmap, in order: `noUnusedLocals`, ES modules (the sources are still plain scripts joined in a fixed order), dropping LESS.
 - **UGS-0028** (studio, editor): Studio adds and changes editor menus through an API (needs UGS-0027).
 - Editor: replace the pseudo-select pickers (`<li><a href="#12">`, about 44 anchors) with real controls (`<select>`, radio groups or a keyboard-friendly listbox). Add `aria-expanded` to the toolbar once menu state is tracked in one place (UGS-0027). Needs a look in a browser: the look changes.
@@ -36,6 +35,8 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0042 | editor | Transpose keeps text typed since the last Update (the Edit Song box or Fullscreen); each choice still counts from the original key. Unreleased: Studio gets it with the next editor release | song-editor#34 |
+| UGS-0041 | studio | Rough edges: window titles, Open Recent and the unsaved-changes question show a song's title decoded (`Rock & Roll`, not `Rock &amp; Roll`); Open Recent hides songs on an unplugged drive instead of forgetting them | #29 |
 | UGS-0040 | all | **UkeGeeks 2026.12**: Song Formatter 1.0.0 and Song Editor 2.0.0 (stable, npm `latest`), Songbook 2.0.0, Studio 0.1.0 (one version in package.json, Cargo and Tauri), ukegeeks.org re-synced. Also lands three Studio commits #26 missed: the move to editor beta.6 (without it `main` declared beta.4, which has no `setEditMenu()`) and two docs fixes | song-formatter#40, song-editor#32, UkeGeeks#42, #27 |
 | UGS-0035 | songbook | The Songbook on Song Editor 2.x: beta.6, its login page, New Song dialog and PHP song page on the `ugsEditor-` class names, the Edit Song box keeping a song's exact text, and the package renamed `@ukegeeks/songbook` | UkeGeeks#40, #41 |
 | UGS-0039 | editor, studio | Edit is Studio's own menu (Edit Song, Define Chords, Open Songbook, Favorite), through new editor hooks that change nothing for other pages: `editMenu`, `setSong()`, `openChordBuilder()`. Edit Song opens the Ace editor in a window of its own, and the songsheet follows as you type except mid-command (an open `[` or `{`). The corner ☆ is gone. Studio is on `@ukegeeks/song-editor` 2.0.0-beta.6, the release with these hooks | song-editor#30 (and #31, the version bump), #26 |
