@@ -9,6 +9,7 @@
  * Save As… and Print… chosen here go to it (windows.rs, send_menu); closing this
  * window loses nothing.
  */
+import { helpForPlatform } from './lib/ace-help.js';
 import { EDIT_EVENTS, onWindowEvent, sendToPartner } from './lib/edit-window.js';
 import { isMidCommand } from './lib/mid-command.js';
 import { errorMessage, tauri } from './lib/tauri.js';
@@ -23,6 +24,31 @@ function showProblem(message) {
   document.getElementById('songSource').hidden = true;
 }
 
+/**
+ * The ? button: a panel of shortcuts and snippets over the right of the window. Its
+ * text comes with the song (fillHelp); Esc closes it when it has the focus.
+ */
+function setUpHelp(editor) {
+  const button = document.getElementById('helpBtn');
+  const panel = document.getElementById('editHelp');
+  const show = (isShown) => {
+    panel.hidden = !isShown;
+    button.setAttribute('aria-expanded', String(isShown));
+    if (!isShown) editor.focus();
+  };
+  button.addEventListener('click', () => show(panel.hidden));
+  panel.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') show(false);
+  });
+  return {
+    fillHelp(html) {
+      if (panel.childElementCount) return; // it doesn't change
+      // the editor package's own help text, from the song window
+      panel.innerHTML = helpForPlatform(html, ace.require('ace/lib/useragent').isMac);
+    },
+  };
+}
+
 function main() {
   const editor = ace.edit('songSource');
   editor.setTheme('ace/theme/idle_fingers');
@@ -30,6 +56,7 @@ function main() {
   editor.setOptions({ enableBasicAutocompletion: true, enableSnippets: true });
   editor.setShowPrintMargin(false);
   editor.setFontSize(14);
+  const help = setUpHelp(editor);
 
   // what the song window has: the text, and whether it's waiting to redraw
   let sentText = null;
@@ -68,7 +95,8 @@ function main() {
     send();
   });
 
-  onWindowEvent(EDIT_EVENTS.SONG, ({ text, title }) => {
+  onWindowEvent(EDIT_EVENTS.SONG, ({ text, title, help: helpHtml }) => {
+    if (typeof helpHtml === 'string') help.fillHelp(helpHtml);
     if (typeof title === 'string') {
       const shown = `Edit: ${title}`;
       document.title = `${shown} · UkeGeeks Studio`;

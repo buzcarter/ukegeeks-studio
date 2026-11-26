@@ -105,7 +105,6 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 ## Open threads
 
 - **The Edit window in the real app** hasn't been tried by the owner: where it opens (beside the song window), Cmd+S and Cmd+Z in it, and closing either window. The preview (`npm run preview`) pairs one song tab with one `edit-window.html` tab; open the second by hand, since the browser pane opens no new tabs.
-- **The Edit window has no help panel** (Fullscreen's shortcuts and snippets list). The text is the editor's `ugsEditorPlus.aceHelpHtml`, styled by the editor's stylesheet.
 
 - **Set lists** (after Favorites): named lists in the player's own order. `favorites.json` already keeps lists; it needs making, renaming and reordering them, and a sidebar section.
 - **Task 0019, first-run welcome/tour:** after Favorites, so it shows the app as it will be.

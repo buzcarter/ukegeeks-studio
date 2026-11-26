@@ -18,3 +18,111 @@ body {
   font: 15px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif;
   color: #ffb4ab;
 }
+
+/* The ? button and its help panel: the editor's Fullscreen help (ugsEditorPlus.aceHelpHtml,
+   styled in song-editor's ugsEditorPlus.aceEditor.less), in the colors of this window's
+   dark Ace theme (idle_fingers). */
+.editHelpBtn {
+  position: absolute;
+  top: 8px;
+  right: 22px; /* clear of Ace's scrollbar */
+  z-index: 10;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #5a5a5a;
+  border-radius: 50%;
+  background: #3b3b3b;
+  color: #c8c8c8;
+  font: bold 13px/22px -apple-system, "Helvetica Neue", Arial, sans-serif;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.editHelpBtn:hover,
+.editHelpBtn[aria-expanded="true"] {
+  opacity: 1;
+  background: #4a4a4a;
+  color: #fff;
+}
+
+.editHelpBtn:focus-visible {
+  outline: 2px solid #cc7833; /* idle_fingers' keyword orange */
+  outline-offset: 2px;
+}
+
+.editHelp {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  width: min(350px, 90vw);
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: #282828;
+  border-left: 1px solid #444;
+  box-shadow: -6px 0 18px rgb(0 0 0 / 35%);
+  color: #b8b8b8;
+  font: 12px/1.5 -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+.editHelp .ugsEditor-aceHelp {
+  padding: 40px 0.9em 1em; /* below the ? button */
+}
+
+.editHelp h3 {
+  margin: 0 0 0.8em;
+  color: #eee;
+  font-size: 1.3em;
+  font-weight: 500;
+}
+
+.editHelp table {
+  margin: 0 0 1.6em;
+  border-collapse: collapse;
+}
+
+.editHelp td,
+.editHelp th {
+  padding: 0 0.8em 0.8em 0;
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.editHelp th {
+  color: #8f8f8f;
+  font-weight: bold;
+}
+
+.editHelp p {
+  margin: 0 0 1em;
+}
+
+.editHelp strong {
+  color: #e6e1dc;
+}
+
+.editHelp code {
+  color: #a5c261; /* idle_fingers' string green */
+  font-family: Menlo, Monaco, monospace;
+}
+
+.editHelp em {
+  color: #b7dff8;
+}
+
+.editHelp .ugsEditor-key {
+  display: inline-block;
+  padding: 0.22em 0.4em;
+  border-radius: 0.22em;
+  background: #555;
+  color: #fff;
+  font: bold 0.71em/1.1 -apple-system, "Helvetica Neue", Arial, sans-serif;
+  text-transform: uppercase;
+}
+
+.editHelp .ugsEditor-shortKeys {
+  white-space: nowrap;
+  padding-right: 1.4em;
+}

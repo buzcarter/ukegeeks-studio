@@ -284,7 +284,8 @@ async function main() {
 
   // The Edit window. It asks for the song when it opens (and gets it now, if it was
   // open while this page loaded again: Save As).
-  const sendSong = () => sendToPartner(EDIT_EVENTS.SONG, { text: editor.getSong(), title: shownTitle });
+  // help: the editor's shortcuts and snippets, for the Edit window's help panel (it loads only Ace)
+  const sendSong = () => sendToPartner(EDIT_EVENTS.SONG, { text: editor.getSong(), title: shownTitle, help: ugsEditorPlus.aceHelpHtml });
   onWindowEvent(EDIT_EVENTS.READY, sendSong);
   sendSong();
   onWindowEvent(EDIT_EVENTS.TYPED, ({ text, mid }) => {
