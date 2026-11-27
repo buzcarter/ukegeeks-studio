@@ -17,6 +17,7 @@
     "icons": "node scripts/icons/build.js",
     "tauri": "tauri",
     "dev": "tauri dev",
+    "build:mac": "tauri build --target universal-apple-darwin --bundles app,dmg",
     "preview": "npm run vendor && node scripts/preview/server.js"
   },
   "dependencies": {

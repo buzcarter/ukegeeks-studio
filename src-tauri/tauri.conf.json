@@ -33,7 +33,19 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
+    "targets": ["app", "dmg", "nsis"],
+    "category": "Music",
+    "publisher": "UkeGeeks",
+    "copyright": "Copyright 2026 Buz Carter. GPL-3.0.",
+    "license": "GPL-3.0-or-later",
+    "homepage": "https://ukegeeks.org",
+    "shortDescription": "Make and play ukulele songbooks",
+    "longDescription": "UkeGeeks Studio keeps your ChordPro songs in songbooks, shows them as songsheets with chord diagrams, and edits, prints and saves them.",
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
