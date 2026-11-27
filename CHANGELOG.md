@@ -1,8 +1,15 @@
 # Changelog
 
-What changed in UkeGeeks Studio, newest first, one entry per pull request. The app runs from source (`npm run dev`); there are no installers yet (Phase 5). Item numbers refer to [docs/BACKLOG.md](docs/BACKLOG.md).
+What changed in UkeGeeks Studio, newest first, one entry per pull request. The app runs from source (`npm run dev`), and from the installers on its GitHub releases page from 0.2.0-beta.1 on. Item numbers refer to [docs/BACKLOG.md](docs/BACKLOG.md).
 
 ## Unreleased
+
+### UGS-0048: the first beta, 0.2.0-beta.1 (2026-11-27)
+
+- **The version is 0.2.0-beta.1,** so the installers are `UkeGeeks Studio_0.2.0-beta.1_universal.dmg` and `UkeGeeks Studio_0.2.0-beta.1_x64-setup.exe`.
+- **Tester notes** for the pre-release: [docs/release-notes/v0.2.0-beta.1.md](docs/release-notes/v0.2.0-beta.1.md) (installing on each system, what to try, what's not there yet, where to report).
+- **[docs/RELEASING.md](docs/RELEASING.md) says how to publish a beta:** version, notes, the two installers, `gh release create --prerelease`.
+- UGS-0046 is done: the first `npm run release:mac` signed and notarized the app and `.dmg`, and Gatekeeper accepted both ("Notarized Developer ID").
 
 ### UGS-0046: signing and notarizing for the Mac (2026-11-27)
 
