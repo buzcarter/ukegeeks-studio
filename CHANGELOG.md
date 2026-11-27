@@ -4,6 +4,10 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### UGS-0046: signing and notarizing for the Mac (2026-11-27)
+
+- **`npm run release:mac`** builds the universal app and `.dmg` signed with the owner's Developer ID, notarizes and staples both, and checks them. The one-time setup and each release's command are in [docs/RELEASING.md](docs/RELEASING.md). Not yet run: it needs the certificate first.
+
 ### UGS-0045: double-click a song to open it (2026-11-27)
 
 - **Double-clicking a `.cpm` song in Finder opens it in Studio,** in its own window, as File > Open… does; so do Open With, dropping a song on the Dock icon, and (on Windows) double-clicking in Explorer. Other ChordPro files (`.cho`, `.chopro`, `.chordpro`, `.chord`, `.crd`) list Studio under Open With.

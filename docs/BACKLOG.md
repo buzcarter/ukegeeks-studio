@@ -8,7 +8,7 @@ The next free number is **UGS-0050**.
 
 ## Doing
 
-Nothing is in progress.
+- **UGS-0046** (studio): Mac signing and notarization. `npm run release:mac` and [RELEASING.md](RELEASING.md) are ready (#35); waiting on the owner's one-time setup there (Developer ID Application certificate, app-specific password in the keychain), then a first real run. Done when that run's checks pass and the `.dmg` opens on another Mac with no warning.
 
 ## Next (in order; rearrange freely)
 
@@ -17,7 +17,6 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 | ID | Repos | What | Depends on |
 |---|---|---|---|
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
-| UGS-0046 | studio | Phase 5, Mac signing: Developer ID Application certificate (the owner's Apple Developer membership), hardened runtime, notarized with `notarytool` (app-specific password or API key in environment variables, never committed), stapled; `npm run release:mac`, checked with `spctl` and `stapler validate`. Signed on the owner's Mac | UGS-0044 |
 | UGS-0047 | studio | Phase 5, Windows CI build: a `windows-latest` job runs `cargo test` and builds an unsigned NSIS `.exe` as a workflow artifact. Expect fixes: the Windows menu code has never been compiled, and `print.rs`/`dock_quit.rs` are Mac-only | UGS-0044 |
 | UGS-0048 | studio | Phase 5, first beta for testers: v0.2.0-beta.1 as a GitHub pre-release with the signed `.dmg` and the unsigned `.exe`, and tester notes (Windows: SmartScreen's "More info > Run anyway") | UGS-0045, UGS-0046, UGS-0047 |
 | UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | |

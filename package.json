@@ -18,6 +18,7 @@
     "tauri": "tauri",
     "dev": "tauri dev",
     "build:mac": "tauri build --target universal-apple-darwin --bundles app,dmg",
+    "release:mac": "node scripts/release-mac.js",
     "preview": "npm run vendor && node scripts/preview/server.js"
   },
   "dependencies": {
