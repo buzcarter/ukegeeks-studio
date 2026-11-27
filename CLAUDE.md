@@ -31,7 +31,7 @@ Every checkout is a folder in `~/Code/UkeGeeks/`.
 |---|---|---|
 | buzcarter/ukegeeks-studio (this) | `ugs-ukegeeks-studio` | `main` |
 | buzcarter/song-editor | `ugs-editor` | `main` |
-| buzcarter/song-formatter | `ugs-song-formatter` | `master` |
+| buzcarter/song-formatter | `ugs-song-formatter` | `main` (renamed from `master` 2026-11-27) |
 | buzcarter/ace-chordpro-extension | `ugs-ace-chordpro-extension` | `main` |
 | buzcarter/UkeGeeks (the Songbook) | `ugs-songbook` | `main` |
 | buzcarter/ukegeeks-org-site (private) | `ugs-website` | |
