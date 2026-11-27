@@ -4,10 +4,11 @@ One backlog for every UkeGeeks repo (Studio, the song editor, Song Formatter, th
 
 An item's branch is `feature/ugs-NNNN_short-name` (or `bugfix/ugs-NNNN_…`), in whichever repo the work lands. Its PR updates this file (Doing → Done, with the PR number). The why behind the choices is in [DECISIONS.md](DECISIONS.md); the bigger phases in [ROADMAP.md](ROADMAP.md).
 
-The next free number is **UGS-0050**.
+The next free number is **UGS-0051**.
 
 ## Doing
 
+- **UGS-0050** (studio): the README for testers: the app icon and screenshots at the top, then how to download and install, what it does and how to get started; building from source comes after. Screenshots in `docs/images/`, 880px wide.
 - **UGS-0048** (studio): Phase 5, first beta for testers: v0.2.0-beta.1 as a GitHub pre-release with the signed `.dmg` and the unsigned `.exe`. This PR sets the version, writes the tester notes ([release-notes/v0.2.0-beta.1.md](release-notes/v0.2.0-beta.1.md)) and the publishing steps ([RELEASING.md](RELEASING.md)); the owner then builds, checks the `.dmg` on another Mac and creates the pre-release.
 
 ## Next (in order; rearrange freely)
