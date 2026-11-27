@@ -1,6 +1,6 @@
 # UkeGeeks Studio: notes for Claude
 
-A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele songbooks. It hosts the Song-a-Matic editor from `@ukegeeks/song-editor`. Plan: [docs/ROADMAP.md](docs/ROADMAP.md); backlog for every UkeGeeks repo: [docs/BACKLOG.md](docs/BACKLOG.md); why things are the way they are: [docs/DECISIONS.md](docs/DECISIONS.md). Current state, code map, testing and Tauri lessons: [docs/HANDOFF.md](docs/HANDOFF.md). What changed, PR by PR: [CHANGELOG.md](CHANGELOG.md).
+A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele songbooks. It hosts the Song-a-Matic editor from `@ukegeeks/song-editor`. Plan: [docs/ROADMAP.md](docs/ROADMAP.md); backlog for every UkeGeeks repo: [docs/BACKLOG.md](docs/BACKLOG.md); why things are the way they are: [docs/DECISIONS.md](docs/DECISIONS.md). Current state, code map, testing and Tauri lessons: [docs/HANDOFF.md](docs/HANDOFF.md). Release builds and signing: [docs/RELEASING.md](docs/RELEASING.md). What changed, PR by PR: [CHANGELOG.md](CHANGELOG.md).
 
 ## Working with the owner (Buz)
 

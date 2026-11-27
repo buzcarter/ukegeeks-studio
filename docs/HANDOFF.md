@@ -58,6 +58,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 | `src-tauri/src/open_files.rs` | Songs opened from outside: `RunEvent::Opened` (Mac), the command line and a second launch (Windows, Linux, through tauri-plugin-single-instance). Each opens as `editor.html?file=`, with the file allowed in the fs scope. |
 | `src-tauri/src/paths.rs`, `platform.rs` | `same_path`, `folder_name`; opening a folder or web page with the OS. |
 | `src-tauri/capabilities/default.json`, `edit.json` | What the song list and song windows may do, and the Edit windows (events and their own title only). Each description says why each permission is there. |
+| `scripts/release-mac.js` | `npm run release:mac`: the signed, notarized Mac release; how-to and one-time setup in [RELEASING.md](RELEASING.md). |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
 | `scripts/icons/` | `npm run icons` (Mac only: Swift draws the SVG): `src-tauri/icons/` from `src-tauri/icons/source/maestro-saurus.svg`, a cream rounded square for the Mac, full-bleed for Windows. The results are committed. |
 | `scripts/preview/` | `npm run preview`: the pages in a browser with a fake Tauri. |
