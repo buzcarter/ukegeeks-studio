@@ -14,6 +14,7 @@
     "test": "node --test \"test/**/*.test.js\"",
     "lint": "eslint .",
     "vendor": "node scripts/vendor.js",
+    "icons": "node scripts/icons/build.js",
     "tauri": "tauri",
     "dev": "tauri dev",
     "preview": "npm run vendor && node scripts/preview/server.js"
