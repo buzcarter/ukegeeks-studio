@@ -13,10 +13,17 @@ A universal (Apple Silicon + Intel) `.app` and `.dmg`, signed with the owner's D
 Needs the Apple Developer Program membership. The Command Line Tools are enough (`notarytool` and `stapler` come with them); Xcode isn't needed.
 
 1. **A Developer ID Application certificate,** in the login keychain:
-   1. Keychain Access > Certificate Assistant > Request a Certificate From a Certificate Authority…: your email, "Saved to disk".
-   2. On developer.apple.com, Certificates, Identifiers & Profiles > Certificates > +: **Developer ID Application** (G2 Sub-CA), upload that request, download the `.cer`.
-   3. Double-click the `.cer` to add it to the login keychain.
-   4. Check: `security find-identity -v -p codesigning` lists "Developer ID Application: <name> (<TEAM ID>)". The ten characters in brackets are the team ID.
+   1. In Keychain Access, select **login** in the sidebar. Then, from the app menu (the bold "Keychain Access" beside File, not the File menu): Certificate Assistant > Request a Certificate From a Certificate Authority…. Your email and name, CA Email Address empty, "Saved to disk".
+   2. On developer.apple.com, Certificates, Identifiers & Profiles > Certificates > +: **Developer ID Application**, then Continue. The next page asks for a Profile Type: **G2 Sub-CA** (it says "Xcode 11.4.1 or later", but Xcode isn't needed). Upload the request, download the `.cer`.
+   3. Double-click the `.cer`. If Keychain Access says the "System Roots" keychain can't be modified, click OK: that's harmless, and the certificate lands in another keychain (System or login; either works).
+   4. **Apple's intermediate certificate,** which Xcode would otherwise install. Without it the certificate shows "is not trusted" and counts as invalid:
+
+```bash
+curl -fsSL -o ~/Downloads/DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer && security import ~/Downloads/DeveloperIDG2CA.cer -k ~/Library/Keychains/login.keychain-db
+```
+
+   5. Check: `security find-identity -v -p codesigning` says "1 valid identities found" and lists "Developer ID Application: <name> (<TEAM ID>)". The ten characters in brackets are the team ID.
+   6. The first signing may ask whether `codesign` may use the key: **Always Allow**, so release builds don't stop to ask.
 2. **An app-specific password** for notarizing: account.apple.com > Sign-In and Security > App-Specific Passwords, named "UkeGeeks Studio notary".
 3. **Keep the password in the keychain,** never in a file or the shell history. This asks for it:
 
