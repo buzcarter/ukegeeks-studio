@@ -4,6 +4,11 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### Phase 5 plan (2026-11-27)
+
+- **The steps to ship for Mac and Windows** are on the backlog as UGS-0043 to UGS-0048: icon, a universal Mac `.dmg`, double-clicking a song, Mac signing and notarization, a Windows CI build, and a first beta for testers. The ROADMAP records the signing choices and the icon set's new place.
+- Song Formatter's default branch is now `main` (UGS-0049).
+
 ### UGS-0041: rough edges (2026-11-26)
 
 - **Song titles read as written in window titles,** the Edit window's title, File > Open Recent and the "save changes?" question: "Rock & Roll ©", not "Rock &amp; Roll &copy;". The song's text keeps its entities. (Open Recent entries from before show the old way until the song is opened again.)

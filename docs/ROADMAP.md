@@ -52,7 +52,13 @@ The feature uke clubs want: pick songs, order them, and export **one PDF** with 
 
 ## Phase 5: ship for Mac and Windows
 
-App icon (the Maestro Saurus favicon set is in `~/Sites/ukegeeks.org/resources/favicon/package/claude/`), installers, code signing, and opening a song by double-clicking it in Finder (a file association; the editor's `?file=` page already exists). Remembering the last songbook and the About item are done (tasks 0005, 0004).
+App icon (the Maestro Saurus favicon set is in `~/Code/UkeGeeks/files/media/Site Assets/favicon/package/claude/`; its largest is 512px), installers, code signing, and opening a song by double-clicking it in Finder (a file association; the editor's `?file=` page already exists). Remembering the last songbook and the About item are done (tasks 0005, 0004). The steps are UGS-0043 to UGS-0048 in [BACKLOG.md](BACKLOG.md).
+
+Decided 2026-11-27, to get a build to beta testers quickly:
+
+- **Mac:** a universal `.dmg`, signed with the owner's Developer ID and notarized, on the owner's Mac for now.
+- **Windows:** an NSIS `.exe`, unsigned for now (testers click through SmartScreen), built by CI.
+- **Later:** signing in GitHub Actions, Windows signing, an updater.
 
 ## Phase 6: iPad
 
@@ -68,4 +74,4 @@ The same Tauri project built for iPadOS. Needs full Xcode; today the machine has
 
 ## Still open
 
-- Windows: when to start building and testing there.
+- Windows: who tests the first beta there (it's built in CI from UGS-0047 on).
