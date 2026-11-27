@@ -13,9 +13,13 @@
  *    staples it, then makes the .dmg from it.
  * 4. Notarizes and staples the .dmg too, so it opens without a check online.
  * 5. Verifies: codesign, Gatekeeper (spctl) and the stapled tickets.
+ *
+ * Rust's tools are often only on the PATH of shells that load ~/.cargo/env, so
+ * ~/.cargo/bin is added when `cargo` isn't found.
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -23,11 +27,34 @@ const BUNDLE = path.join(ROOT, 'src-tauri/target/universal-apple-darwin/release/
 const KEYCHAIN_ITEM = 'ukegeeks-studio-notary';
 
 const output = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8' }).trim();
-const run = (cmd, args, env = process.env) => execFileSync(cmd, args, { cwd: ROOT, stdio: 'inherit', env });
 
 function fail(message) {
   console.error(`\nrelease:mac: ${message}\nSee docs/RELEASING.md.`);
   process.exit(1);
+}
+
+/** Runs a step, its output shown; a failed step ends the script with its name. */
+function run(cmd, args, env = process.env) {
+  try {
+    execFileSync(cmd, args, { cwd: ROOT, stdio: 'inherit', env });
+  } catch {
+    fail(`this step failed: ${cmd} ${args.slice(0, 2).join(' ')}…`);
+  }
+}
+
+/** Finds `cargo`, adding ~/.cargo/bin to the PATH if needed. */
+function ensureCargo() {
+  const has = () => {
+    try {
+      execFileSync('cargo', ['--version'], { stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  if (has()) return;
+  process.env.PATH = `${path.join(os.homedir(), '.cargo/bin')}${path.delimiter}${process.env.PATH}`;
+  if (!has()) fail('cargo (Rust) not found, not even in ~/.cargo/bin.');
 }
 
 /** The one Developer ID Application identity in the keychain, by its full name. */
@@ -73,6 +100,7 @@ function onlyFile(dir, ext) {
   return path.join(dir, files[0]);
 }
 
+ensureCargo();
 const identity = signingIdentity();
 const notary = notaryCredentials();
 console.log(`Signing as: ${identity}`);
