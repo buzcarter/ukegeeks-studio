@@ -55,6 +55,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 | `src-tauri/src/favorites.rs` | Favorites, kept in `favorites.json` as lists of `{ folder, file }` (one list today): star, unstar, follow a rename. |
 | `src-tauri/src/recent.rs`, `settings.rs` | Open Recent (songs) and Settings, kept in `recent.json` and `settings.json`. |
 | `src-tauri/src/song_file.rs`, `print.rs`, `dock_quit.rs` | `save_song_file` (a song outside a songbook folder), `print_page` (a Mac print sheet with margins), and Dock > Quit asking about unsaved changes (Mac). |
+| `src-tauri/src/open_files.rs` | Songs opened from outside: `RunEvent::Opened` (Mac), the command line and a second launch (Windows, Linux, through tauri-plugin-single-instance). Each opens as `editor.html?file=`, with the file allowed in the fs scope. |
 | `src-tauri/src/paths.rs`, `platform.rs` | `same_path`, `folder_name`; opening a folder or web page with the OS. |
 | `src-tauri/capabilities/default.json`, `edit.json` | What the song list and song windows may do, and the Edit windows (events and their own title only). Each description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
@@ -92,6 +93,9 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 - **Menu:** it's built in `setup()` (so Open Recent can be rebuilt), and menu calls are safe from any thread.
 - **Events to one window:** `emit_to(label, …)` still reaches every page that listens with a plain `listen()`, which hears events sent to any target. Listen with `{ target: { kind: 'AnyLabel', label } }` to get only your window's events (and still the global ones from `emit`).
 - **Window URLs:** `WebviewUrl::App("editor.html?x=1")` keeps the query string (it's joined onto the app URL).
+- **Opening files on a Mac:** `RunEvent::Opened` for the files a launch was for comes *before* the app has finished launching, so before `setup()` has managed any state: `app.state::<T>()` panics there, and a panic in that Apple Event handler aborts the app (SIGABRT in `NSAppleEventManager`). `open_files.rs` keeps such files until the end of `setup()`.
+- **Testing a bundle with `open -a`:** macOS hands the file to a running app with the same bundle ID, the owner's `npm run dev` included. Test a copy with its own `CFBundleIdentifier` (PlistBuddy, then `codesign --force --deep -s -`), stop it by PID, and back up `recent.json` first, since an opened song joins Open Recent. Crash reports are in `~/Library/Logs/DiagnosticReports/ukegeeks-studio-*.ips`.
+- **The owner's `tauri dev` watches `src-tauri/`:** Rust or `Cargo.toml` edits rebuild and restart their running app, and can end it (2026-11-27).
 - **Rust dependencies:** `objc2`, `serde` and `serde_json` are direct dependencies, but Tauri already builds them, so they cost nothing extra.
 
 ## Disk

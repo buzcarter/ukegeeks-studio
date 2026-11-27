@@ -4,6 +4,11 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### UGS-0045: double-click a song to open it (2026-11-27)
+
+- **Double-clicking a `.cpm` song in Finder opens it in Studio,** in its own window, as File > Open… does; so do Open With, dropping a song on the Dock icon, and (on Windows) double-clicking in Explorer. Other ChordPro files (`.cho`, `.chopro`, `.chordpro`, `.chord`, `.crd`) list Studio under Open With.
+- A song opened this way can be saved, and joins File > Open Recent.
+
 ### UGS-0044: the Mac bundle (2026-11-27)
 
 - **`npm run build:mac`** builds `UkeGeeks Studio.app` and a `.dmg` for Apple Silicon and Intel Macs (macOS 11 or later), in `src-tauri/target/universal-apple-darwin/release/bundle/`. It's ad-hoc signed for now: a Mac that downloads it asks to right-click > Open the first time. Signing and notarizing come next (UGS-0046).

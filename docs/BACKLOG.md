@@ -17,7 +17,6 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 | ID | Repos | What | Depends on |
 |---|---|---|---|
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
-| UGS-0045 | studio | Phase 5, double-clicking a song opens it: `.cpm` in `bundle.fileAssociations` (the other ChordPro extensions too, as Viewer, if wanted); on a Mac `RunEvent::Opened` (also when the app is already running), on Windows the path from the command line; open it through `editor.html?file=` and allow that one file | UGS-0044 |
 | UGS-0046 | studio | Phase 5, Mac signing: Developer ID Application certificate (the owner's Apple Developer membership), hardened runtime, notarized with `notarytool` (app-specific password or API key in environment variables, never committed), stapled; `npm run release:mac`, checked with `spctl` and `stapler validate`. Signed on the owner's Mac | UGS-0044 |
 | UGS-0047 | studio | Phase 5, Windows CI build: a `windows-latest` job runs `cargo test` and builds an unsigned NSIS `.exe` as a workflow artifact. Expect fixes: the Windows menu code has never been compiled, and `print.rs`/`dock_quit.rs` are Mac-only | UGS-0044 |
 | UGS-0048 | studio | Phase 5, first beta for testers: v0.2.0-beta.1 as a GitHub pre-release with the signed `.dmg` and the unsigned `.exe`, and tester notes (Windows: SmartScreen's "More info > Run anyway") | UGS-0045, UGS-0046, UGS-0047 |
@@ -39,6 +38,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0045 | studio | Double-clicking a song opens it: `.cpm` belongs to Studio (its own type, `org.ukegeeks.cpm`, a kind of plain text), and `.cho`, `.chopro`, `.chordpro`, `.chord`, `.crd` list it under Open With. On a Mac `RunEvent::Opened` (files sent before the app has started wait for `setup()`); on Windows and Linux the command line, and a second launch hands its files to the running app (tauri-plugin-single-instance). Each song opens on its own, as with File > Open… | #33 |
 | UGS-0044 | studio | The Mac bundle: `npm run build:mac` makes a universal (Apple Silicon + Intel) `UkeGeeks Studio.app` and `.dmg` (about 25 MB and 9 MB), ad-hoc signed with the hardened runtime until UGS-0046; Music category, macOS 11 or later, copyright and licence. `tauri.conf.json` also lists NSIS for Windows (UGS-0047) | #32 |
 | UGS-0043 | studio | App icon: the Maestro Saurus, drawn from the favicon's SVG (`src-tauri/icons/source/maestro-saurus.svg`) by `npm run icons`. On a Mac, on cream inside Apple's rounded-square grid (macOS 26 puts other shapes in a grey tile); on Windows (`icon.ico`), the art full-bleed. A cream tile was the owner's pick over pale wood and white | #31 |
 | UGS-0049 | formatter | Default branch renamed `master` → `main` on GitHub (2026-11-27); CI (`runTests.yml`) and the demo deploy (`publishDemo.yml`) follow it, and so do the README and Studio's `CLAUDE.md` | song-formatter#42 |

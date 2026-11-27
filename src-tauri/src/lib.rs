@@ -5,13 +5,15 @@
 //!
 //! Each song opens in its own window (windows.rs). The song list's sidebar is the
 //! Library (library.rs); Favorites (starred songs) are in favorites.rs, File > Open
-//! Recent in recent.rs, the Settings window in settings.rs.
+//! Recent in recent.rs, the Settings window in settings.rs. Songs opened from Finder,
+//! Explorer or the command line go through open_files.rs.
 
 #[cfg(target_os = "macos")]
 mod dock_quit;
 mod favorites;
 mod library;
 mod menu;
+mod open_files;
 mod paths;
 mod platform;
 mod print;
@@ -32,7 +34,20 @@ pub(crate) fn exit_app(app: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  let app = tauri::Builder::default()
+  let builder = tauri::Builder::default();
+  // Windows and Linux start a second copy of the app for a double-clicked song: it
+  // hands its command line to this one and quits. (A Mac sends RunEvent::Opened.)
+  // The plugin must be the first one registered.
+  #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
+  let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+    let paths = open_files::paths_from_args(argv.into_iter().skip(1), std::path::Path::new(&cwd));
+    if paths.is_empty() {
+      windows::show_main(app, "");
+    } else {
+      open_files::open_paths(app, paths);
+    }
+  }));
+  let app = builder
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_fs::init())
     .on_menu_event(|app, event| menu::on_menu_event(app, event.id().as_ref()))
@@ -78,6 +93,14 @@ pub fn run() {
       app.set_menu(menu::build_menu(handle, &open_recent)?)?;
       #[cfg(target_os = "macos")]
       dock_quit::install(app.handle().clone());
+      // a song double-clicked on Windows or Linux starts the app with its path
+      #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
+      {
+        let cwd = std::env::current_dir().unwrap_or_default();
+        open_files::open_paths(handle, open_files::paths_from_args(std::env::args().skip(1), &cwd));
+      }
+      // songs a Mac sent before the app had started (RunEvent::Opened, below)
+      open_files::open_waiting(handle);
       #[cfg(not(target_os = "macos"))]
       let _ = app;
       Ok(())
@@ -99,6 +122,13 @@ pub fn run() {
       }
     }
     // Clicking the Dock icon with no windows showing brings back the Library
+    // A song double-clicked in Finder, opened with Open With, or dropped on the Dock
+    // icon, whether or not the app was running
+    #[cfg(target_os = "macos")]
+    RunEvent::Opened { urls } => {
+      let paths = urls.into_iter().filter_map(|url| url.to_file_path().ok()).collect();
+      open_files::open_paths(app, paths);
+    }
     #[cfg(target_os = "macos")]
     RunEvent::Reopen { has_visible_windows: false, .. } => {
       windows::show_main(app, "");

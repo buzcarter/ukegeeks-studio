@@ -20,7 +20,7 @@ pub const SETTINGS_WINDOW: &str = "settings";
 /// Song file extensions the song list may show. ".txt" also covers the Songbook's
 /// ".cpm.txt" (the pages add it). The rest are ChordPro's other common extensions
 /// (chordpro.org); ".cho" is ChordPro's recommended default.
-const KNOWN_EXTENSIONS: [&str; 8] = [".cpm", ".txt", ".cho", ".crd", ".chopro", ".chord", ".chordpro", ".pro"];
+pub(crate) const KNOWN_EXTENSIONS: [&str; 8] = [".cpm", ".txt", ".cho", ".crd", ".chopro", ".chord", ".chordpro", ".pro"];
 
 /// How song files are named from their title and artist (the pages build the names).
 const FILE_NAMINGS: [&str; 3] = ["title-artist", "title", "artist-title"];
