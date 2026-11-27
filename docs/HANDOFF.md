@@ -73,7 +73,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 - **The real app:** Claude Code's screen tools can't target a dev build's window, because it's a bare binary, not an `.app`. So test the pages with `npm run preview`, build and briefly launch the binary to catch startup errors, then ask the owner to try it, saying exactly what to click. Launch it as `./target/debug/ukegeeks-studio & pid=$!; sleep 6; kill $pid`. **Never `pkill` by name:** that also kills the owner's own `npm run dev`, which runs the same binary. Put the launch on a line of its own, not after `cd … && cargo build &&`: there `&` backgrounds the whole chain and `$!` is a subshell, not the app. The owner's `tauri dev` also rebuilds and restarts on Rust edits, so their running app may already have the branch's code.
 - **Port 8765 taken** (another chat's preview): the server reads `PORT`, so `PORT=8766 npm run preview` works.
 - **Commands for the owner:** the desktop app's `!` shell doesn't load their profile, so cargo isn't on its PATH. Give them `cd ~/Code/UkeGeeks/ugs-ukegeeks-studio && PATH="$HOME/.cargo/bin:$PATH" npm run dev`.
-- **Windows:** the Windows menu code (`cfg(not(target_os = "macos"))`) has never been compiled; only the Mac target is installed.
+- **Windows:** CI's `windows` job (UGS-0047) compiles and tests the Windows code and builds an unsigned installer (the run's Artifacts). It has never been *run* on Windows by a person yet.
 
 ## Tauri lessons (2.12.5; checked, don't relearn)
 
@@ -127,7 +127,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 
 Done in UGS-0034: Studio no longer reaches into the editor's page, and song titles with entities are no longer rewritten on save (the editor's box keeps the exact text). Done in UGS-0032: the reorganisation above, the shared JSON store, lint and CI, and three bugs (a stale song list after a save renamed a file, names holding HTML entities, a parse cache that never hit). Still open, most important first:
 
-- **The Windows menu and paths have never been compiled or run.** CI only runs `cargo test` on macOS; add a `windows-latest` job when Windows work starts (Phase 5).
+- **The Windows menu and paths compile and pass their tests in CI (UGS-0047) but have never been run** by a person on Windows.
 - **No type checking of the pages.** `// @ts-check` with a `jsconfig.json` and the Tauri API's types would catch wrong command arguments; the editor's 2.0 types (`@ukegeeks/song-editor/browser`) can be used too.
 - **`cargo clippy` and `cargo fmt` aren't installed** on this machine (`rustup component add clippy rustfmt`), so neither has been run. The code uses 2-space indentation, which needs a `rustfmt.toml` (`tab_spaces = 2`, `max_width = 120`) before `cargo fmt` is safe to run.
 - **`npm audit`** reports a moderate advisory in `minimatch`, which only ESLint (a dev tool) uses; it goes away when ESLint updates.
