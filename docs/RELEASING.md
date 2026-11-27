@@ -13,23 +13,42 @@ A universal (Apple Silicon + Intel) `.app` and `.dmg`, signed with the owner's D
 Needs the Apple Developer Program membership. The Command Line Tools are enough (`notarytool` and `stapler` come with them); Xcode isn't needed.
 
 1. **A Developer ID Application certificate,** in the login keychain:
-   1. Keychain Access > Certificate Assistant > Request a Certificate From a Certificate Authority…: your email, "Saved to disk".
-   2. On developer.apple.com, Certificates, Identifiers & Profiles > Certificates > +: **Developer ID Application** (G2 Sub-CA), upload that request, download the `.cer`.
-   3. Double-click the `.cer` to add it to the login keychain.
-   4. Check: `security find-identity -v -p codesigning` lists "Developer ID Application: <name> (<TEAM ID>)". The ten characters in brackets are the team ID.
-2. **An app-specific password** for notarizing: account.apple.com > Sign-In and Security > App-Specific Passwords, named "UkeGeeks Studio notary".
-3. **Keep the password in the keychain,** never in a file or the shell history. This asks for it:
+   1. In Keychain Access, select **login** in the sidebar. Then, from the app menu (the bold "Keychain Access" beside File, not the File menu): Certificate Assistant > Request a Certificate From a Certificate Authority…. Your email and name, CA Email Address empty, "Saved to disk".
+   2. On developer.apple.com, Certificates, Identifiers & Profiles > Certificates > +: **Developer ID Application**, then Continue. The next page asks for a Profile Type: **G2 Sub-CA** (it says "Xcode 11.4.1 or later", but Xcode isn't needed). Upload the request, download the `.cer`.
+   3. Double-click the `.cer`. If Keychain Access says the "System Roots" keychain can't be modified, click OK: that's harmless, and the certificate lands in another keychain (System or login; either works).
+   4. **Apple's intermediate certificate,** which Xcode would otherwise install. Without it the certificate shows "is not trusted" and counts as invalid:
 
 ```bash
-security add-generic-password -s ukegeeks-studio-notary -a "<your Apple ID email>" -w
+curl -fsSL -o ~/Downloads/DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer && security import ~/Downloads/DeveloperIDG2CA.cer -k ~/Library/Keychains/login.keychain-db
+```
+
+   5. Check: `security find-identity -v -p codesigning` says "1 valid identities found" and lists "Developer ID Application: <name> (<TEAM ID>)". The ten characters in brackets are the team ID.
+   6. The first signing may ask whether `codesign` may use the key: **Always Allow**, so release builds don't stop to ask.
+2. **An app-specific password** for notarizing: sign in at account.apple.com **with the Apple ID of the Developer account** (the one you use on developer.apple.com), then Sign-In and Security > App-Specific Passwords > +, named "UkeGeeks Studio notary". It looks like `abcd-efgh-ijkl-mnop` and is shown only once.
+3. **Keep the password in the keychain,** never in a file or the shell history. In the command below, replace `you@example.com` with that Apple ID (keep the quotes). At `password data for new item:` and again at `retype password data for new item:`, paste the **app-specific password**. `-U` replaces an earlier one.
+
+```bash
+security add-generic-password -U -s ukegeeks-studio-notary -a "you@example.com" -w
 ```
 
 (An App Store Connect API key works instead: set `APPLE_API_KEY`, `APPLE_API_ISSUER` and `APPLE_API_KEY_PATH`.)
 
+### Which password is which
+
+| Where it asks | What it wants |
+|---|---|
+| A macOS dialog while signing: "codesign wants to sign using key … in your keychain" | Your **Mac login password** (the one that unlocks this Mac), then **Always Allow** |
+| The Terminal, after `security add-generic-password … -w`: "password data for new item" | The **app-specific password** (`abcd-efgh-ijkl-mnop`) |
+| Anywhere in this setup | **Never** your regular Apple ID password |
+
+If notarizing fails with **HTTP 401, "Invalid credentials"**: the keychain item holds the wrong password, or it's under a different Apple ID than the Developer account. Make a new app-specific password and run step 3 again.
+
 ### Each release
 
+Replace `you@example.com` and `ABCDE12345` with the Apple ID and team ID (keep the quotes):
+
 ```bash
-cd ~/Code/UkeGeeks/ugs-ukegeeks-studio && APPLE_ID="<your Apple ID email>" APPLE_TEAM_ID="<TEAM ID>" npm run release:mac
+cd ~/Code/UkeGeeks/ugs-ukegeeks-studio && APPLE_ID="you@example.com" APPLE_TEAM_ID="ABCDE12345" npm run release:mac
 ```
 
 Notarizing usually takes a few minutes per upload (two uploads: the app, then the `.dmg`). The result is `src-tauri/target/universal-apple-darwin/release/bundle/dmg/UkeGeeks Studio_<version>_universal.dmg`. If Apple rejects an upload, `xcrun notarytool log <submission id> …` (same credentials) says why.
