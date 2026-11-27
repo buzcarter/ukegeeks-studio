@@ -19,7 +19,7 @@ A Tauri 2 desktop app (Mac first, then Windows, later iPad) for making ukulele s
 
 ## Machine
 
-- macOS on Apple Silicon. Rust 1.99.1 (`aarch64-apple-darwin` only), Node 24.14, npm 11.9.
+- macOS on Apple Silicon. Rust 1.99.1 (`aarch64-apple-darwin`, and `x86_64-apple-darwin` since 2026-11-27 for universal builds), Node 24.14, npm 11.9.
 - Xcode **Command Line Tools only** (no full Xcode): enough for macOS builds, not for iPad.
 - The owner is signed in to `gh` and npm as `buzcarter`. npm publishing asks for a browser sign-in.
 
