@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="64" viewBox="0 0 250 64" role="img" aria-label="Download for macOS">
+  <rect width="250" height="64" rx="12" fill="#7a2e0e"/>
+  <g transform="translate(18 16)">
+    <rect x="1" y="1" width="38" height="30" rx="5" fill="#fbf8f2" stroke="#f4e19f" stroke-width="2"/>
+    <path d="M1 10h38" stroke="#d9d2c4" stroke-width="1.5"/>
+    <circle cx="7" cy="5.5" r="2" fill="#ff5f57"/>
+    <circle cx="13" cy="5.5" r="2" fill="#febc2e"/>
+    <circle cx="19" cy="5.5" r="2" fill="#28c840"/>
+    <path d="M20 14v10m-4-4 4 4 4-4" fill="none" stroke="#7a2e0e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" fill="#fbf8f2">
+    <text x="72" y="27" font-size="12" opacity="0.85">Download for</text>
+    <text x="72" y="49" font-size="22" font-weight="700">macOS</text>
+  </g>
+</svg>
