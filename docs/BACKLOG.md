@@ -17,8 +17,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 | ID | Repos | What | Depends on |
 |---|---|---|---|
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
-| UGS-0043 | studio | Phase 5, app icon: a 1024px master of the Maestro Saurus icon, upscaled nearest-neighbour from `icon-512.png` (the largest in `~/Code/UkeGeeks/files/media/Site Assets/favicon/package/claude/`), kept in the repo; `npx tauri icon` makes the `.icns`, `.ico` and PNGs. Dialogs stop showing a folder icon | |
-| UGS-0044 | studio | Phase 5, Mac bundle: `bundle.active`, a universal (Apple Silicon + Intel) `.dmg` (`rustup target add x86_64-apple-darwin`), category, copyright and minimum macOS version; `npm run build:mac`. Release builds add several GB to `src-tauri/target/` | UGS-0043 |
+| UGS-0044 | studio | Phase 5, Mac bundle: `bundle.active`, a universal (Apple Silicon + Intel) `.dmg` (`rustup target add x86_64-apple-darwin`), category, copyright and minimum macOS version; `npm run build:mac`. Release builds add several GB to `src-tauri/target/`. Check the icon in Finder, the Dock and dialogs (a bare dev binary can't show it) | |
 | UGS-0045 | studio | Phase 5, double-clicking a song opens it: `.cpm` in `bundle.fileAssociations` (the other ChordPro extensions too, as Viewer, if wanted); on a Mac `RunEvent::Opened` (also when the app is already running), on Windows the path from the command line; open it through `editor.html?file=` and allow that one file | UGS-0044 |
 | UGS-0046 | studio | Phase 5, Mac signing: Developer ID Application certificate (the owner's Apple Developer membership), hardened runtime, notarized with `notarytool` (app-specific password or API key in environment variables, never committed), stapled; `npm run release:mac`, checked with `spctl` and `stapler validate`. Signed on the owner's Mac | UGS-0044 |
 | UGS-0047 | studio | Phase 5, Windows CI build: a `windows-latest` job runs `cargo test` and builds an unsigned NSIS `.exe` as a workflow artifact. Expect fixes: the Windows menu code has never been compiled, and `print.rs`/`dock_quit.rs` are Mac-only | UGS-0044 |
@@ -41,6 +40,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0043 | studio | App icon: the Maestro Saurus, drawn from the favicon's SVG (`src-tauri/icons/source/maestro-saurus.svg`) by `npm run icons`. On a Mac, on cream inside Apple's rounded-square grid (macOS 26 puts other shapes in a grey tile); on Windows (`icon.ico`), the art full-bleed. A cream tile was the owner's pick over pale wood and white | #31 |
 | UGS-0049 | formatter | Default branch renamed `master` → `main` on GitHub (2026-11-27); CI (`runTests.yml`) and the demo deploy (`publishDemo.yml`) follow it, and so do the README and Studio's `CLAUDE.md` | song-formatter#42 |
 | UGS-0042 | editor | Transpose keeps text typed since the last Update (the Edit Song box or Fullscreen); each choice still counts from the original key. Unreleased: Studio gets it with the next editor release | song-editor#34 |
 | UGS-0041 | studio | Rough edges: window titles, Open Recent and the unsaved-changes question show a song's title decoded (`Rock & Roll`, not `Rock &amp; Roll`); Open Recent hides songs on an unplugged drive instead of forgetting them; the Edit window has a help panel (shortcuts and snippets, with Mac keys on a Mac) | #29 |

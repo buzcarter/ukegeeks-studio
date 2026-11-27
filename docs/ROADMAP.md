@@ -52,7 +52,7 @@ The feature uke clubs want: pick songs, order them, and export **one PDF** with 
 
 ## Phase 5: ship for Mac and Windows
 
-App icon (the Maestro Saurus favicon set is in `~/Code/UkeGeeks/files/media/Site Assets/favicon/package/claude/`; its largest is 512px), installers, code signing, and opening a song by double-clicking it in Finder (a file association; the editor's `?file=` page already exists). Remembering the last songbook and the About item are done (tasks 0005, 0004). The steps are UGS-0043 to UGS-0048 in [BACKLOG.md](BACKLOG.md).
+App icon (done, UGS-0043: the Maestro Saurus from the favicon's SVG, `npm run icons`), installers, code signing, and opening a song by double-clicking it in Finder (a file association; the editor's `?file=` page already exists). Remembering the last songbook and the About item are done (tasks 0005, 0004). The steps are UGS-0043 to UGS-0048 in [BACKLOG.md](BACKLOG.md).
 
 Decided 2026-11-27, to get a build to beta testers quickly:
 

@@ -4,6 +4,11 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### UGS-0043: app icon (2026-11-27)
+
+- **UkeGeeks Studio has an icon:** the Maestro Saurus, ukegeeks.org's favicon, on a cream rounded square on a Mac and full-bleed on Windows. It's drawn from the SVG, so it's sharp at every size.
+- `npm run icons` remakes `src-tauri/icons/` from `src-tauri/icons/source/maestro-saurus.svg` (on a Mac).
+
 ### Phase 5 plan (2026-11-27)
 
 - **The steps to ship for Mac and Windows** are on the backlog as UGS-0043 to UGS-0048: icon, a universal Mac `.dmg`, double-clicking a song, Mac signing and notarization, a Windows CI build, and a first beta for testers. The ROADMAP records the signing choices and the icon set's new place.

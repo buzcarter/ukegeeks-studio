@@ -58,6 +58,7 @@ Reorganised on 2026-11-11 (UGS-0032). The pages are plain ES modules with no bun
 | `src-tauri/src/paths.rs`, `platform.rs` | `same_path`, `folder_name`; opening a folder or web page with the OS. |
 | `src-tauri/capabilities/default.json`, `edit.json` | What the song list and song windows may do, and the Edit windows (events and their own title only). Each description says why each permission is there. |
 | `scripts/vendor.js` | Copies the @ukegeeks packages into `web/vendor/` (not committed). |
+| `scripts/icons/` | `npm run icons` (Mac only: Swift draws the SVG): `src-tauri/icons/` from `src-tauri/icons/source/maestro-saurus.svg`, a cream rounded square for the Mac, full-bleed for Windows. The results are committed. |
 | `scripts/preview/` | `npm run preview`: the pages in a browser with a fake Tauri. |
 
 ## How to test
@@ -112,7 +113,7 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 - **Not tried in the real app by the owner yet,** as far as this session knows: search, the songbook right-click menu, songbook names, staying open on a Mac, and Favorites. Ask how they went.
 - **Phase 3:** add a song from a pasted songsheet, using the editor's `ugsEditorPlus.reformat`.
 - **Phase 5 work that's already visible:**
-  - The dev build has no app icon; dialogs show a folder icon.
+  - The app icon is in `src-tauri/icons/` (UGS-0043), but a bare dev binary isn't an `.app`, so Finder and dialogs show it only once the app is bundled (UGS-0044).
   - Double-clicking a `.cpm` in Finder should open it, through a file association and the existing `editor.html?file=` page.
 - **The editor is Buz's again** (2026-11-11; `~/Code/UkeGeeks/ugs-editor`). UGS-0034 gave the editor a host API, published as 2.0.0-beta.1. UGS-0033 prefixed the editor's class names (`ugsEditor-…`) and scoped its DOM lookups, published as 2.0.0-beta.4. UGS-0039's hooks came in beta.6. All of it is 2.0.0 since UkeGeeks 2026.12 (UGS-0040), which Studio and the Songbook use.
 
