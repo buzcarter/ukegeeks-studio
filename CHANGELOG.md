@@ -4,6 +4,10 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### UGS-0050: a README for testers (2026-11-27)
+
+- **The README starts with the app:** its icon, a screenshot of the Library, a link to the beta, then how to install it on a Mac or Windows, what it does (with screenshots of a song and the Edit window) and a step-by-step Getting started. Running from source and the project's layout come last, under "For developers".
+
 ### UGS-0048: the first beta, 0.2.0-beta.1 (2026-11-27)
 
 - **The version is 0.2.0-beta.1,** so the installers are `UkeGeeks Studio_0.2.0-beta.1_universal.dmg` and `UkeGeeks Studio_0.2.0-beta.1_x64-setup.exe`.
