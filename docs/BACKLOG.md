@@ -8,7 +8,7 @@ The next free number is **UGS-0050**.
 
 ## Doing
 
-- **UGS-0046** (studio): Mac signing and notarization. `npm run release:mac` and [RELEASING.md](RELEASING.md) are ready (#35); waiting on the owner's one-time setup there (Developer ID Application certificate, app-specific password in the keychain), then a first real run. Done when that run's checks pass and the `.dmg` opens on another Mac with no warning.
+- **UGS-0048** (studio): Phase 5, first beta for testers: v0.2.0-beta.1 as a GitHub pre-release with the signed `.dmg` and the unsigned `.exe`. This PR sets the version, writes the tester notes ([release-notes/v0.2.0-beta.1.md](release-notes/v0.2.0-beta.1.md)) and the publishing steps ([RELEASING.md](RELEASING.md)); the owner then builds, checks the `.dmg` on another Mac and creates the pre-release.
 
 ## Next (in order; rearrange freely)
 
@@ -17,7 +17,6 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 | ID | Repos | What | Depends on |
 |---|---|---|---|
 | UGS-0019 | studio | A first-run welcome or short tour, so a new player gets the most out of the app | |
-| UGS-0048 | studio | Phase 5, first beta for testers: v0.2.0-beta.1 as a GitHub pre-release with the signed `.dmg` and the unsigned `.exe`, and tester notes (Windows: SmartScreen's "More info > Run anyway") | UGS-0045, UGS-0046, UGS-0047 |
 | UGS-0027 | editor | Data-driven menus: build the toolbar and its drop-down menus from a data model (items, labels, icons, actions) instead of fixed markup | |
 
 ## Later
@@ -36,6 +35,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0046 | studio | Mac signing and notarization: `npm run release:mac` finds the Developer ID certificate, builds the universal app and `.dmg`, has Tauri sign (hardened runtime), notarize and staple the app, notarizes and staples the `.dmg`, then checks both (`codesign`, `spctl`: "Notarized Developer ID", `stapler`). The password stays in the keychain. One-time setup in [RELEASING.md](RELEASING.md); the first real run passed on 2026-11-27 | #35, #36 |
 | UGS-0047 | studio | Windows CI: a `windows-latest` job runs `cargo test` and builds an unsigned NSIS installer (`UkeGeeks Studio_<version>_x64-setup.exe`, about 3 MB), kept as the run's `ukegeeks-studio-windows` artifact. The Windows code (menus, paths, single-instance) compiled and its 19 tests passed on the first run, with no warnings | #34 |
 | UGS-0045 | studio | Double-clicking a song opens it: `.cpm` belongs to Studio (its own type, `org.ukegeeks.cpm`, a kind of plain text), and `.cho`, `.chopro`, `.chordpro`, `.chord`, `.crd` list it under Open With. On a Mac `RunEvent::Opened` (files sent before the app has started wait for `setup()`); on Windows and Linux the command line, and a second launch hands its files to the running app (tauri-plugin-single-instance). Each song opens on its own, as with File > Open… | #33 |
 | UGS-0044 | studio | The Mac bundle: `npm run build:mac` makes a universal (Apple Silicon + Intel) `UkeGeeks Studio.app` and `.dmg` (about 25 MB and 9 MB), ad-hoc signed with the hardened runtime until UGS-0046; Music category, macOS 11 or later, copyright and licence. `tauri.conf.json` also lists NSIS for Windows (UGS-0047) | #32 (merged into #31's branch after #31 had landed, so it reached `main` with #33) |

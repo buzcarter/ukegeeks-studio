@@ -56,3 +56,19 @@ Notarizing usually takes a few minutes per upload (two uploads: the app, then th
 ## Windows
 
 The CI's `windows` job (`.github/workflows/ci.yml`) builds an unsigned NSIS installer on every push and PR; it's under the run's Artifacts as `ukegeeks-studio-windows`. Until Windows signing is set up, SmartScreen says "Windows protected your PC": testers click More info > Run anyway.
+
+## Publishing a beta
+
+A beta is a GitHub pre-release with both installers and the tester notes in [release-notes/](release-notes/). The owner runs these steps.
+
+1. **The version,** in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` (the same in all three, like `0.2.0-beta.1`), through a PR. `npm install --package-lock-only` and `cargo test` update the two lock files. The installers' names come from it.
+2. **The tester notes:** `docs/release-notes/v<version>.md`, in the same PR.
+3. **The Mac `.dmg`:** after the PR is merged, on `main`, run `npm run release:mac` (above).
+4. **The Windows `.exe`:** from the CI run of that same commit on `main` (Actions > CI > the run > Artifacts > `ukegeeks-studio-windows`), unzipped into `~/Downloads`.
+5. **The pre-release,** tagged on `main`:
+
+```bash
+cd ~/Code/UkeGeeks/ugs-ukegeeks-studio && gh release create v0.2.0-beta.1 --prerelease --target main --title "UkeGeeks Studio 0.2.0 beta 1" --notes-file docs/release-notes/v0.2.0-beta.1.md "src-tauri/target/universal-apple-darwin/release/bundle/dmg/UkeGeeks Studio_0.2.0-beta.1_universal.dmg" "$HOME/Downloads/UkeGeeks Studio_0.2.0-beta.1_x64-setup.exe"
+```
+
+Testers download from the release's page. Before sending the link, download the `.dmg` from it on another Mac (or another user account) and open the app: it should open with no warning.

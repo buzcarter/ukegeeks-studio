@@ -1,6 +1,6 @@
 [package]
 name = "ukegeeks-studio"
-version = "0.1.0"
+version = "0.2.0-beta.1"
 description = "UkeGeeks Studio: a desktop app for making ukulele songbooks"
 authors = ["Buz Carter <buz@ukegeeks.org>"]
 license = "GPL-3.0-or-later"
