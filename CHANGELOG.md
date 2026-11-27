@@ -4,6 +4,10 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### UGS-0047: a Windows build in CI (2026-11-27)
+
+- **Every push and PR builds a Windows installer** (unsigned NSIS `.exe`, about 3 MB), under the CI run's Artifacts as `ukegeeks-studio-windows`, and runs the Rust tests on Windows. Testers click through SmartScreen (More info > Run anyway) until Windows signing.
+
 ### UGS-0045: double-click a song to open it (2026-11-27)
 
 - **Double-clicking a `.cpm` song in Finder opens it in Studio,** in its own window, as File > Open… does; so do Open With, dropping a song on the Dock icon, and (on Windows) double-clicking in Explorer. Other ChordPro files (`.cho`, `.chopro`, `.chordpro`, `.chord`, `.crd`) list Studio under Open With.
