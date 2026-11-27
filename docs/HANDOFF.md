@@ -105,7 +105,6 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 ## Open threads
 
 - **The Edit window in the real app** hasn't been tried by the owner: where it opens (beside the song window), Cmd+S and Cmd+Z in it, and closing either window. The preview (`npm run preview`) pairs one song tab with one `edit-window.html` tab; open the second by hand, since the browser pane opens no new tabs.
-- **The Edit window has no help panel** (Fullscreen's shortcuts and snippets list). The text is the editor's `ugsEditorPlus.aceHelpHtml`, styled by the editor's stylesheet.
 
 - **Set lists** (after Favorites): named lists in the player's own order. `favorites.json` already keeps lists; it needs making, renaming and reordering them, and a sidebar section.
 - **Task 0019, first-run welcome/tour:** after Favorites, so it shows the app as it will be.
@@ -121,8 +120,6 @@ About 10 GB free on 2026-11-07, with `src-tauri/target/` at 2.3 GB. Incremental 
 
 Done in UGS-0034: Studio no longer reaches into the editor's page, and song titles with entities are no longer rewritten on save (the editor's box keeps the exact text). Done in UGS-0032: the reorganisation above, the shared JSON store, lint and CI, and three bugs (a stale song list after a save renamed a file, names holding HTML entities, a parse cache that never hit). Still open, most important first:
 
-- **A window title shows a song title's entities as typed** (`Rock &amp; Roll`); the song list shows `Rock & Roll`. Decode for the title bar.
-- **Open Recent forgets songs on an unplugged drive:** `recent.rs` drops entries whose file is missing at launch, and the next save makes that permanent. The Library keeps such songbooks; Recent should too (hide, don't drop).
 - **The Windows menu and paths have never been compiled or run.** CI only runs `cargo test` on macOS; add a `windows-latest` job when Windows work starts (Phase 5).
 - **No type checking of the pages.** `// @ts-check` with a `jsconfig.json` and the Tauri API's types would catch wrong command arguments; the editor's 2.0 types (`@ukegeeks/song-editor/browser`) can be used too.
 - **`cargo clippy` and `cargo fmt` aren't installed** on this machine (`rustup component add clippy rustfmt`), so neither has been run. The code uses 2-space indentation, which needs a `rustfmt.toml` (`tab_spaces = 2`, `max_width = 120`) before `cargo fmt` is safe to run.

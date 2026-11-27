@@ -33,7 +33,7 @@ import { newSong } from './dialogs/new-song.js';
 import { getSettings, loadSettings, SONG_EXTENSION, songFileBase } from './lib/app-settings.js';
 import { EDIT_EVENTS, onWindowEvent, sendToPartner } from './lib/edit-window.js';
 import { getFavorites, isStarred, onFavoritesChanged, renameFavorite, starSong } from './lib/favorites.js';
-import { escapeText } from './lib/html.js';
+import { decodeEntities, escapeText } from './lib/html.js';
 import { findSongbook, getLibrary, onLibraryChanged, songbookName } from './lib/library.js';
 import { cancelQuit, onMenu, quitApp } from './lib/menu.js';
 import { cleanPath, folderName, splitPath } from './lib/paths.js';
@@ -134,7 +134,9 @@ async function main() {
   let named = { title: song.title, artist: song.artist };
 
   let savedText = null;
-  let songName = song.title || filename;
+  // the title as read, for the title bar, Open Recent and dialogs (named keeps the
+  // song's own text, entities and all, to tell whether a save changed it)
+  let songName = decodeEntities(song.title || '') || filename;
   addRecentSong(folder, filename, songName, !songbook);
   tellPath(path);
   showPlace(folder, !!songbook);
@@ -166,7 +168,7 @@ async function main() {
       await songbook.update(filename, text);
     }
     named = { title: parsed.title, artist: parsed.artist };
-    songName = parsed.title || filename;
+    songName = decodeEntities(parsed.title || '') || filename;
     addRecentSong(folder, filename, songName, !songbook);
     // song lists show the title, artist and file: they read the songbook again
     if (songbook) notifySongsChanged(folder, filename);
@@ -268,7 +270,7 @@ async function main() {
   // when the songbook is known or renamed.
   let shownTitle = null;
   function showTitle() {
-    const artist = named.artist ? ` - ${named.artist}` : '';
+    const artist = named.artist ? ` - ${decodeEntities(named.artist)}` : '';
     const place = placeName ? ` (${placeName})` : '';
     const title = `${songName}${artist}${place}${isDirty() ? ' — Edited' : ''}`;
     if (title === shownTitle) return;
@@ -282,7 +284,8 @@ async function main() {
 
   // The Edit window. It asks for the song when it opens (and gets it now, if it was
   // open while this page loaded again: Save As).
-  const sendSong = () => sendToPartner(EDIT_EVENTS.SONG, { text: editor.getSong(), title: shownTitle });
+  // help: the editor's shortcuts and snippets, for the Edit window's help panel (it loads only Ace)
+  const sendSong = () => sendToPartner(EDIT_EVENTS.SONG, { text: editor.getSong(), title: shownTitle, help: ugsEditorPlus.aceHelpHtml });
   onWindowEvent(EDIT_EVENTS.READY, sendSong);
   sendSong();
   onWindowEvent(EDIT_EVENTS.TYPED, ({ text, mid }) => {

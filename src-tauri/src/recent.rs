@@ -9,6 +9,10 @@
 //! allowed get into the list (`recent_add_song` checks), so the pages can't use
 //! it to reach other folders. Clearing the menu takes the folders out of the list,
 //! and the next launch no longer allows them.
+//!
+//! A song whose file isn't there (an unplugged drive, a folder moved away) stays in
+//! the list but is left out of the menu, and shows again once the file is back; only
+//! Clear Menu, or ten newer songs, take it out.
 
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -51,12 +55,10 @@ pub struct RecentState {
   menu: Mutex<Option<Submenu<Wry>>>,
 }
 
-/// Reads the list, drops what no longer exists, and allows its folders again.
+/// Reads the list and allows its folders again. Songs whose files are missing stay
+/// in it (the menu hides them), so an unplugged drive doesn't lose them.
 pub fn load(app: &AppHandle) -> RecentState {
-  let mut recent: Recent = store::read(app, FILE).unwrap_or_default();
-
-  recent.songbooks.retain(|folder| Path::new(folder).is_dir());
-  recent.songs.retain(|song| Path::new(&song.folder).join(&song.filename).is_file());
+  let recent: Recent = store::read(app, FILE).unwrap_or_default();
 
   let scope = app.fs_scope();
   let folders = recent.songbooks.iter().chain(recent.songs.iter().filter(|s| !s.single).map(|s| &s.folder));
@@ -116,23 +118,32 @@ fn refresh_menu(app: &AppHandle, state: &RecentState) {
   }
 }
 
+/// The songs the menu shows, with their place in the list (their menu id): those
+/// whose file is there now.
+fn shown_songs(songs: &[RecentSong], exists: impl Fn(&RecentSong) -> bool) -> Vec<(usize, &RecentSong)> {
+  songs.iter().enumerate().filter(|(_, song)| exists(song)).collect()
+}
+
+fn song_exists(song: &RecentSong) -> bool {
+  Path::new(&song.folder).join(&song.filename).is_file()
+}
+
 fn fill_submenu(app: &AppHandle, submenu: &Submenu<Wry>, recent: &Recent) -> tauri::Result<()> {
   while submenu.remove_at(0)?.is_some() {}
 
   let mut items: Vec<Box<dyn IsMenuItem<Wry>>> = Vec::new();
 
-  if !recent.songs.is_empty() {
-    let titles: Vec<String> = recent.songs.iter().map(|s| s.title.clone()).collect();
-    let folders: Vec<String> = recent.songs.iter().map(|s| folder_name(&s.folder)).collect();
-    for (i, label) in labels(&titles, &folders).into_iter().enumerate() {
+  let shown = shown_songs(&recent.songs, song_exists);
+  if !shown.is_empty() {
+    let titles: Vec<String> = shown.iter().map(|(_, s)| s.title.clone()).collect();
+    let folders: Vec<String> = shown.iter().map(|(_, s)| folder_name(&s.folder)).collect();
+    for ((i, _), label) in shown.iter().zip(labels(&titles, &folders)) {
       items.push(Box::new(MenuItem::with_id(app, format!("{SONG_ID}{i}"), label, true, None::<&str>)?));
     }
-  }
-
-  if !items.is_empty() {
     items.push(Box::new(PredefinedMenuItem::separator(app)?));
   }
-  let has_items = !items.is_empty();
+  // hidden songs count too: Clear Menu forgets them as well
+  let has_items = !recent.songs.is_empty();
   items.push(Box::new(MenuItem::with_id(app, CLEAR_ID, "Clear Menu", has_items, None::<&str>)?));
 
   for item in &items {
@@ -211,4 +222,28 @@ pub fn recent_add_song(
     recent.songs.insert(0, song);
   });
   Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn song(filename: &str) -> RecentSong {
+    RecentSong { folder: "/Volumes/Gig/songs".into(), filename: filename.into(), title: filename.into(), single: false }
+  }
+
+  #[test]
+  fn missing_songs_are_hidden_but_keep_their_menu_ids() {
+    let songs = vec![song("a.cpm"), song("gone.cpm"), song("c.cpm")];
+    let shown = shown_songs(&songs, |s| s.filename != "gone.cpm");
+    let ids: Vec<usize> = shown.iter().map(|(i, _)| *i).collect();
+    assert_eq!(ids, vec![0, 2]);
+    assert_eq!(shown[1].1.filename, "c.cpm");
+  }
+
+  #[test]
+  fn nothing_is_shown_while_the_drive_is_away() {
+    let songs = vec![song("a.cpm"), song("b.cpm")];
+    assert!(shown_songs(&songs, |_| false).is_empty());
+  }
 }

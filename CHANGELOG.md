@@ -4,6 +4,12 @@ What changed in UkeGeeks Studio, newest first, one entry per pull request. The a
 
 ## Unreleased
 
+### UGS-0041: rough edges (2026-11-26)
+
+- **Song titles read as written in window titles,** the Edit window's title, File > Open Recent and the "save changes?" question: "Rock & Roll ©", not "Rock &amp; Roll &copy;". The song's text keeps its entities. (Open Recent entries from before show the old way until the song is opened again.)
+- **The Edit window has a help panel:** the ? in its corner shows the keyboard shortcuts and ChordPro snippets, the same help as the editor's Fullscreen, with the Mac keys on a Mac (Cmd+F to find, Cmd+Option+F to replace).
+- **Open Recent keeps songs on an unplugged drive.** They used to be dropped at launch, for good; now they're hidden until the file is back. Clear Menu still forgets everything.
+
 ## 0.1.0 (2026-12)
 
 The first release, part of **UkeGeeks 2026.12**: on `@ukegeeks/song-editor` 2.0.0 and `@ukegeeks/song-formatter` 1.0.0, both stable. Its version is 0.1.0 everywhere (package.json, Cargo.toml, tauri.conf.json, the git tag). Everything below, back to UGS-0002, is in it.
