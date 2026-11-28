@@ -8,7 +8,6 @@ The next free number is **UGS-0051**.
 
 ## Doing
 
-- **UGS-0050** (studio): the README for testers: the app icon and screenshots at the top, then how to download and install, what it does and how to get started; building from source comes after. Screenshots in `docs/images/`, 880px wide.
 - **UGS-0048** (studio): Phase 5, first beta for testers: v0.2.0-beta.1 as a GitHub pre-release with the signed `.dmg` and the unsigned `.exe`. This PR sets the version, writes the tester notes ([release-notes/v0.2.0-beta.1.md](release-notes/v0.2.0-beta.1.md)) and the publishing steps ([RELEASING.md](RELEASING.md)); the owner then builds, checks the `.dmg` on another Mac and creates the pre-release.
 
 ## Next (in order; rearrange freely)
@@ -36,6 +35,7 @@ The editor is Buz's again (2026-11-11), so its items are ordered here with Studi
 
 | ID | Repos | What | PR |
 |---|---|---|---|
+| UGS-0050 | studio | The README for testers: the app icon, Download for macOS and Download for Windows buttons (the Scriptasaurus climbing out of a cardboard box with a down arrow; our own drawings, since Apple's and Microsoft's logos and installer art are theirs), a Library screenshot, then installing, what it does (with screenshots), Getting started; building from source comes last. Screenshots in `docs/images/`, 880px wide | #38, and the buttons' PR |
 | UGS-0046 | studio | Mac signing and notarization: `npm run release:mac` finds the Developer ID certificate, builds the universal app and `.dmg`, has Tauri sign (hardened runtime), notarize and staple the app, notarizes and staples the `.dmg`, then checks both (`codesign`, `spctl`: "Notarized Developer ID", `stapler`). The password stays in the keychain. One-time setup in [RELEASING.md](RELEASING.md); the first real run passed on 2026-11-27 | #35, #36 |
 | UGS-0047 | studio | Windows CI: a `windows-latest` job runs `cargo test` and builds an unsigned NSIS installer (`UkeGeeks Studio_<version>_x64-setup.exe`, about 3 MB), kept as the run's `ukegeeks-studio-windows` artifact. The Windows code (menus, paths, single-instance) compiled and its 19 tests passed on the first run, with no warnings | #34 |
 | UGS-0045 | studio | Double-clicking a song opens it: `.cpm` belongs to Studio (its own type, `org.ukegeeks.cpm`, a kind of plain text), and `.cho`, `.chopro`, `.chordpro`, `.chord`, `.crd` list it under Open With. On a Mac `RunEvent::Opened` (files sent before the app has started wait for `setup()`); on Windows and Linux the command line, and a second launch hands its files to the running app (tauri-plugin-single-instance). Each song opens on its own, as with File > Open… | #33 |

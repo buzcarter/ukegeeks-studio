@@ -5,8 +5,15 @@
 <h1 align="center">UkeGeeks Studio</h1>
 
 <p align="center">
-  Your ukulele songs in tidy songbooks, on your Mac or Windows PC.<br>
-  <strong><a href="https://github.com/buzcarter/ukegeeks-studio/releases">Download the beta</a></strong>
+  Your ukulele songs in tidy songbooks, on your Mac or Windows PC.
+</p>
+
+<p align="center">
+  <a href="https://github.com/buzcarter/ukegeeks-studio/releases"><img src="docs/images/download-mac.svg" alt="Download for macOS" width="290" height="120"></a>
+  &nbsp;
+  <a href="https://github.com/buzcarter/ukegeeks-studio/releases"><img src="docs/images/download-windows.svg" alt="Download for Windows" width="290" height="120"></a>
+  <br>
+  <sub>Free beta · macOS 11 or later (Apple Silicon or Intel) · Windows 10 or 11, 64-bit</sub>
 </p>
 
 <p align="center">
